@@ -1,0 +1,2 @@
+#required for heroku/python buildpack
+-r requirements/production.txt

@@ -1,0 +1,17 @@
+{
+  "cSpell.words": [
+    "ayushma"
+  ],
+  "python.formatting.provider": "black",
+  "python.sortImports.args": [
+    "--profile",
+    "black"
+  ],
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.python",
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": true
+    }
+  },
+  "editor.formatOnSave": true
+}

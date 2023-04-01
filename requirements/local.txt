@@ -1,0 +1,21 @@
+-r base.txt
+
+# Werkzeug[watchdog]==2.1.2 # https://github.com/pallets/werkzeug
+ipdb==0.13.9  # https://github.com/gotcha/ipdb
+psycopg2==2.9.3  # https://github.com/psycopg/psycopg2
+# watchgod==0.7  # https://github.com/samuelcolvin/watchgod
+
+# Code quality
+# ------------------------------------------------------------------------------
+flake8==5.0.4  # https://github.com/PyCQA/flake8
+flake8-isort==4.2.0  # https://github.com/gforcada/flake8-isort
+coverage==6.5.0 # https://github.com/nedbat/coveragepy
+black==22.8.0  # https://github.com/psf/black
+pre-commit==2.20.0  # https://github.com/pre-commit/pre-commit
+
+# Django
+# ------------------------------------------------------------------------------
+factory-boy==3.2.1  # https://github.com/FactoryBoy/factory_boy
+
+django-debug-toolbar==3.7.0  # https://github.com/jazzband/django-debug-toolbar
+django-extensions==3.2.1  # https://github.com/django-extensions/django-extensions
