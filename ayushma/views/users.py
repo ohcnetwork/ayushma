@@ -1,16 +1,10 @@
-import requests
-from django.db.models import Count, Exists, OuterRef
 from drf_spectacular.utils import extend_schema, extend_schema_view
-from rest_framework import permissions, status
+from rest_framework import permissions
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
-from rest_framework.response import Response
 
-from core.settings.base import CDN_KEY
 from utils.views.base import BaseModelViewSet
-from ayushma.serializers.users import UserPublicSerializer
 
-from ..models import Follow, UploadType, User
+from ..models import User
 from ..permissions import IsSelfOrReadOnly
 from ..serializers import UserDetailSerializer, UserSerializer
 

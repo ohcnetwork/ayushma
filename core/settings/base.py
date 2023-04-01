@@ -275,9 +275,9 @@ REST_FRAMEWORK = {
 SPECTACULAR_SETTINGS = {
     "TITLE": "Ayushma API",
     "DESCRIPTION": "Api for ayushma",
-    "VERSION": "4.0.0",
+    "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
-    "SCHEMA_PATH_PREFIX": "/v4/",
+    "SCHEMA_PATH_PREFIX": "/api/",
     "LICENSE": {
         "name": "MIT License",
     },
@@ -318,8 +318,3 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "sentry-trace",
 ]
-
-CDN_KEY = env(
-    "CDN_KEY",
-    default="",
-)

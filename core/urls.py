@@ -17,20 +17,20 @@ urlpatterns = [
 # API URLS
 urlpatterns += [
     # API base url
-    path("v4/", include("ayushma.api_router")),
+    path("api/", include("ayushma.api_router")),
     # Schema
-    path("v4/schema", SpectacularAPIView.as_view(), name="schema"),
+    path("api/schema", SpectacularAPIView.as_view(), name="schema"),
     path(
-        "v4/schema/swagger/",
+        "api/schema/swagger/",
         SpectacularSwaggerView.as_view(url_name="schema"),
         name="swagger-ui",
     ),
     path(
-        "v4/schema/redoc/",
+        "api/schema/redoc/",
         SpectacularRedocView.as_view(url_name="schema"),
         name="redoc",
     ),
-    path("", RedirectView.as_view(url="/v4/schema/swagger/", permanent=False)),
+    path("", RedirectView.as_view(url="/api/schema/swagger/", permanent=False)),
 ]
 
 if settings.DEBUG:
