@@ -318,3 +318,8 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "sentry-trace",
 ]
+
+# OpenAI, Pincone
+OPENAI_API_KEY = env("OPENAI_API_KEY", default="")
+PINECONE_API_KEY = env("PINCONE_API_KEY", default="")
+PINECONE_ENVIRONMENT = env("PINECONE_ENVIRONMENT", default="")
