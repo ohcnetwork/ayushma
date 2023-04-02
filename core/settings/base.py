@@ -318,3 +318,5 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "sentry-trace",
 ]
+
+OPENAI_API_KEY = env("OPENAI_API_KEY", default="")
