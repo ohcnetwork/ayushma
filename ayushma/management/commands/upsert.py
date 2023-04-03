@@ -48,12 +48,13 @@ class Command(BaseCommand):
 
             batch_size = 100  # process everything in batches of 100 (creates 100 vectors per upset)
 
-            print(f"Fetching Pinecone index for {filename}...")
-            if filename_md5 not in pinecone.list_indexes():
+            print(f"Fetching Pinecone index...")
+            if settings.PINECONE_INDEX not in pinecone.list_indexes():
                 pinecone.create_index(
-                    filename_md5, dimension=1536  # 1536 is the dimension of the text-embedding-ada-002 model
+                    settings.PINECONE_INDEX,
+                    dimension=1536,  # 1536 is the dimension of the text-embedding-ada-002 model
                 )
-            pinecone_index = pinecone.Index(index_name=filename_md5)
+            pinecone_index = pinecone.Index(index_name=settings.PINECONE_INDEX)
 
             print(f"Upserting {filename} to Pinecone index...")
 
@@ -65,6 +66,6 @@ class Command(BaseCommand):
                 embeds = create_embedding(lines_batch)  # create embeddings
                 meta = [{"text": line} for line in lines_batch]  # prep metadata and upsert batch
                 to_upsert = zip(ids_batch, embeds, meta)  # zip together
-                pinecone_index.upsert(vectors=list(to_upsert))  # upsert to Pinecone
+                pinecone_index.upsert(vectors=list(to_upsert), namespace=filename_md5)  # upsert to Pinecone
 
             print(f"Finished upserting {filename} to Pinecone index")
