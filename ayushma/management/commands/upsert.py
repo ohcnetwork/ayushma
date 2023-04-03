@@ -35,12 +35,14 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         upsert_dir = "upsert"
         openai.api_key = settings.OPENAI_API_KEY
-        pinecone.init(api_key=settings.PINECONE_API_KEY, environment=settings.PINECONE_ENVIRONMENT)
+        pinecone.init(
+            api_key=settings.PINECONE_API_KEY, environment=settings.PINECONE_ENVIRONMENT
+        )
         print("Initialized Pinecone and OpenAI")
 
         for filename in os.listdir(upsert_dir):
-           if filename == ".gitkeep" :
-               continue
+            if filename == ".gitkeep":
+                continue
             print(f"Processing {filename}...")
 
             filepath = os.path.join(upsert_dir, filename)
@@ -61,13 +63,23 @@ class Command(BaseCommand):
             print(f"Upserting {filename} to Pinecone index...")
 
             for i in tqdm(range(0, len(document_lines), batch_size)):
-                i_end = min(i + batch_size, len(document_lines))  # set end position of batch
-                lines_batch = document_lines[i : i + batch_size]  # get batch of lines and IDs
-                lines_batch = [line.strip() for line in lines_batch if line.strip()]  # remove blank lines
+                i_end = min(
+                    i + batch_size, len(document_lines)
+                )  # set end position of batch
+                lines_batch = document_lines[
+                    i : i + batch_size
+                ]  # get batch of lines and IDs
+                lines_batch = [
+                    line.strip() for line in lines_batch if line.strip()
+                ]  # remove blank lines
                 ids_batch = [str(n) for n in range(i, i_end)]  # create IDs
                 embeds = create_embedding(lines_batch)  # create embeddings
-                meta = [{"text": line} for line in lines_batch]  # prep metadata and upsert batch
+                meta = [
+                    {"text": line} for line in lines_batch
+                ]  # prep metadata and upsert batch
                 to_upsert = zip(ids_batch, embeds, meta)  # zip together
-                pinecone_index.upsert(vectors=list(to_upsert), namespace=filename_md5)  # upsert to Pinecone
+                pinecone_index.upsert(
+                    vectors=list(to_upsert), namespace=filename_md5
+                )  # upsert to Pinecone
 
             print(f"Finished upserting {filename} to Pinecone index")
