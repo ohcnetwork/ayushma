@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 from ..utils.openaiapi import get_embedding
 
 
-class TextToVector(APIView):
+class ChatViewSet(APIView):
     """
     View to convert text to vector embeddings using OpenAI's API
     """
