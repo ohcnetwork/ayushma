@@ -39,6 +39,8 @@ class Command(BaseCommand):
         print("Initialized Pinecone and OpenAI")
 
         for filename in os.listdir(upsert_dir):
+           if filename == ".gitkeep" :
+               continue
             print(f"Processing {filename}...")
 
             filepath = os.path.join(upsert_dir, filename)
