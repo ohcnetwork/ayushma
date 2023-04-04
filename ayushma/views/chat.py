@@ -15,22 +15,17 @@ def num_tokens_from_string(string: str, encoding_name: str) -> int:
     num_tokens = len(encoding.encode(string))
     return num_tokens
 
-def n_equal_strings(str):
+def split_text(text):
     """Returns one string split into n equal length strings"""
     n = len(str)
-    number_of_strings = int(n / 8192) 
-    number_of_chars = int(n / number_of_strings)
-    equalStr = []
+    number_of_chars = 8192
+    parts = []
 
     for i in range(0, n, number_of_chars):
-        try:
-            part = str[i : i + number_of_chars]
-            equalStr.append(part)
-        except:
-            part = str[i : ]
-            equalStr.append(part)
-    
-    return equalStr
+        part = text[i : i + number_of_chars]
+        parts.append(part)
+
+    return parts
 
 
 class ChatViewSet(APIView):
@@ -56,7 +51,7 @@ class ChatViewSet(APIView):
             return Response({"embedding": embedding})
         else:
             res = []
-            equalStrs = n_equal_strings(text)
-            for str in equalStrs:
-                res.append({"embedding": get_embedding(text=str)})
+            parts = split_text(text)
+            for part in parts:
+                res.append({"embedding": get_embedding(text=part)})
             return Response({"embeddings": res})
