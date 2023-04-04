@@ -16,6 +16,7 @@ if settings.DEBUG:
 
 
 router.register(r"users", UserViewSet)
+router.register(r"chats", ChatViewSet)
 
 auth_urls = [
     path("login", APILoginView.as_view(), name="login"),
@@ -25,5 +26,4 @@ auth_urls = [
 urlpatterns = [
     path(r"", include(router.urls)),
     path("auth/", include(auth_urls)),
-    path("chat", ChatViewSet.as_view()),
 ]
