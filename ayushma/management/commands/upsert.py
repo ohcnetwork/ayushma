@@ -1,17 +1,13 @@
 import hashlib
 import os
 
-import openai
 import pinecone
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from PyPDF2 import PdfReader
 from tqdm.auto import tqdm
 
-
-def create_embedding(text):
-    res = openai.Embedding.create(input=text, engine="text-embedding-ada-002")
-    return [record["embedding"] for record in res["data"]]
+from ayushma.utils.openaiapi import get_embedding
 
 
 def read_document(filepath):
@@ -34,7 +30,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         upsert_dir = "upsert"
-        openai.api_key = settings.OPENAI_API_KEY
         pinecone.init(
             api_key=settings.PINECONE_API_KEY, environment=settings.PINECONE_ENVIRONMENT
         )
@@ -73,7 +68,7 @@ class Command(BaseCommand):
                     line.strip() for line in lines_batch if line.strip()
                 ]  # remove blank lines
                 ids_batch = [str(n) for n in range(i, i_end)]  # create IDs
-                embeds = create_embedding(lines_batch)  # create embeddings
+                embeds = get_embedding(lines_batch)  # create embeddings
                 meta = [
                     {"text": line} for line in lines_batch
                 ]  # prep metadata and upsert batch
