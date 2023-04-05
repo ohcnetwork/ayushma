@@ -7,7 +7,7 @@ from django.core.management.base import BaseCommand
 from PyPDF2 import PdfReader
 from tqdm.auto import tqdm
 
-from ...utils.openaiapi import get_embedding
+from ayushma.utils.openaiapi import get_embedding
 
 
 def read_document(filepath):
