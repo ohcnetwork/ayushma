@@ -75,15 +75,16 @@ class ChatViewSet(BaseModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         text = self.request.data.get("text")
+        text = text.replace("\n", " ")
         openai.api_key = settings.OPENAI_API_KEY
         num_tokens = num_tokens_from_string(text, "cl100k_base")
 
         if num_tokens < 8192:
-            embedding = get_embedding(text=text)
+            embedding = get_embedding(text=[text])
             return Response({"embedding": embedding})
         else:
             res = []
             parts = split_text(text)
             for part in parts:
-                res.append({"embedding": get_embedding(text=part)})
+                res.append({"embedding": get_embedding(text=[part])})
             return Response({"embeddings": res})
