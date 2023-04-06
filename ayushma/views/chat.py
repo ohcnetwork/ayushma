@@ -110,7 +110,7 @@ class ChatViewSet(BaseModelViewSet):
         else:
             parts = split_text(text)
             for part in parts:
-                embeddings.append({"embedding": get_embedding(text=[part])})
+                embeddings.append(get_embedding(text=[part]))
 
         # find similar embeddings from pinecone index for each embedding
         pinecone_references: List[QueryResponse] = []
