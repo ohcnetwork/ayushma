@@ -43,6 +43,8 @@ class Command(BaseCommand):
             filepath = os.path.join(upsert_dir, filename)
             filename_md5 = hashlib.md5(filename.encode()).hexdigest()
 
+            print(f"Md5 of {filename} is {filename_md5}")
+
             document_lines = read_document(filepath).splitlines()
 
             batch_size = 100  # process everything in batches of 100 (creates 100 vectors per upset)

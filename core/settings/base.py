@@ -5,15 +5,16 @@ Base settings to build other settings files upon.
 from pathlib import Path
 
 import environ
+import pinecone
 from corsheaders.defaults import default_headers
 from django.urls import reverse_lazy
 
 ROOT_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
 env = environ.Env()
 
-if READ_DOT_ENV_FILE := env.bool("DJANGO_READ_DOT_ENV_FILE", default=False):
-    # OS environment variables take precedence over variables from .env
-    env.read_env(str(ROOT_DIR / ".env"))
+# if READ_DOT_ENV_FILE := env.bool("DJANGO_READ_DOT_ENV_FILE", default=False):
+# OS environment variables take precedence over variables from .env
+env.read_env(str(ROOT_DIR / ".env"))
 
 # GENERAL
 # ------------------------------------------------------------------------------
@@ -41,6 +42,7 @@ DATABASES = {
         "DATABASE_URL", default="postgres://postgres:postgres@localhost:5432/ayushma"
     )
 }
+
 DATABASES["default"]["ATOMIC_REQUESTS"] = True
 # https://docs.djangoproject.com/en/stable/ref/settings/#std:setting-DEFAULT_AUTO_FIELD
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -324,3 +326,6 @@ OPENAI_API_KEY = env("OPENAI_API_KEY", default="")
 PINECONE_API_KEY = env("PINECONE_API_KEY", default="")
 PINECONE_ENVIRONMENT = env("PINECONE_ENVIRONMENT", default="")
 PINECONE_INDEX = env("PINECONE_INDEX", default="")
+
+pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENVIRONMENT)
+PINECONE_INDEX_INSTANCE = pinecone.Index(index_name=PINECONE_INDEX)
