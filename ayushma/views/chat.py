@@ -125,10 +125,14 @@ class ChatViewSet(BaseModelViewSet):
 
             pinecone_references.append(similar)
 
-        prompt = get_sanitized_reference(pinecone_references=pinecone_references)
+        reference = get_sanitized_reference(pinecone_references=pinecone_references)
 
         lang_chain_helper = LangChainHelper()
 
         return Response(
-            {"answer": lang_chain_helper.get_response(user_msg=text, reference=prompt)}
+            {
+                "answer": lang_chain_helper.get_response(
+                    user_msg=text, reference=reference
+                )
+            }
         )
