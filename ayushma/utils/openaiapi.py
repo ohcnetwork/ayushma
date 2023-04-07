@@ -2,9 +2,12 @@ from typing import List
 
 import openai
 from django.conf import settings
+from pinecone import QueryResponse
 
 
-def get_embedding(text: List[str], model: str = "text-embedding-ada-002") -> List[List[float]]:
+def get_embedding(
+    text: List[str], model: str = "text-embedding-ada-002"
+) -> List[List[float]]:
     """
     Generates embeddings for the given list of texts using the OpenAI API.
 
@@ -27,3 +30,27 @@ def get_embedding(text: List[str], model: str = "text-embedding-ada-002") -> Lis
     openai.api_key = settings.OPENAI_API_KEY
     res = openai.Embedding.create(input=text, model=model)
     return [record["embedding"] for record in res["data"]]
+
+
+def get_sanitized_reference(pinecone_references: List[QueryResponse]) -> str:
+    """
+    Extracts the text from the Pinecone QueryResponse object and sanitizes it.
+
+    Args:
+        pinecone_reference (List[QueryResponse]): The similar documents retrieved from
+            the Pinecone index.
+
+    Returns:
+        A string containing the text from the Pinecone QueryResponse object.
+
+    Example usage:
+        >>> get_sanitized_reference([QueryResponse(...), QueryResponse(...)])
+        "Hello, world! How are you?,I am fine. Thank you."
+    """
+    sanitized_reference = ""
+
+    for reference in pinecone_references:
+        for match in reference.matches:
+            sanitized_reference += match.metadata["text"].replace("\n", " ") + ","
+
+    return sanitized_reference
