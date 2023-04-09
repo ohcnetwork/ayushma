@@ -3,7 +3,8 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from djangoql.admin import DjangoQLSearchMixin
 from simple_history.admin import SimpleHistoryAdmin
 
-from .models import  User
+from .models import User, Chat, ChatMessage
+
 
 @admin.register(User)
 class UserAdmin(DjangoQLSearchMixin, BaseUserAdmin):
@@ -71,3 +72,13 @@ class UserAdmin(DjangoQLSearchMixin, BaseUserAdmin):
         ),
     )
     readonly_fields = ("modified_at", "last_login", "date_joined")
+
+
+@admin.register(Chat)
+class ChatAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
+    pass
+
+
+@admin.register(ChatMessage)
+class ChatMessageAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
+    pass
