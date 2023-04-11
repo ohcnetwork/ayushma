@@ -3,6 +3,7 @@ from django.urls import include, path
 from rest_framework_nested import routers
 
 from .views.auth import APILoginView, APILogoutView
+from .views.chat import ChatViewSet
 from .views.users import UserViewSet
 
 app_name = "api"
@@ -15,6 +16,7 @@ if settings.DEBUG:
 
 
 router.register(r"users", UserViewSet)
+router.register(r"chats", ChatViewSet)
 
 auth_urls = [
     path("login", APILoginView.as_view(), name="login"),

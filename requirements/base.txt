@@ -1,7 +1,7 @@
-python-slugify==6.1.2  # https://github.com/un33k/python-slugify
+python-slugify==8.0.1  # https://github.com/un33k/python-slugify
 Pillow==9.2.0  # https://github.com/python-pillow/Pillow
 argon2-cffi==21.3.0  # https://github.com/hynek/argon2_cffi
-whitenoise==6.2.0  # https://github.com/evansd/whitenoise
+whitenoise==6.4.0  # https://github.com/evansd/whitenoise
 redis==4.5.4  # https://github.com/redis/redis-py
 celery==5.2.7  # pyup: < 6.0  # https://github.com/celery/celery
 # django-celery-beat==2.2.1  # https://github.com/celery/django-celery-beat
@@ -10,16 +10,23 @@ celery==5.2.7  # pyup: < 6.0  # https://github.com/celery/celery
 # ------------------------------------------------------------------------------
 django==4.1.7  # pyup: < 5.0  # https://www.djangoproject.com/
 django-environ==0.9.0  # https://github.com/joke2k/django-environ
-django-model-utils==4.2.0  # https://github.com/jazzband/django-model-utils
+django-model-utils==4.3.1  # https://github.com/jazzband/django-model-utils
 django-filter==22.1  # https://github.com/carltongibson/django-filter
 djangoql==0.17.1 # https://github.com/ivelum/djangoql
 django-countries==7.5.1  # https://github.com/SmileyChris/django-countries
-django-simple-history==3.1.1  # https://github.com/jazzband/django-simple-history
+django-simple-history==3.3.0  # https://github.com/jazzband/django-simple-history
 # Django REST Framework
 djangorestframework==3.14.0  # https://github.com/encode/django-rest-framework
-django-cors-headers==3.13.0 # https://github.com/adamchainz/django-cors-headers
+django-cors-headers==3.14.0 # https://github.com/adamchainz/django-cors-headers
 drf-nested-routers==0.93.4 # https://github.com/alanjds/drf-nested-routers
 # DRF-spectacular for api documentation
-drf-spectacular==0.25.1 # https://github.com/tfranzel/drf-spectacular
+drf-spectacular==0.26.1 # https://github.com/tfranzel/drf-spectacular
 #mysqlclient
 requests
+
+# OpenAI, Pinecone, PyPDF2 and Langchain
+openai==0.27.2
+pinecone-client==2.2.1
+PyPDF2==3.0.1
+tiktoken==0.3.3
+langchain==0.0.133
