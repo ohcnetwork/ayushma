@@ -12,8 +12,8 @@ from rest_framework.serializers import CharField, IntegerField
 
 from utils.views.base import BaseModelViewSet
 
-from ..models import Chat
-from ..serializers import ChatSerializer
+from ..models import Chat, ChatMessage
+from ..serializers import ChatSerializer, ChatDetailSerializer
 from ..utils.langchain import LangChainHelper
 from ..utils.openaiapi import get_embedding, get_sanitized_reference
 
@@ -50,7 +50,7 @@ class ChatViewSet(BaseModelViewSet):
     queryset = Chat.objects.all()
     serializer_action_classes = {
         "list": ChatSerializer,
-        "retrieve": ChatSerializer,
+        "retrieve": ChatDetailSerializer,
         "create": ChatSerializer,
         "update": ChatSerializer,
     }
@@ -111,6 +111,11 @@ class ChatViewSet(BaseModelViewSet):
             parts = split_text(text)
             for part in parts:
                 embeddings.append(get_embedding(text=[part]))
+
+        # store the sent text
+        external_id = self.kwargs["external_id"]
+        chat = Chat.objects.filter(external_id=external_id).get()
+        ChatMessage.objects.create(message=text, chat=chat)
 
         # find similar embeddings from pinecone index for each embedding
         pinecone_references: List[QueryResponse] = []
