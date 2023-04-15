@@ -95,6 +95,12 @@ class ChatViewSet(BaseModelViewSet):
         chat = Chat.objects.get(external_id=kwarg["external_id"])
 
         text = text.replace("\n", " ")
+
+        # create a new ChatMessage model with type=USER and message=text and chat=chat
+        external_id = self.kwargs["external_id"]
+        chat = Chat.objects.filter(external_id=external_id).get()
+        ChatMessage.objects.create(message=text, chat=chat, type=1)
+
         openai.api_key = settings.OPENAI_API_KEY
         num_tokens = num_tokens_from_string(text, "cl100k_base")
 
@@ -107,11 +113,6 @@ class ChatViewSet(BaseModelViewSet):
             parts = split_text(text)
             for part in parts:
                 embeddings.append(get_embedding(text=[part]))
-
-        # store the sent text
-        external_id = self.kwargs["external_id"]
-        chat = Chat.objects.filter(external_id=external_id).get()
-        ChatMessage.objects.create(message=text, chat=chat)
 
         # find similar embeddings from pinecone index for each embedding
         pinecone_references: List[QueryResponse] = []
@@ -130,10 +131,31 @@ class ChatViewSet(BaseModelViewSet):
 
         lang_chain_helper = LangChainHelper()
 
+        
+        
+        # get all ChatMessages (model) with chat=chat(defined above) and them through langchain
+        previous_messages = ChatMessage.objects.filter(external_id=external_id).order_by("created_at")
+        
+        # seperate out into string of USER messages and string of BOT messages sperated by newline (you have type in chatMessage model)
+        # so output string =
+        # "
+        # USER: "Hello" (for type = USER)
+        # AYUSHMA: "Hi" (for type = AYUSHMA)
+        # "
+        chat_history = ""
+        for message in previous_messages:
+            if message.messageType == 1: # type=USER
+                chat_history += "USER: " + message.message + "\n"
+            elif message.messageType == 3: # type=AYUSHMA
+                chat_history += "AYUSHMA: " + message.message + "\n"
+
+        # get_response in a new variable say "answer" pass chat_history also
+        response = lang_chain_helper.get_response(user_msg=text, reference=reference, chat_history=chat_history)
+
+        # create a new ChatMessage model with type=AYUSHMA and message=answer and chat=chat
+        ChatMessage.objects.create(message=response, chat=chat, type=3)
+
+        # return answer in response
         return Response(
-            {
-                "answer": lang_chain_helper.get_response(
-                    user_msg=text, reference=reference
-                )
-            }
+            {"answer": response}
         )
