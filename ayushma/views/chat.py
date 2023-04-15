@@ -97,7 +97,6 @@ class ChatViewSet(BaseModelViewSet):
         text = text.replace("\n", " ")
 
         # create a new ChatMessage model with type=USER and message=text and chat=chat
-        external_id = self.kwargs["external_id"]
         ChatMessage.objects.create(message=text, chat=chat, messageType=1)
 
         openai.api_key = settings.OPENAI_API_KEY
