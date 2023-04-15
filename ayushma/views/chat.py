@@ -77,7 +77,6 @@ class ChatViewSet(BaseModelViewSet):
             name="ConverseRequest",
             fields={
                 "text": CharField(),
-                "namespace": CharField(),
                 "match_number": IntegerField(default=10),
             },
         ),
@@ -91,13 +90,10 @@ class ChatViewSet(BaseModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if not self.request.data.get("namespace"):
-            return Response(
-                {"error": "Please provide a namespace for the file to search on"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
         text = self.request.data.get("text")
+
+        chat = Chat.objects.get(external_id=kwarg["external_id"])
+
         text = text.replace("\n", " ")
         openai.api_key = settings.OPENAI_API_KEY
         num_tokens = num_tokens_from_string(text, "cl100k_base")
@@ -119,7 +115,7 @@ class ChatViewSet(BaseModelViewSet):
             similar: QueryResponse = settings.PINECONE_INDEX_INSTANCE.query(
                 vector=embedding,
                 top_k=top_k,
-                namespace=self.request.data.get("namespace"),
+                namespace=chat.namespace,
                 include_metadata=True,
             )
 
