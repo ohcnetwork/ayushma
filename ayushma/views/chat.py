@@ -99,7 +99,7 @@ class ChatViewSet(BaseModelViewSet):
         # create a new ChatMessage model with type=USER and message=text and chat=chat
         external_id = self.kwargs["external_id"]
         chat = Chat.objects.filter(external_id=external_id).get()
-        ChatMessage.objects.create(message=text, chat=chat, type=1)
+        ChatMessage.objects.create(message=text, chat=chat, messageType=1)
 
         openai.api_key = settings.OPENAI_API_KEY
         num_tokens = num_tokens_from_string(text, "cl100k_base")
@@ -134,7 +134,7 @@ class ChatViewSet(BaseModelViewSet):
         
         
         # get all ChatMessages (model) with chat=chat(defined above) and them through langchain
-        previous_messages = ChatMessage.objects.filter(external_id=external_id).order_by("created_at")
+        previous_messages = ChatMessage.objects.filter(chat=chat).order_by("created_at")
         
         # seperate out into string of USER messages and string of BOT messages sperated by newline (you have type in chatMessage model)
         # so output string =
@@ -145,15 +145,21 @@ class ChatViewSet(BaseModelViewSet):
         chat_history = ""
         for message in previous_messages:
             if message.messageType == 1: # type=USER
-                chat_history += "USER: " + message.message + "\n"
+                chat_history += "Nurse: " + message.message + "\n"
             elif message.messageType == 3: # type=AYUSHMA
-                chat_history += "AYUSHMA: " + message.message + "\n"
+                chat_history += "AI: " + message.message + "\n"
+
+        print("Chat History: ")
+        print(chat_history)
 
         # get_response in a new variable say "answer" pass chat_history also
         response = lang_chain_helper.get_response(user_msg=text, reference=reference, chat_history=chat_history)
 
         # create a new ChatMessage model with type=AYUSHMA and message=answer and chat=chat
-        ChatMessage.objects.create(message=response, chat=chat, type=3)
+        ChatMessage.objects.create(message=response, chat=chat, messageType=3)
+
+        # filter the response
+        response = response.replace("Ayushma: ", "")
 
         # return answer in response
         return Response(
