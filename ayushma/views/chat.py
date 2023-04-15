@@ -7,6 +7,7 @@ from drf_spectacular.utils import extend_schema, extend_schema_view, inline_seri
 from pinecone import QueryResponse
 from rest_framework import authentication, permissions, status
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.serializers import CharField, IntegerField
 
@@ -62,6 +63,13 @@ class ChatViewSet(BaseModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
+        openai_key = self.request.headers.get("OpenAI-Key")
+
+        if (not openai_key and not serializer.validated_data.get("allow_key")):
+            raise ValidationError(
+                {"error": "Please provide OpenAI-Key in the header or set allow_key=true in the body"},
+            )
+
         if self.request.user.is_authenticated:
             serializer.save(user=self.request.user)
         else:
@@ -94,8 +102,14 @@ class ChatViewSet(BaseModelViewSet):
 
         chat = Chat.objects.get(external_id=kwarg["external_id"])
 
+        openai_key = self.request.headers.get("OpenAI-Key") or (chat.allow_key and settings.OPENAI_API_KEY)
+        if (not openai_key):
+            raise ValidationError(
+                {"error": "Please provide OpenAI-Key in the header or create a chat with allow_key=true in its body"},
+            )
+        openai.api_key = openai_key
+
         text = text.replace("\n", " ")
-        openai.api_key = settings.OPENAI_API_KEY
         num_tokens = num_tokens_from_string(text, "cl100k_base")
 
         embeddings: List[List[List[float]]] = []
