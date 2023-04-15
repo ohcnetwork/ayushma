@@ -149,9 +149,6 @@ class ChatViewSet(BaseModelViewSet):
             elif message.messageType == 3: # type=AYUSHMA
                 chat_history += "AI: " + message.message + "\n"
 
-        print("Chat History: ")
-        print(chat_history)
-
         # get_response in a new variable say "answer" pass chat_history also
         response = lang_chain_helper.get_response(user_msg=text, reference=reference, chat_history=chat_history)
 
