@@ -98,7 +98,6 @@ class ChatViewSet(BaseModelViewSet):
 
         # create a new ChatMessage model with type=USER and message=text and chat=chat
         external_id = self.kwargs["external_id"]
-        chat = Chat.objects.filter(external_id=external_id).get()
         ChatMessage.objects.create(message=text, chat=chat, messageType=1)
 
         openai.api_key = settings.OPENAI_API_KEY
@@ -139,7 +138,7 @@ class ChatViewSet(BaseModelViewSet):
         # seperate out into string of USER messages and string of BOT messages sperated by newline (you have type in chatMessage model)
         # so output string =
         # "
-        # USER: "Hello" (for type = USER)
+        # Nurse: "Hello" (for type = USER)
         # AYUSHMA: "Hi" (for type = AYUSHMA)
         # "
         chat_history = ""
@@ -147,16 +146,16 @@ class ChatViewSet(BaseModelViewSet):
             if message.messageType == 1: # type=USER
                 chat_history += "Nurse: " + message.message + "\n"
             elif message.messageType == 3: # type=AYUSHMA
-                chat_history += "AI: " + message.message + "\n"
+                chat_history += "Ayushma: " + message.message + "\n"
 
         # get_response in a new variable say "answer" pass chat_history also
         response = lang_chain_helper.get_response(user_msg=text, reference=reference, chat_history=chat_history)
 
-        # create a new ChatMessage model with type=AYUSHMA and message=answer and chat=chat
-        ChatMessage.objects.create(message=response, chat=chat, messageType=3)
-
         # filter the response
         response = response.replace("Ayushma: ", "")
+
+        # create a new ChatMessage model with type=AYUSHMA and message=answer and chat=chat
+        ChatMessage.objects.create(message=response, chat=chat, messageType=3)
 
         # return answer in response
         return Response(
