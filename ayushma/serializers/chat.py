@@ -6,11 +6,5 @@ from ayushma.models import Chat
 class ChatSerializer(serializers.ModelSerializer):
     class Meta:
         model = Chat
-        fields = (
-            "external_id",
-            "title",
-            "created_at",
-            "modified_at",
-            "namespace",
-        )
+        fields = ("external_id", "title", "created_at", "modified_at", "namespace")
         read_only_fields = ("external_id", "created_at", "modified_at")
