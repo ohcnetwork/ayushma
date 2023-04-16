@@ -9,7 +9,6 @@ class Chat(BaseModel):
     title = models.CharField(max_length=30)
     user = models.ForeignKey(User, on_delete=models.PROTECT)
     namespace = models.CharField(max_length=300)
-    allow_key = models.BooleanField(default=False)
 
     def __str__(self) -> str:
         return f"{self.title} from {self.user.username}"
