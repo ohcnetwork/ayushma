@@ -12,6 +12,5 @@ class ChatSerializer(serializers.ModelSerializer):
             "created_at",
             "modified_at",
             "namespace",
-            "allow_key",
         )
         read_only_fields = ("external_id", "created_at", "modified_at")
