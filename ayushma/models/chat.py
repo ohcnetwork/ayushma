@@ -22,4 +22,4 @@ class ChatMessage(BaseModel):
     message = models.TextField()
 
     def __str__(self) -> str:
-        return f"{self.chat.title} - {self.user.username}"
+        return f"{self.message} : {self.chat}"
