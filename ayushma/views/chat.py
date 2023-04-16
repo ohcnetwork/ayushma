@@ -7,6 +7,7 @@ from drf_spectacular.utils import extend_schema, extend_schema_view, inline_seri
 from pinecone import QueryResponse
 from rest_framework import authentication, permissions, status
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.serializers import CharField, IntegerField
 
@@ -62,10 +63,18 @@ class ChatViewSet(BaseModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
+        if (
+            not self.request.headers.get("OpenAI-Key")
+            and not self.request.user.allow_key
+        ):
+            raise ValidationError(
+                {"error": "OpenAI-Key header is required to create a chat"}
+            )
+
         if self.request.user.is_authenticated:
             serializer.save(user=self.request.user)
         else:
-            Response(
+            return Response(
                 {"error": "Please login to create a chat"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
@@ -94,12 +103,22 @@ class ChatViewSet(BaseModelViewSet):
 
         chat = Chat.objects.get(external_id=kwarg["external_id"])
 
+        openai_key = self.request.headers.get("OpenAI-Key") or (
+            self.request.user.allow_key and settings.OPENAI_API_KEY
+        )
+        if not openai_key:
+            raise ValidationError(
+                {"error": "OpenAI-Key header is required to create a chat or converse"}
+            )
+        openai.api_key = openai_key
+
         text = text.replace("\n", " ")
 
         # create a new ChatMessage model with type=USER and message=text and chat=chat
         ChatMessage.objects.create(message=text, chat=chat, messageType=1)
 
         openai.api_key = settings.OPENAI_API_KEY
+
         num_tokens = num_tokens_from_string(text, "cl100k_base")
 
         embeddings: List[List[List[float]]] = []
