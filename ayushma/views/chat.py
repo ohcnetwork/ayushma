@@ -13,8 +13,8 @@ from rest_framework.serializers import CharField, IntegerField
 
 from utils.views.base import BaseModelViewSet
 
-from ..models import Chat
-from ..serializers import ChatSerializer
+from ..models import Chat, ChatMessage
+from ..serializers import ChatSerializer, ChatDetailSerializer
 from ..utils.langchain import LangChainHelper
 from ..utils.openaiapi import get_embedding, get_sanitized_reference
 
@@ -51,7 +51,7 @@ class ChatViewSet(BaseModelViewSet):
     queryset = Chat.objects.all()
     serializer_action_classes = {
         "list": ChatSerializer,
-        "retrieve": ChatSerializer,
+        "retrieve": ChatDetailSerializer,
         "create": ChatSerializer,
         "update": ChatSerializer,
     }
@@ -113,6 +113,12 @@ class ChatViewSet(BaseModelViewSet):
         openai.api_key = openai_key
 
         text = text.replace("\n", " ")
+
+        # create a new ChatMessage model with type=USER and message=text and chat=chat
+        ChatMessage.objects.create(message=text, chat=chat, messageType=1)
+
+        openai.api_key = settings.OPENAI_API_KEY
+
         num_tokens = num_tokens_from_string(text, "cl100k_base")
 
         embeddings: List[List[List[float]]] = []
@@ -142,10 +148,34 @@ class ChatViewSet(BaseModelViewSet):
 
         lang_chain_helper = LangChainHelper()
 
+        
+        
+        # get all ChatMessages (model) with chat=chat(defined above) and them through langchain
+        previous_messages = ChatMessage.objects.filter(chat=chat).order_by("created_at")
+        
+        # seperate out into string of USER messages and string of BOT messages sperated by newline (you have type in chatMessage model)
+        # so output string =
+        # "
+        # Nurse: "Hello" (for type = USER)
+        # AYUSHMA: "Hi" (for type = AYUSHMA)
+        # "
+        chat_history = ""
+        for message in previous_messages:
+            if message.messageType == 1: # type=USER
+                chat_history += "Nurse: " + message.message + "\n"
+            elif message.messageType == 3: # type=AYUSHMA
+                chat_history += "Ayushma: " + message.message + "\n"
+
+        # get_response in a new variable say "answer" pass chat_history also
+        response = lang_chain_helper.get_response(user_msg=text, reference=reference, chat_history=chat_history)
+
+        # filter the response
+        response = response.replace("Ayushma: ", "")
+
+        # create a new ChatMessage model with type=AYUSHMA and message=answer and chat=chat
+        ChatMessage.objects.create(message=response, chat=chat, messageType=3)
+
+        # return answer in response
         return Response(
-            {
-                "answer": lang_chain_helper.get_response(
-                    user_msg=text, reference=reference
-                )
-            }
+            {"answer": response}
         )
