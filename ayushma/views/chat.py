@@ -63,17 +63,18 @@ class ChatViewSet(BaseModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
-        openai_key = self.request.headers.get("OpenAI-Key")
-
-        if (not openai_key and not serializer.validated_data.get("allow_key")):
+        if (
+            not self.request.headers.get("OpenAI-Key")
+            and not self.request.user.allow_key
+        ):
             raise ValidationError(
-                {"error": "Please provide OpenAI-Key in the header or set allow_key=true in the body"},
+                {"error": "OpenAI-Key header is required to create a chat"}
             )
 
         if self.request.user.is_authenticated:
             serializer.save(user=self.request.user)
         else:
-            Response(
+            return Response(
                 {"error": "Please login to create a chat"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
@@ -102,10 +103,12 @@ class ChatViewSet(BaseModelViewSet):
 
         chat = Chat.objects.get(external_id=kwarg["external_id"])
 
-        openai_key = self.request.headers.get("OpenAI-Key") or (chat.allow_key and settings.OPENAI_API_KEY)
-        if (not openai_key):
+        openai_key = self.request.headers.get("OpenAI-Key") or (
+            self.request.user.allow_key and settings.OPENAI_API_KEY
+        )
+        if not openai_key:
             raise ValidationError(
-                {"error": "Please provide OpenAI-Key in the header or create a chat with allow_key=true in its body"},
+                {"error": "OpenAI-Key header is required to create a chat or converse"}
             )
         openai.api_key = openai_key
 
