@@ -1,5 +1,5 @@
 python-slugify==8.0.1  # https://github.com/un33k/python-slugify
-Pillow==9.2.0  # https://github.com/python-pillow/Pillow
+Pillow==9.5.0  # https://github.com/python-pillow/Pillow
 argon2-cffi==21.3.0  # https://github.com/hynek/argon2_cffi
 whitenoise==6.4.0  # https://github.com/evansd/whitenoise
 redis==4.5.4  # https://github.com/redis/redis-py
@@ -11,7 +11,7 @@ celery==5.2.7  # pyup: < 6.0  # https://github.com/celery/celery
 django==4.1.7  # pyup: < 5.0  # https://www.djangoproject.com/
 django-environ==0.9.0  # https://github.com/joke2k/django-environ
 django-model-utils==4.3.1  # https://github.com/jazzband/django-model-utils
-django-filter==22.1  # https://github.com/carltongibson/django-filter
+django-filter==23.1  # https://github.com/carltongibson/django-filter
 djangoql==0.17.1 # https://github.com/ivelum/djangoql
 django-countries==7.5.1  # https://github.com/SmileyChris/django-countries
 django-simple-history==3.3.0  # https://github.com/jazzband/django-simple-history
@@ -29,4 +29,4 @@ openai==0.27.2
 pinecone-client==2.2.1
 PyPDF2==3.0.1
 tiktoken==0.3.3
-langchain==0.0.133
+langchain==0.0.139

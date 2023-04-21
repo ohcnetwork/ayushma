@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from djangoql.admin import DjangoQLSearchMixin
 from simple_history.admin import SimpleHistoryAdmin
 
-from .models import User, Chat, ChatMessage
+from .models import Chat, ChatMessage, User
 
 
 @admin.register(User)
@@ -29,14 +29,7 @@ class UserAdmin(DjangoQLSearchMixin, BaseUserAdmin):
     fieldsets = (
         (
             None,
-            {
-                "fields": (
-                    "email",
-                    "username",
-                    "password",
-                    "external_id",
-                )
-            },
+            {"fields": ("email", "username", "password", "external_id", "allow_key")},
         ),
         (
             "User info",

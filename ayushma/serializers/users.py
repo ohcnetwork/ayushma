@@ -5,7 +5,6 @@ from ..models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = User
         fields = (
@@ -22,11 +21,13 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "username",
             "full_name",
             "email",
+            "allow_key",
         )
         read_only_fields = (
             "external_id",
             "email",
             "username",
+            "allow_key",
         )
 
     def create(self, validated_data):
