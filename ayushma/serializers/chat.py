@@ -25,9 +25,9 @@ class ChatMessageSerializer(serializers.ModelSerializer):
 
 
 class ChatDetailSerializer(serializers.ModelSerializer):
-    chats = ChatMessageSerializer(many=True, read_only=True)
+    chats = ChatMessageSerializer(many=True, read_only=True, source="chatmessage_set")
 
     class Meta:
         model = Chat
         fields = ("external_id", "title", "created_at", "modified_at", "chats")
-        read_only_fields = ("external_id", "created_at", "modified_at", "chats")
+        read_only_fields = ("external_id", "created_at", "modified_at")

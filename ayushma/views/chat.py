@@ -14,7 +14,7 @@ from rest_framework.serializers import CharField, IntegerField
 from utils.views.base import BaseModelViewSet
 
 from ..models import Chat, ChatMessage
-from ..serializers import ChatSerializer, ChatDetailSerializer
+from ..serializers import ChatDetailSerializer, ChatSerializer
 from ..utils.langchain import LangChainHelper
 from ..utils.openaiapi import get_embedding, get_sanitized_reference
 
@@ -49,13 +49,14 @@ def split_text(text):
 )
 class ChatViewSet(BaseModelViewSet):
     queryset = Chat.objects.all()
+    serializer_class = ChatSerializer
     serializer_action_classes = {
         "list": ChatSerializer,
         "retrieve": ChatDetailSerializer,
         "create": ChatSerializer,
         "update": ChatSerializer,
     }
-    permission_classe = (permissions.IsAuthenticated(),)
+    permission_classes = (permissions.IsAuthenticated,)
     lookup_field = "external_id"
 
     def get_queryset(self):
@@ -71,14 +72,12 @@ class ChatViewSet(BaseModelViewSet):
                 {"error": "OpenAI-Key header is required to create a chat"}
             )
 
-        if self.request.user.is_authenticated:
-            serializer.save(user=self.request.user)
-        else:
-            return Response(
-                {"error": "Please login to create a chat"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        serializer.save(user=self.request.user)
         super().perform_create(serializer)
+
+    def get_serializer_class(self):
+        print(super().get_serializer_class())
+        return super().get_serializer_class()
 
     @extend_schema(
         tags=("chats",),
@@ -148,11 +147,9 @@ class ChatViewSet(BaseModelViewSet):
 
         lang_chain_helper = LangChainHelper()
 
-        
-        
         # get all ChatMessages (model) with chat=chat(defined above) and them through langchain
         previous_messages = ChatMessage.objects.filter(chat=chat).order_by("created_at")
-        
+
         # seperate out into string of USER messages and string of BOT messages sperated by newline (you have type in chatMessage model)
         # so output string =
         # "
@@ -161,13 +158,15 @@ class ChatViewSet(BaseModelViewSet):
         # "
         chat_history = ""
         for message in previous_messages:
-            if message.messageType == 1: # type=USER
+            if message.messageType == 1:  # type=USER
                 chat_history += "Nurse: " + message.message + "\n"
-            elif message.messageType == 3: # type=AYUSHMA
+            elif message.messageType == 3:  # type=AYUSHMA
                 chat_history += "Ayushma: " + message.message + "\n"
 
         # get_response in a new variable say "answer" pass chat_history also
-        response = lang_chain_helper.get_response(user_msg=text, reference=reference, chat_history=chat_history)
+        response = lang_chain_helper.get_response(
+            user_msg=text, reference=reference, chat_history=chat_history
+        )
 
         # filter the response
         response = response.replace("Ayushma: ", "")
@@ -176,6 +175,4 @@ class ChatViewSet(BaseModelViewSet):
         ChatMessage.objects.create(message=response, chat=chat, messageType=3)
 
         # return answer in response
-        return Response(
-            {"answer": response}
-        )
+        return Response({"answer": response})
