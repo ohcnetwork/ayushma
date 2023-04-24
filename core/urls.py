@@ -10,6 +10,8 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 
+from ayushma.views.router import login_view
+
 urlpatterns = [
     path(settings.ADMIN_URL, admin.site.urls),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
@@ -31,6 +33,8 @@ urlpatterns += [
         name="redoc",
     ),
     path("", RedirectView.as_view(url="/api/schema/swagger/", permanent=False)),
+    path("__reload__/", include("django_browser_reload.urls")),
+    path("login/", login_view, name="login"),
 ]
 
 if settings.DEBUG:

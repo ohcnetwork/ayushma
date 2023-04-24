@@ -1,0 +1,26 @@
+{% extends "baseauth.html" %}  
+
+{% block inner_content %}
+<form method="post" action="">
+    {% csrf_token %}
+    <label for="username">Username:</label>
+    <input 
+        type="text" 
+        id="username" 
+        name="username" 
+        required
+        class="border-2 border-gray-300 p-2 rounded-lg"
+    >
+    <br>
+    <label for="password">Password:</label>
+    <input 
+        type="password" 
+        id="password" 
+        name="password" 
+        class="border-2 border-gray-300 p-2 rounded-lg"
+        required
+    >
+    <br>
+    <input type="submit" value="Log in">
+</form>
+{% endblock %}

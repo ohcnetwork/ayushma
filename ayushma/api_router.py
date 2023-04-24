@@ -4,6 +4,7 @@ from rest_framework_nested import routers
 
 from .views.auth import APILoginView, APILogoutView
 from .views.chat import ChatViewSet
+from .views.router import login_view
 from .views.users import UserViewSet
 
 app_name = "api"
