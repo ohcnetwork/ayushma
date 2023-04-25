@@ -39,8 +39,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/dev/ref/settings/#databases
 DATABASES = {
     "default": env.db(
-        "DATABASE_URL",
-        default="postgres://kzbspwvk:0jNxfOIxoLxRvKADXD65FCi5iOPRsih5@lucky.db.elephantsql.com/kzbspwvk",
+        "DATABASE_URL", default="postgres://postgres:postgres@localhost:5432/ayushma"
     )
 }
 

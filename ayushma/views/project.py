@@ -1,9 +1,9 @@
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.viewsets import ModelViewSet
 
 from ayushma.models import Project
 from ayushma.serializers.project import ProjectSerializer
+from utils.views.base import BaseModelViewSet
 
 
 @extend_schema_view(
@@ -14,10 +14,11 @@ from ayushma.serializers.project import ProjectSerializer
         description="Get Projects",
     ),
 )
-class ProjectViewSet(ModelViewSet):
+class ProjectViewSet(BaseModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
     permission_classes = (IsAuthenticated,)
+    lookup_field = "external_id"
 
     def get_queryset(self):
         queryset = self.queryset.filter(user=self.request.user)

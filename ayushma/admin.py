@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from djangoql.admin import DjangoQLSearchMixin
 from simple_history.admin import SimpleHistoryAdmin
 
-from .models import Chat, ChatMessage, Project, User
+from .models import Chat, ChatMessage, Document, Project, User
 
 
 @admin.register(User)
@@ -79,4 +79,9 @@ class ChatMessageAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
 
 @admin.register(Project)
 class ProjectAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
+    pass
+
+
+@admin.register(Document)
+class DocumentAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
     pass
