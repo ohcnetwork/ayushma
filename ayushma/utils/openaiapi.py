@@ -53,6 +53,6 @@ def get_sanitized_reference(pinecone_references: List[QueryResponse]) -> str:
 
     for reference in pinecone_references:
         for match in reference.matches:
-            sanitized_reference += match.metadata["text"].replace("\n", " ") + ","
+            sanitized_reference += str(match.metadata["text"]).replace("\n", " ") + ","
 
     return sanitized_reference

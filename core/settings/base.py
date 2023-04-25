@@ -317,10 +317,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 #     "http://localhost:3000",
 # ]
 
-CORS_ALLOW_HEADERS = list(default_headers) + [
-    "sentry-trace",
-    "OpenAI-Key"
-]
+CORS_ALLOW_HEADERS = list(default_headers) + ["sentry-trace", "OpenAI-Key"]
 
 # OpenAI, Pincone
 OPENAI_API_KEY = env("OPENAI_API_KEY", default="")

@@ -13,7 +13,7 @@ from rest_framework.serializers import CharField, IntegerField
 
 from utils.views.base import BaseModelViewSet
 
-from ..models import Chat, ChatMessage
+from ..models import Chat, ChatMessage, Project
 from ..serializers import ChatDetailSerializer, ChatSerializer
 from ..utils.langchain import LangChainHelper
 from ..utils.openaiapi import get_embedding, get_sanitized_reference
@@ -72,12 +72,11 @@ class ChatViewSet(BaseModelViewSet):
                 {"error": "OpenAI-Key header is required to create a chat"}
             )
 
-        serializer.save(user=self.request.user)
-        super().perform_create(serializer)
+        project_id = self.kwargs["project_external_id"]
+        project = Project.objects.get(external_id=project_id)
 
-    def get_serializer_class(self):
-        print(super().get_serializer_class())
-        return super().get_serializer_class()
+        serializer.save(user=self.request.user, project=project)
+        super().perform_create(serializer)
 
     @extend_schema(
         tags=("chats",),
@@ -150,7 +149,7 @@ class ChatViewSet(BaseModelViewSet):
                 similar: QueryResponse = settings.PINECONE_INDEX_INSTANCE.query(
                     vector=embedding,
                     top_k=top_k,
-                    namespace=chat.namespace,
+                    namespace=str(chat.project.external_id),
                     include_metadata=True,
                 )
 
@@ -163,7 +162,9 @@ class ChatViewSet(BaseModelViewSet):
 
         reference = get_sanitized_reference(pinecone_references=pinecone_references)
 
-        lang_chain_helper = LangChainHelper(openai_api_key=openai_key)
+        lang_chain_helper = LangChainHelper(
+            openai_api_key=openai_key, prompt_template=chat.project.prompt
+        )
 
         # get all ChatMessages (model) with chat=chat(defined above) and them through langchain
         previous_messages = ChatMessage.objects.filter(chat=chat).order_by("created_at")
