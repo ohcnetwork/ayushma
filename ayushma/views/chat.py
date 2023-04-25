@@ -146,14 +146,20 @@ class ChatViewSet(BaseModelViewSet):
         pinecone_references: List[QueryResponse] = []
         top_k = self.request.data.get("match_number") or 10
         for embedding in embeddings:
-            similar: QueryResponse = settings.PINECONE_INDEX_INSTANCE.query(
-                vector=embedding,
-                top_k=top_k,
-                namespace=chat.namespace,
-                include_metadata=True,
-            )
+            try:
+                similar: QueryResponse = settings.PINECONE_INDEX_INSTANCE.query(
+                    vector=embedding,
+                    top_k=top_k,
+                    namespace=chat.namespace,
+                    include_metadata=True,
+                )
 
-            pinecone_references.append(similar)
+                pinecone_references.append(similar)
+            except Exception as e:
+                return Response(
+                    {"error": e.__str__()},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         reference = get_sanitized_reference(pinecone_references=pinecone_references)
 
