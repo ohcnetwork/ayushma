@@ -116,19 +116,17 @@ class ChatViewSet(BaseModelViewSet):
         # create a new ChatMessage model with type=USER and message=text and chat=chat
         ChatMessage.objects.create(message=text, chat=chat, messageType=1)
 
-        openai.api_key = settings.OPENAI_API_KEY
-
         num_tokens = num_tokens_from_string(text, "cl100k_base")
 
         embeddings: List[List[List[float]]] = []
 
         if num_tokens < 8192:
-            embeddings.append(get_embedding(text=[text]))
+            embeddings.append(get_embedding(text=[text], openai_api_key=openai_key))
 
         else:
             parts = split_text(text)
             for part in parts:
-                embeddings.append(get_embedding(text=[part]))
+                embeddings.append(get_embedding(text=[part], openai_api_key=openai_key))
 
         # find similar embeddings from pinecone index for each embedding
         pinecone_references: List[QueryResponse] = []
@@ -145,7 +143,7 @@ class ChatViewSet(BaseModelViewSet):
 
         reference = get_sanitized_reference(pinecone_references=pinecone_references)
 
-        lang_chain_helper = LangChainHelper()
+        lang_chain_helper = LangChainHelper(openai_api_key=openai_key)
 
         # get all ChatMessages (model) with chat=chat(defined above) and them through langchain
         previous_messages = ChatMessage.objects.filter(chat=chat).order_by("created_at")

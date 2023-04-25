@@ -1,13 +1,14 @@
 import os
 
+from django.conf import settings
 from langchain import LLMChain, PromptTemplate
 from langchain.chat_models import ChatOpenAI
 
 
 class LangChainHelper:
-    def __init__(self):
+    def __init__(self, openai_api_key=settings.OPENAI_API_KEY):
         # 0 means more deterministic output, 1 means more random output
-        llm = ChatOpenAI(temperature=0)
+        llm = ChatOpenAI(temperature=0, openai_api_key=openai_api_key)
         template = """You are a medical assistant called Ayushma in this conversation between you and a nurse. 
             Your purpose is to assist emergency nurses in ICUs and help them with the patients they are handling. 
             You are given a reference and are only allowed to use the reference material and the conversation history while assisting a nurse and answering their queries. 
