@@ -6,7 +6,7 @@ from utils.models.base import BaseModel
 
 
 class Chat(BaseModel):
-    title = models.CharField(max_length=30)
+    title = models.CharField(max_length=50)
     user = models.ForeignKey(User, on_delete=models.PROTECT)
     namespace = models.CharField(max_length=300)
 

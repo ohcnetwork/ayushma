@@ -121,12 +121,26 @@ class ChatViewSet(BaseModelViewSet):
         embeddings: List[List[List[float]]] = []
 
         if num_tokens < 8192:
-            embeddings.append(get_embedding(text=[text], openai_api_key=openai_key))
+            try:
+                embeddings.append(get_embedding(text=[text], openai_api_key=openai_key))
+            except Exception as e:
+                return Response(
+                    {"error": e.__str__()},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         else:
             parts = split_text(text)
             for part in parts:
-                embeddings.append(get_embedding(text=[part], openai_api_key=openai_key))
+                try:
+                    embeddings.append(
+                        get_embedding(text=[part], openai_api_key=openai_key)
+                    )
+                except Exception as e:
+                    return Response(
+                        {"error": e.__str__()},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
 
         # find similar embeddings from pinecone index for each embedding
         pinecone_references: List[QueryResponse] = []
