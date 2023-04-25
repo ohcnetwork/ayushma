@@ -39,7 +39,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/dev/ref/settings/#databases
 DATABASES = {
     "default": env.db(
-        "DATABASE_URL", default="postgres://postgres:postgres@localhost:5432/ayushma"
+        "DATABASE_URL",
+        default="postgres://kzbspwvk:0jNxfOIxoLxRvKADXD65FCi5iOPRsih5@lucky.db.elephantsql.com/kzbspwvk",
     )
 }
 
@@ -317,10 +318,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 #     "http://localhost:3000",
 # ]
 
-CORS_ALLOW_HEADERS = list(default_headers) + [
-    "sentry-trace",
-    "OpenAI-Key"
-]
+CORS_ALLOW_HEADERS = list(default_headers) + ["sentry-trace", "OpenAI-Key"]
 
 # OpenAI, Pincone
 OPENAI_API_KEY = env("OPENAI_API_KEY", default="")
