@@ -18,11 +18,11 @@ if settings.DEBUG:
 
 
 router.register(r"users", UserViewSet)
-router.register(r"chats", ChatViewSet)
 router.register(r"projects", ProjectViewSet)
 
 projects_router = NestedRouter(router, r"projects", lookup="project")
 projects_router.register(r"documents", DocumentViewSet)
+projects_router.register(r"chats", ChatViewSet)
 
 
 auth_urls = [

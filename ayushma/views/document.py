@@ -1,6 +1,6 @@
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework.parsers import MultiPartParser
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAdminUser
 
 from ayushma.models import Document, Project
 from ayushma.serializers.document import DocumentSerializer, DocumentUpdateSerializer
@@ -25,7 +25,7 @@ class DocumentViewSet(BaseModelViewSet):
         "update": DocumentUpdateSerializer,
         "partial_update": DocumentUpdateSerializer,
     }
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAdminUser,)
     parser_classes = (MultiPartParser,)
     lookup_field = "external_id"
 

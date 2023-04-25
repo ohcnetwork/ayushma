@@ -1,6 +1,7 @@
 from django.db import models
 
 from ayushma.models.enums import ChatMessageType
+from ayushma.models.project import Project
 from ayushma.models.users import User
 from utils.models.base import BaseModel
 
@@ -8,7 +9,7 @@ from utils.models.base import BaseModel
 class Chat(BaseModel):
     title = models.CharField(max_length=50)
     user = models.ForeignKey(User, on_delete=models.PROTECT)
-    namespace = models.CharField(max_length=300)
+    project = models.ForeignKey(Project, on_delete=models.PROTECT)
 
     def __str__(self) -> str:
         return f"{self.title} from {self.user.username}"

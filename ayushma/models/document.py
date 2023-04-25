@@ -8,7 +8,7 @@ from .project import Project
 
 class Document(BaseModel):
     title = models.CharField(max_length=50)
-    description = models.TextField()
+    description = models.TextField(null=True, blank=True)
     file = models.FileField(upload_to="documents/")
     project = models.ForeignKey(Project, on_delete=models.PROTECT)
 
