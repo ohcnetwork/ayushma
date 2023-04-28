@@ -25,7 +25,7 @@ drf-spectacular==0.26.1 # https://github.com/tfranzel/drf-spectacular
 requests
 
 # OpenAI, Pinecone, PyPDF2 and Langchain
-openai==0.27.2
+openai==0.27.5
 pinecone-client==2.2.1
 PyPDF2==3.0.1
 tiktoken==0.3.3
