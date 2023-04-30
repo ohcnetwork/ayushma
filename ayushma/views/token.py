@@ -7,6 +7,7 @@ from django.contrib.auth.password_validation import (
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework import serializers
 from rest_framework import status
 from django.conf import settings
 from rest_framework.decorators import action
@@ -109,6 +110,25 @@ class ResetPasswordViewset(GenericViewSet):
 
     @action(methods=["POST"], detail=False)
     def reset(self, request, *args, **kwargs):
+        def validation(password):
+            try:
+                validate_password(
+                    password,
+                    user=request.user,
+                    password_validators=get_password_validators(
+                        settings.AUTH_PASSWORD_VALIDATORS
+                    ),
+                )
+            except ValidationError as e:
+                raise serializers.ValidationError({"password": e.messages})
+
+        if request.user.is_authenticated:
+            password = request.data.get("password")
+            validation(password)
+            request.user.set_password(password)
+            request.user.save()
+            return Response(status=status.HTTP_202_ACCEPTED)
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -116,25 +136,16 @@ class ResetPasswordViewset(GenericViewSet):
         token = serializer.validated_data.get("token")
 
         # find the token
-        reset_password_token = ResetPasswordToken.objects.get(key=token)
+        try:
+            reset_password_token = ResetPasswordToken.objects.get(key=token)
+        except ResetPasswordToken.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
         if not reset_password_token.user.is_active:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         # set the new password
-        try:
-            validate_password(
-                password,
-                user=reset_password_token.user,
-                password_validators=get_password_validators(
-                    settings.AUTH_PASSWORD_VALIDATORS
-                ),
-            )
-        except ValidationError as e:
-            return Response(
-                status=status.HTTP_400_BAD_REQUEST,
-                data={"password": e.messages},
-            )
-
+        validation(password)
         reset_password_token.user.set_password(password)
         reset_password_token.user.save()
 

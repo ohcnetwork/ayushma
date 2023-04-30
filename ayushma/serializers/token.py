@@ -1,8 +1,5 @@
 from datetime import timedelta
-
 from django.core.exceptions import ValidationError
-from django.http import Http404
-from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
