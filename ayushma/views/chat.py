@@ -3,9 +3,13 @@ from typing import List
 import openai
 import tiktoken
 from django.conf import settings
-from drf_spectacular.utils import extend_schema, extend_schema_view, inline_serializer
+from drf_spectacular.utils import (
+    extend_schema,
+    extend_schema_view,
+    inline_serializer,
+)
 from pinecone import QueryResponse
-from rest_framework import authentication, permissions, status
+from rest_framework import permissions, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
@@ -13,10 +17,10 @@ from rest_framework.serializers import CharField, IntegerField
 
 from utils.views.base import BaseModelViewSet
 
-from ..models import Chat, ChatMessage, Project
-from ..serializers import ChatDetailSerializer, ChatSerializer
-from ..utils.langchain import LangChainHelper
-from ..utils.openaiapi import get_embedding, get_sanitized_reference
+from ayushma.models import Chat, ChatMessage, Project
+from ayushma.serializers import ChatSerializer, ChatDetailSerializer
+from ayushma.utils.langchain import LangChainHelper
+from ayushma.utils.openaiapi import get_embedding, get_sanitized_reference
 
 
 def num_tokens_from_string(string: str, encoding_name: str) -> int:
@@ -51,10 +55,7 @@ class ChatViewSet(BaseModelViewSet):
     queryset = Chat.objects.all()
     serializer_class = ChatSerializer
     serializer_action_classes = {
-        "list": ChatSerializer,
         "retrieve": ChatDetailSerializer,
-        "create": ChatSerializer,
-        "update": ChatSerializer,
     }
     permission_classes = (permissions.IsAuthenticated,)
     lookup_field = "external_id"
@@ -106,7 +107,9 @@ class ChatViewSet(BaseModelViewSet):
         )
         if not openai_key:
             raise ValidationError(
-                {"error": "OpenAI-Key header is required to create a chat or converse"}
+                {
+                    "error": "OpenAI-Key header is required to create a chat or converse"
+                }
             )
         openai.api_key = openai_key
 
@@ -121,7 +124,9 @@ class ChatViewSet(BaseModelViewSet):
 
         if num_tokens < 8192:
             try:
-                embeddings.append(get_embedding(text=[text], openai_api_key=openai_key))
+                embeddings.append(
+                    get_embedding(text=[text], openai_api_key=openai_key)
+                )
             except Exception as e:
                 return Response(
                     {"error": e.__str__()},
@@ -146,11 +151,13 @@ class ChatViewSet(BaseModelViewSet):
         top_k = self.request.data.get("match_number") or 10
         for embedding in embeddings:
             try:
-                similar: QueryResponse = settings.PINECONE_INDEX_INSTANCE.query(
-                    vector=embedding,
-                    top_k=top_k,
-                    namespace=str(chat.project.external_id),
-                    include_metadata=True,
+                similar: QueryResponse = (
+                    settings.PINECONE_INDEX_INSTANCE.query(
+                        vector=embedding,
+                        top_k=top_k,
+                        namespace=str(chat.project.external_id),
+                        include_metadata=True,
+                    )
                 )
 
                 pinecone_references.append(similar)
@@ -160,14 +167,18 @@ class ChatViewSet(BaseModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-        reference = get_sanitized_reference(pinecone_references=pinecone_references)
+        reference = get_sanitized_reference(
+            pinecone_references=pinecone_references
+        )
 
         lang_chain_helper = LangChainHelper(
             openai_api_key=openai_key, prompt_template=chat.project.prompt
         )
 
         # get all ChatMessages (model) with chat=chat(defined above) and them through langchain
-        previous_messages = ChatMessage.objects.filter(chat=chat).order_by("created_at")
+        previous_messages = ChatMessage.objects.filter(chat=chat).order_by(
+            "created_at"
+        )
 
         # seperate out into string of USER messages and string of BOT messages sperated by newline (you have type in chatMessage model)
         # so output string =

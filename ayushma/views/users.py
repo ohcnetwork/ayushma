@@ -1,12 +1,21 @@
-from drf_spectacular.utils import extend_schema, extend_schema_view
-from rest_framework import permissions
+from drf_spectacular.utils import (
+    extend_schema,
+    extend_schema_view,
+    OpenApiResponse,
+)
+from rest_framework import permissions, status
 from rest_framework.decorators import action
+from rest_framework.response import Response
 
 from utils.views.base import BaseModelViewSet
 
-from ..models import User
-from ..permissions import IsSelfOrReadOnly
-from ..serializers import UserDetailSerializer, UserSerializer
+from ayushma.models import User
+from ayushma.permissions import IsSelfOrReadOnly
+from ayushma.serializers.users import (
+    UserCreateSerializer,
+    UserDetailSerializer,
+    UserSerializer,
+)
 
 
 @extend_schema_view(
@@ -22,6 +31,7 @@ class UserViewSet(BaseModelViewSet):
     serializer_class = UserDetailSerializer
     permission_classes = (IsSelfOrReadOnly,)
     serializer_action_classes = {
+        "register": UserCreateSerializer,
         "list": UserSerializer,
     }
     permission_action_classes = {
@@ -36,11 +46,20 @@ class UserViewSet(BaseModelViewSet):
             else self.get_queryset().get(pk=self.request.user.id)
         )
 
-    def destroy(self, *args, **kwargs):
-        raise NotImplementedError
-
-    def create(self, *args, **kwargs):
-        raise NotImplementedError
+    @extend_schema(
+        request=UserCreateSerializer,
+        responses={
+            201: OpenApiResponse(
+                description="User created",
+            )
+        },
+    )
+    @action(detail=False, methods=["POST"])
+    def register(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_201_CREATED)
 
     @action(detail=False)
     def me(self, *args, **kwargs):

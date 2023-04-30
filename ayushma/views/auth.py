@@ -6,7 +6,7 @@ from rest_framework.generics import CreateAPIView, DestroyAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from ..serializers import AuthSerializer
+from ayushma.serializers import AuthSerializer
 
 
 class APILoginView(CreateAPIView):

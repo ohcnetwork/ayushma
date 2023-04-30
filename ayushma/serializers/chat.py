@@ -9,8 +9,19 @@ class ChatSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Chat
-        fields = ("external_id", "title", "created_at", "modified_at", "project")
-        read_only_fields = ("external_id", "created_at", "modified_at", "project")
+        fields = (
+            "external_id",
+            "title",
+            "created_at",
+            "modified_at",
+            "project",
+        )
+        read_only_fields = (
+            "external_id",
+            "created_at",
+            "modified_at",
+            "project",
+        )
 
 
 class ChatMessageSerializer(serializers.ModelSerializer):
@@ -28,7 +39,9 @@ class ChatMessageSerializer(serializers.ModelSerializer):
 
 
 class ChatDetailSerializer(serializers.ModelSerializer):
-    chats = ChatMessageSerializer(many=True, read_only=True, source="chatmessage_set")
+    chats = ChatMessageSerializer(
+        many=True, read_only=True, source="chatmessage_set"
+    )
 
     class Meta:
         model = Chat

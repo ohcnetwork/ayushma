@@ -1,7 +1,6 @@
-from django_countries.serializers import CountryFieldMixin
 from rest_framework import serializers
 
-from ..models import User
+from ayushma.models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -10,6 +9,19 @@ class UserSerializer(serializers.ModelSerializer):
         fields = (
             "username",
             "full_name",
+        )
+
+
+class UserCreateSerializer(serializers.ModelSerializer):
+    full_name = serializers.CharField(required=True)
+
+    class Meta:
+        model = User
+        fields = (
+            "username",
+            "full_name",
+            "password",
+            "email",
         )
 
 
@@ -29,9 +41,6 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "username",
             "allow_key",
         )
-
-    def create(self, validated_data):
-        return User.objects.create_user(**validated_data)
 
     def update(self, instance, validated_data):
         if password := validated_data.pop("password", None):
