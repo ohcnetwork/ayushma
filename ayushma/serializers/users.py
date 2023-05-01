@@ -22,13 +22,9 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "full_name",
             "email",
             "allow_key",
+            "is_staff",
         )
-        read_only_fields = (
-            "external_id",
-            "email",
-            "username",
-            "allow_key",
-        )
+        read_only_fields = ("external_id", "email", "username", "allow_key", "is_staff")
 
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)
