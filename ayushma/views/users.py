@@ -1,14 +1,11 @@
 from drf_spectacular.utils import (
     extend_schema,
     extend_schema_view,
-    OpenApiResponse,
 )
-from rest_framework import permissions, status
+from rest_framework import permissions
 from rest_framework.decorators import action
-from rest_framework.response import Response
 
 from utils.views.base import BaseModelViewSet
-
 from ayushma.models import User
 from ayushma.permissions import IsSelfOrReadOnly
 from ayushma.serializers.users import (
@@ -46,26 +43,13 @@ class UserViewSet(BaseModelViewSet):
             else self.get_queryset().get(pk=self.request.user.id)
         )
 
-    @extend_schema(
-        request=UserCreateSerializer,
-        responses={
-            201: OpenApiResponse(
-                description="User created",
-            )
-        },
-    )
-    @action(detail=False, methods=["POST"])
-    def register(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(status=status.HTTP_201_CREATED)
-
+    @extend_schema(tags=["users"])
     @action(detail=False)
     def me(self, *args, **kwargs):
         """Get current user"""
         return super().retrieve(*args, **kwargs)
 
+    @extend_schema(tags=["users"])
     @me.mapping.patch
     def partial_update_me(self, request, *args, **kwargs):
         """Update current user"""

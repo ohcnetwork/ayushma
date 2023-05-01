@@ -299,8 +299,8 @@ DJANGO_REST_RESET_TOKEN_EXPIRY_TIME = 10
 
 # EMAIL
 # ------------------------------------------------------------------------------
-CURRENT_DOMAIN = "https://ayushma.ohc.network"
-SUPPORT_EMAIL = "info@coronasafe.network"
+CURRENT_DOMAIN = env("CURRENT_DOMAIN", default="http://localhost:8000")
+SUPPORT_EMAIL = env("SUPPORT_EMAIL", default="admin@localhost")
 # https://docs.djangoproject.com/en/dev/ref/settings/#default-from-email
 DEFAULT_FROM_EMAIL = env(
     "DJANGO_DEFAULT_FROM_EMAIL",

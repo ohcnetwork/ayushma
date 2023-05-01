@@ -3,10 +3,10 @@ from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 
 from ayushma.token import RandomStringTokenGenerator
+from utils.models.base import BaseModel
 
 
-class ResetPasswordToken(models.Model):
-    id = models.AutoField(primary_key=True)
+class ResetPasswordToken(BaseModel):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name="password_reset_tokens",

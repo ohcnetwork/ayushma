@@ -4,6 +4,7 @@ from django.contrib.auth.password_validation import (
     validate_password,
     get_password_validators,
 )
+from drf_spectacular.utils import extend_schema
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -39,12 +40,11 @@ class ResetPasswordViewset(GenericViewSet):
     def get_serializer_class(self):
         if self.action == "forgot":
             return ResetPasswordUserSerializer
-        elif self.action == "reset":
-            return PasswordTokenSerializer
         elif self.action == "verify":
             return ResetTokenSerializer
         return super().get_serializer_class()
 
+    @extend_schema(tags=["auth"])
     @action(detail=False, methods=["POST"], url_name="forgot-password")
     def forgot(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -88,6 +88,7 @@ class ResetPasswordViewset(GenericViewSet):
 
         return Response(status=status.HTTP_200_OK)
 
+    @extend_schema(tags=["auth"])
     @action(methods=["POST"], detail=False)
     def verify(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -108,6 +109,7 @@ class ResetPasswordViewset(GenericViewSet):
             data={"token": "Token is verified"},
         )
 
+    @extend_schema(tags=["auth"])
     @action(methods=["POST"], detail=False)
     def reset(self, request, *args, **kwargs):
         def validation(password):
