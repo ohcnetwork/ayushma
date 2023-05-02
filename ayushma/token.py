@@ -1,10 +1,12 @@
-import os
-import binascii
+import random
+import string
 
 
 class RandomStringTokenGenerator:
-    def __init__(self, length=20):
+    def __init__(self, length=6):
         self.length = length
 
     def generate(self):
-        return binascii.hexlify(os.urandom(self.length)).decode()
+        return "".join(
+            [random.choice(string.digits) for _ in range(self.length)]
+        )

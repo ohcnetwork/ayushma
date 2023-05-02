@@ -12,10 +12,10 @@ def password_reset_token_created(
 ):
     context = {
         "username": reset_password_token.user.username,
-        "reset_password_url": "{}/reset-password?token={}&username={}".format(
+        "reset_password_url": "{}/reset-password?token={}&user_id={}".format(
             settings.CURRENT_DOMAIN,
             reset_password_token.key,
-            reset_password_token.user.username,
+            reset_password_token.user.external_id,
         ),
         "support_email": settings.SUPPORT_EMAIL,
     }

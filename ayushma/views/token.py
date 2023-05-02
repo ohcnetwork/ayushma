@@ -49,7 +49,7 @@ class ResetPasswordViewset(GenericViewSet):
     def forgot(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        username = serializer.validated_data.get("username")
+        email = serializer.validated_data.get("email")
 
         # deleting all the previous expiry tokens
         password_reset_token_validation_time = (
@@ -61,15 +61,18 @@ class ResetPasswordViewset(GenericViewSet):
 
         ResetPasswordToken.objects.filter(created_at__lte=expiry_time).delete()
 
+        print("email", email)
         # checking if the user is active or not
         try:
-            user = User.objects.get(username=username)
+            user = User.objects.get(email=email)
         except User.DoesNotExist:
+            print("user does not exist")
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         if not user.is_active:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
+        print("user", user)
         # creating a new token
         token = None
         if user.password_reset_tokens.all().count() > 0:
@@ -95,18 +98,24 @@ class ResetPasswordViewset(GenericViewSet):
         serializer.is_valid(raise_exception=True)
 
         token = serializer.validated_data.get("token")
-        username = serializer.validated_data.get("username")
+        external_id = serializer.validated_data.get("user_id")
 
         if not ResetPasswordToken.objects.filter(
-            key=token, user__username=username
+            key=token, user__external_id=external_id
         ).exists():
             return Response(
                 status=status.HTTP_400_BAD_REQUEST,
                 data={"token": "Invalid token"},
             )
+
+        user = User.objects.get(external_id=external_id)
         return Response(
             status=status.HTTP_202_ACCEPTED,
-            data={"token": "Token is verified"},
+            data={
+                "email": user.email,
+                "username": user.username,
+                "full_name": user.full_name,
+            },
         )
 
     @extend_schema(tags=["auth"])
@@ -125,6 +134,7 @@ class ResetPasswordViewset(GenericViewSet):
                 raise serializers.ValidationError({"password": e.messages})
 
         if request.user.is_authenticated:
+            print("user is authenticated")
             password = request.data.get("password")
             validation(password)
             request.user.set_password(password)
@@ -136,6 +146,7 @@ class ResetPasswordViewset(GenericViewSet):
 
         password = serializer.validated_data.get("password")
         token = serializer.validated_data.get("token")
+        external_id = serializer.validated_data.get("user_id")
 
         # find the token
         try:
@@ -143,17 +154,16 @@ class ResetPasswordViewset(GenericViewSet):
         except ResetPasswordToken.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        if not reset_password_token.user.is_active:
+        user = User.objects.get(external_id=external_id)
+        if not user.is_active:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         # set the new password
         validation(password)
-        reset_password_token.user.set_password(password)
-        reset_password_token.user.save()
+        user.set_password(password)
+        user.save()
 
         # Delete all password reset tokens for this user
-        ResetPasswordToken.objects.filter(
-            user=reset_password_token.user
-        ).delete()
+        ResetPasswordToken.objects.filter(user=user).delete()
 
         return Response(status=status.HTTP_202_ACCEPTED)

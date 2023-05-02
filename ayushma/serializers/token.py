@@ -53,12 +53,13 @@ class PasswordValidateMixin:
 class PasswordTokenSerializer(PasswordValidateMixin, serializers.Serializer):
     password = serializers.CharField()
     token = serializers.CharField()
+    user_id = serializers.UUIDField()
 
 
 class ResetTokenSerializer(PasswordValidateMixin, serializers.Serializer):
     token = serializers.CharField()
-    username = serializers.CharField()
+    user_id = serializers.UUIDField()
 
 
 class ResetPasswordUserSerializer(serializers.Serializer):
-    username = serializers.CharField()
+    email = serializers.EmailField()
