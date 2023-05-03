@@ -1,25 +1,25 @@
 from datetime import timedelta
-from django.utils import timezone
+
+from django.conf import settings
 from django.contrib.auth.password_validation import (
-    validate_password,
     get_password_validators,
+    validate_password,
 )
+from django.core.exceptions import ValidationError
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema
-from rest_framework.viewsets import GenericViewSet
+from rest_framework import serializers, status
+from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework import serializers
-from rest_framework import status
-from django.conf import settings
-from rest_framework.decorators import action
-from django.core.exceptions import ValidationError
+from rest_framework.viewsets import GenericViewSet
 
 from ayushma.models.token import ResetPasswordToken
 from ayushma.models.users import User
 from ayushma.serializers.token import (
     PasswordTokenSerializer,
-    ResetTokenSerializer,
     ResetPasswordUserSerializer,
+    ResetTokenSerializer,
 )
 from ayushma.signals.token import reset_password_token_created
 
@@ -98,17 +98,15 @@ class ResetPasswordViewset(GenericViewSet):
         serializer.is_valid(raise_exception=True)
 
         token = serializer.validated_data.get("token")
-        external_id = serializer.validated_data.get("user_id")
+        email = serializer.validated_data.get("email")
 
-        if not ResetPasswordToken.objects.filter(
-            key=token, user__external_id=external_id
-        ).exists():
+        if not ResetPasswordToken.objects.filter(key=token, user__email=email).exists():
             return Response(
                 status=status.HTTP_400_BAD_REQUEST,
                 data={"token": "Invalid token"},
             )
 
-        user = User.objects.get(external_id=external_id)
+        user = User.objects.get(email=email)
         return Response(
             status=status.HTTP_202_ACCEPTED,
             data={
@@ -146,7 +144,7 @@ class ResetPasswordViewset(GenericViewSet):
 
         password = serializer.validated_data.get("password")
         token = serializer.validated_data.get("token")
-        external_id = serializer.validated_data.get("user_id")
+        email = serializer.validated_data.get("email")
 
         # find the token
         try:
@@ -154,7 +152,7 @@ class ResetPasswordViewset(GenericViewSet):
         except ResetPasswordToken.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        user = User.objects.get(external_id=external_id)
+        user = User.objects.get(email=email)
         if not user.is_active:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 

@@ -1,10 +1,10 @@
 from datetime import timedelta
+
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from rest_framework import serializers
-from rest_framework import status
-from django.conf import settings
+from rest_framework import serializers, status
 
 from ayushma.models.token import ResetPasswordToken
 
@@ -53,12 +53,12 @@ class PasswordValidateMixin:
 class PasswordTokenSerializer(PasswordValidateMixin, serializers.Serializer):
     password = serializers.CharField()
     token = serializers.CharField()
-    user_id = serializers.UUIDField()
+    email = serializers.EmailField()
 
 
 class ResetTokenSerializer(PasswordValidateMixin, serializers.Serializer):
     token = serializers.CharField()
-    user_id = serializers.UUIDField()
+    email = serializers.EmailField()
 
 
 class ResetPasswordUserSerializer(serializers.Serializer):
