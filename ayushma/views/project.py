@@ -25,8 +25,10 @@ class ProjectViewSet(BaseModelViewSet):
     lookup_field = "external_id"
 
     def get_queryset(self):
+        queryset = super().get_queryset()
         if self.action == "list":
-            queryset = self.queryset.filter(is_default=True)
+            if not self.request.user.is_staff:
+                queryset = self.queryset.filter(is_default=True)
         return queryset
 
     def perform_create(self, serializer):
