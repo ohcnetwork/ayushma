@@ -1,36 +1,58 @@
-from drf_spectacular.utils import extend_schema
-from rest_framework import permissions, status
+from drf_spectacular.utils import (
+    extend_schema,
+    OpenApiResponse,
+)
+from rest_framework import status
+from rest_framework.viewsets import GenericViewSet
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ParseError
-from rest_framework.generics import CreateAPIView, DestroyAPIView
-from rest_framework.request import Request
-from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
 
-from ..serializers import AuthSerializer
+from ayushma.serializers.auth import AuthSerializer
+from ayushma.serializers.users import (
+    UserCreateSerializer,
+)
 
 
-class APILoginView(CreateAPIView):
+class AuthViewSet(GenericViewSet):
     serializer_class = AuthSerializer
-    permission_classes = (permissions.AllowAny,)
-    authentication_classes = ()
+    permission_classes = (AllowAny,)
+
+    def get_serializer_class(self):
+        if self.action == "register":
+            return UserCreateSerializer
+        return super().get_serializer_class()
 
     @extend_schema(
-        tags=("auth",),
-        operation_id="api-login",
+        request=UserCreateSerializer,
+        responses={
+            201: OpenApiResponse(
+                description="User created",
+            )
+        },
+        tags=["auth"],
     )
-    def post(self, request: Request):
-        """Get auth token"""
+    @action(detail=False, methods=["POST"])
+    def register(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_201_CREATED)
+
+    @extend_schema(tags=["auth"])
+    @action(detail=False, methods=["POST"])
+    def login(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
         token, _ = Token.objects.get_or_create(user=user)
         return Response({"token": token.key})
 
-
-class APILogoutView(DestroyAPIView):
-    @extend_schema(tags=("auth",), operation_id="api-logout", responses=None)
-    def delete(self, request: Request):
-        """Destroy auth token"""
+    @extend_schema(tags=["auth"])
+    @action(detail=False, methods=["DELETE"])
+    def logout(self, request, *args, **kwargs):
         if auth_token := request.auth:
             Token.objects.filter(key=auth_token).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)

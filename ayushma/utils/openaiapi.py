@@ -6,7 +6,9 @@ from pinecone import QueryResponse
 
 
 def get_embedding(
-    text: List[str], model: str = "text-embedding-ada-002"
+    text: List[str],
+    model: str = "text-embedding-ada-002",
+    openai_api_key: str = settings.OPENAI_API_KEY,
 ) -> List[List[float]]:
     """
     Generates embeddings for the given list of texts using the OpenAI API.
@@ -27,7 +29,7 @@ def get_embedding(
         [[-0.123, 0.456, 0.789, ...], [0.123, -0.456, 0.789, ...]]
 
     """
-    openai.api_key = settings.OPENAI_API_KEY
+    openai.api_key = openai_api_key
     res = openai.Embedding.create(input=text, model=model)
     return [record["embedding"] for record in res["data"]]
 
@@ -51,6 +53,6 @@ def get_sanitized_reference(pinecone_references: List[QueryResponse]) -> str:
 
     for reference in pinecone_references:
         for match in reference.matches:
-            sanitized_reference += match.metadata["text"].replace("\n", " ") + ","
+            sanitized_reference += str(match.metadata["text"]).replace("\n", " ") + ","
 
     return sanitized_reference

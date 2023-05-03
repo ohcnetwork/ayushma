@@ -39,7 +39,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/dev/ref/settings/#databases
 DATABASES = {
     "default": env.db(
-        "DATABASE_URL", default="postgres://postgres:postgres@localhost:5432/ayushma"
+        "DATABASE_URL",
+        default="postgres://postgres:postgres@localhost:5432/ayushma",
     )
 }
 
@@ -113,8 +114,12 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
     },
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
-    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"
+    },
 ]
 
 # MIDDLEWARE
@@ -237,7 +242,8 @@ LOGGING = {
 CELERY_TIMEZONE = TIME_ZONE
 # http://docs.celeryproject.org/en/latest/userguide/configuration.html#std:setting-broker_url
 CELERY_BROKER_URL = env(
-    "CELERY_BROKER_URL", default=env("REDIS_URL", default="redis://localhost:6379/0")
+    "CELERY_BROKER_URL",
+    default=env("REDIS_URL", default="redis://localhost:6379/0"),
 )
 # http://docs.celeryproject.org/en/latest/userguide/configuration.html#std:setting-result_backend
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL
@@ -258,7 +264,9 @@ CELERY_TASK_SOFT_TIME_LIMIT = 60
 # -------------------------------------------------------------------------------
 # django-rest-framework - https://www.django-rest-framework.org/api-guide/settings/
 REST_FRAMEWORK = {
-    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.IsAuthenticated",
+    ),
     "DEFAULT_PAGINATION_CLASS": "utils.pagination.CustomLimitOffsetPagination",
     "DEFAULT_FILTER_BACKENDS": (
         "django_filters.rest_framework.DjangoFilterBackend",
@@ -284,8 +292,15 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT License",
     },
 }
+
+# PASSWORD RESET
+# ------------------------------------------------------------------------------
+DJANGO_REST_RESET_TOKEN_EXPIRY_TIME = 10
+
 # EMAIL
 # ------------------------------------------------------------------------------
+CURRENT_DOMAIN = env("CURRENT_DOMAIN", default="http://localhost:8000")
+SUPPORT_EMAIL = env("SUPPORT_EMAIL", default="admin@localhost")
 # https://docs.djangoproject.com/en/dev/ref/settings/#default-from-email
 DEFAULT_FROM_EMAIL = env(
     "DJANGO_DEFAULT_FROM_EMAIL",
@@ -317,9 +332,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 #     "http://localhost:3000",
 # ]
 
-CORS_ALLOW_HEADERS = list(default_headers) + [
-    "sentry-trace",
-]
+CORS_ALLOW_HEADERS = list(default_headers) + ["sentry-trace", "OpenAI-Key"]
 
 # OpenAI, Pincone
 OPENAI_API_KEY = env("OPENAI_API_KEY", default="")
