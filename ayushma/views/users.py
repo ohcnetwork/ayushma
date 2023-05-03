@@ -14,6 +14,8 @@ from ayushma.serializers.users import (
     UserSerializer,
 )
 
+class IsSupervisor(permissions.BasePermission):
+    
 
 @extend_schema_view(
     destroy=extend_schema(exclude=True),

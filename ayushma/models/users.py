@@ -49,3 +49,36 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ["email", "first_name"]
 
     objects = UserManager()
+
+    @staticmethod
+    def has_read_permission(request):
+        return True
+
+    def has_object_read_permission(self, request):
+        return request.user.is_superuser or self == request.user or (int(request.data["user_type"]) == 3)
+
+    @staticmethod
+    def has_write_permission(request):
+        try:
+            return int(request.data["user_type"]) == 3
+        except KeyError:
+            # No user_type passed, the view shall raise a 400
+            return True
+
+    def has_object_write_permission(self, request):
+        return self.has_object_read_permission(self, request)
+
+    def has_object_update_permission(self, request):
+        return self.has_object_read_permission(self, request)
+
+    @staticmethod
+    def has_add_user_permission(request):
+        return request.user.is_superuser or int(request.data["user_type"]) == 3
+
+    @staticmethod
+    def check_username_exists(username):
+        return User.objects.get_entire_queryset().filter(username=username).exists()
+
+    def delete(self, *args, **kwargs):
+        self.deleted = True
+        self.save()
