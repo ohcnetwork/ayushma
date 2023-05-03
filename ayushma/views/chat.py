@@ -139,7 +139,7 @@ class ChatViewSet(BaseModelViewSet):
 
         # find similar embeddings from pinecone index for each embedding
         pinecone_references: List[QueryResponse] = []
-        top_k = self.request.data.get("match_number") or 10
+        top_k = self.request.data.get("match_number") or 100
         for embedding in embeddings:
             try:
                 similar: QueryResponse = settings.PINECONE_INDEX_INSTANCE.query(
