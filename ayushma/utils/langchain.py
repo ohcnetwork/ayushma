@@ -55,8 +55,6 @@ class LangChainHelper:
 
     def get_response(self, user_msg, reference, chat_history):
 
-        print("chat_history", chat_history)
-        
         return self.chain.predict(
             user_msg=f"Nurse: {user_msg}",
             reference=reference,
