@@ -12,5 +12,6 @@ class ProjectSerializer(serializers.ModelSerializer):
             "created_at",
             "modified_at",
             "description",
+            "is_default",
         )
         read_only_fields = ("external_id", "created_at", "modified_at")

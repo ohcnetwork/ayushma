@@ -17,14 +17,22 @@ class LangChainHelper:
         # 0 means more deterministic output, 1 means more random output
         llm = ChatOpenAI(temperature=0.3, openai_api_key=openai_api_key)
 
-        template = """You are a medical assistant called Ayushma in this conversation between you and a nurse. 
-            Your purpose is to assist emergency nurses in ICUs and help them with the patients they are handling. 
-            You are given a reference and are only allowed to use the reference material and the conversation history while assisting a nurse and answering their queries. 
-            You are also given the conversation history at the end with the nurse for better understanding of the query.
-            Output Format:
-            Ayushma: <enter_Ayushma_reponse_here>
+        template = """You are a medical assistant called Ayushma in this conversation and you must follow the given algorithm strictly to assist emergency nurses in ICUs.
+            Algorithm:
+            references = <{reference}>
             
-            references: [{reference}]        
+            if "references" is not empty":
+            (
+            use_your_knowledge = <analyze "chat history with nurse" and "query" and generate an approriate result for the "query">
+            result = <analyze "references", "chat_history", "query" and "use_your_knowledge" to give the most complete and most accurate answer to solve the nurse's query related to medical emergencies>
+            )
+            else
+            (
+            result = <"Sorry I am not able to find anything related to your query in my database">
+            )
+            
+            Output Format(should contain only one line):
+            Ayushma: <enter_result_here>       
             """
         if prompt_template:
             template = prompt_template
@@ -54,7 +62,6 @@ class LangChainHelper:
         self.chain = LLMChain(llm=llm, prompt=chat_prompt, verbose=True)
 
     def get_response(self, user_msg, reference, chat_history):
-
         return self.chain.predict(
             user_msg=f"Nurse: {user_msg}",
             reference=reference,
