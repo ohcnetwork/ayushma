@@ -3,11 +3,8 @@ from typing import List
 import openai
 import tiktoken
 from django.conf import settings
-from drf_spectacular.utils import (
-    extend_schema,
-    extend_schema_view,
-    inline_serializer,
-)
+from drf_spectacular.utils import extend_schema, extend_schema_view, inline_serializer
+from langchain.schema import AIMessage, HumanMessage
 from pinecone import QueryResponse
 from rest_framework import permissions, status
 from rest_framework.decorators import action
@@ -15,12 +12,11 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.serializers import CharField, IntegerField
 
-from utils.views.base import BaseModelViewSet
-
 from ayushma.models import Chat, ChatMessage, Project
-from ayushma.serializers import ChatSerializer, ChatDetailSerializer
+from ayushma.serializers import ChatDetailSerializer, ChatSerializer
 from ayushma.utils.langchain import LangChainHelper
 from ayushma.utils.openaiapi import get_embedding, get_sanitized_reference
+from utils.views.base import BaseModelViewSet
 
 
 def num_tokens_from_string(string: str, encoding_name: str) -> int:
@@ -107,16 +103,13 @@ class ChatViewSet(BaseModelViewSet):
         )
         if not openai_key:
             raise ValidationError(
-                {
-                    "error": "OpenAI-Key header is required to create a chat or converse"
-                }
+                {"error": "OpenAI-Key header is required to create a chat or converse"}
             )
         openai.api_key = openai_key
 
         text = text.replace("\n", " ")
 
-        # create a new ChatMessage model with type=USER and message=text and chat=chat
-        ChatMessage.objects.create(message=text, chat=chat, messageType=1)
+        nurse_query = ChatMessage.objects.create(message=text, chat=chat, messageType=1)
 
         num_tokens = num_tokens_from_string(text, "cl100k_base")
 
@@ -124,9 +117,7 @@ class ChatViewSet(BaseModelViewSet):
 
         if num_tokens < 8192:
             try:
-                embeddings.append(
-                    get_embedding(text=[text], openai_api_key=openai_key)
-                )
+                embeddings.append(get_embedding(text=[text], openai_api_key=openai_key))
             except Exception as e:
                 return Response(
                     {"error": e.__str__()},
@@ -151,13 +142,11 @@ class ChatViewSet(BaseModelViewSet):
         top_k = self.request.data.get("match_number") or 10
         for embedding in embeddings:
             try:
-                similar: QueryResponse = (
-                    settings.PINECONE_INDEX_INSTANCE.query(
-                        vector=embedding,
-                        top_k=top_k,
-                        namespace=str(chat.project.external_id),
-                        include_metadata=True,
-                    )
+                similar: QueryResponse = settings.PINECONE_INDEX_INSTANCE.query(
+                    vector=embedding,
+                    top_k=top_k,
+                    namespace=str(chat.project.external_id),
+                    include_metadata=True,
                 )
 
                 pinecone_references.append(similar)
@@ -167,42 +156,32 @@ class ChatViewSet(BaseModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-        reference = get_sanitized_reference(
-            pinecone_references=pinecone_references
-        )
+        reference = get_sanitized_reference(pinecone_references=pinecone_references)
 
         lang_chain_helper = LangChainHelper(
             openai_api_key=openai_key, prompt_template=chat.project.prompt
         )
 
-        # get all ChatMessages (model) with chat=chat(defined above) and them through langchain
-        previous_messages = ChatMessage.objects.filter(chat=chat).order_by(
-            "created_at"
+        # excluding the latest query since it is not a history
+        previous_messages = (
+            ChatMessage.objects.filter(chat=chat)
+            .exclude(id=nurse_query.id)
+            .order_by("created_at")
         )
 
-        # seperate out into string of USER messages and string of BOT messages sperated by newline (you have type in chatMessage model)
-        # so output string =
-        # "
-        # Nurse: "Hello" (for type = USER)
-        # AYUSHMA: "Hi" (for type = AYUSHMA)
-        # "
-        chat_history = ""
+        chat_history = []
         for message in previous_messages:
             if message.messageType == 1:  # type=USER
-                chat_history += "Nurse: " + message.message + "\n"
+                chat_history.append(HumanMessage(content=f"Nurse: {message.message}"))
             elif message.messageType == 3:  # type=AYUSHMA
-                chat_history += "Ayushma: " + message.message + "\n"
+                chat_history.append(AIMessage(content=f"Ayushma: {message.message}"))
 
-        # get_response in a new variable say "answer" pass chat_history also
         response = lang_chain_helper.get_response(
             user_msg=text, reference=reference, chat_history=chat_history
         )
 
-        # filter the response
         response = response.replace("Ayushma: ", "")
 
-        # create a new ChatMessage model with type=AYUSHMA and message=answer and chat=chat
         ChatMessage.objects.create(message=response, chat=chat, messageType=3)
 
-        # return answer in response
         return Response({"answer": response})
