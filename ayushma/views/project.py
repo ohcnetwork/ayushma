@@ -18,16 +18,16 @@ class ProjectViewSet(BaseModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
     permission_classes = (IsAdminUser,)
-    serializer_action_classes = {
-        "create": ProjectUpdateSerializer,
-        "update": ProjectUpdateSerializer,
-        "partial_update": ProjectUpdateSerializer,
-    }
     permission_action_classes = {
         "list": (IsAuthenticated(),),
         "retrieve": (IsAuthenticated(),),
     }
     lookup_field = "external_id"
+
+    def get_serializer_class(self):
+        if self.request.user.is_staff:
+            return ProjectUpdateSerializer
+        return super().get_serializer_class()
 
     def get_queryset(self):
         queryset = super().get_queryset()
