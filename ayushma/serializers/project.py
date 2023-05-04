@@ -15,3 +15,9 @@ class ProjectSerializer(serializers.ModelSerializer):
             "is_default",
         )
         read_only_fields = ("external_id", "created_at", "modified_at")
+
+
+class ProjectUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Project
+        fields = ProjectSerializer.Meta.fields + ("prompt",)

@@ -2,7 +2,7 @@ from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 
 from ayushma.models import Project
-from ayushma.serializers.project import ProjectSerializer
+from ayushma.serializers.project import ProjectSerializer, ProjectUpdateSerializer
 from utils.views.base import BaseModelViewSet
 
 
@@ -18,6 +18,11 @@ class ProjectViewSet(BaseModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
     permission_classes = (IsAdminUser,)
+    serializer_action_classes = {
+        "create": ProjectUpdateSerializer,
+        "update": ProjectUpdateSerializer,
+        "partial_update": ProjectUpdateSerializer,
+    }
     permission_action_classes = {
         "list": (IsAuthenticated(),),
         "retrieve": (IsAuthenticated(),),
