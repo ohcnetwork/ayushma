@@ -57,7 +57,10 @@ class ChatViewSet(BaseModelViewSet):
     lookup_field = "external_id"
 
     def get_queryset(self):
-        queryset = self.queryset.filter(user=self.request.user)
+        project_id = self.kwargs["project_external_id"]
+        queryset = self.queryset.filter(
+            user=self.request.user, project__external_id=project_id
+        )
         return queryset
 
     def perform_create(self, serializer):
