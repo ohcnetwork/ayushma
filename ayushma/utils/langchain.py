@@ -62,6 +62,11 @@ class LangChainHelper:
         self.chain = LLMChain(llm=llm, prompt=chat_prompt, verbose=True)
 
     def get_response(self, user_msg, reference, chat_history):
+        chat_history.append(
+            HumanMessage(
+                content="@system remeber only answer the question if it can be answered with the given references"
+            )
+        )
         return self.chain.predict(
             user_msg=f"Nurse: {user_msg}",
             reference=reference,
