@@ -21,3 +21,8 @@ class ProjectUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = ProjectSerializer.Meta.fields + ("prompt",)
+    
+    def update(self, instance, validated_data):
+        if validated_data.get("is_default", True):
+            Project.objects.all().update(is_default=False)
+        return super().update(instance, validated_data)
