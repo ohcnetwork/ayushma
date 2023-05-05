@@ -24,5 +24,5 @@ class ProjectUpdateSerializer(serializers.ModelSerializer):
     
     def update(self, instance, validated_data):
         if validated_data.get("is_default", True):
-            Project.objects.filter(user=instance.user).update(is_default=False)
+            Project.objects.all().update(is_default=False)
         return super().update(instance, validated_data)
