@@ -39,5 +39,11 @@ class DocumentViewSet(BaseModelViewSet):
         external_id = self.kwargs["project_external_id"]
         project = Project.objects.get(external_id=external_id)
         document = serializer.save(project=project)
-        # upsert file
-        upsert(filepath=str(document.file), external_id=external_id)
+        if document.document_type == Document.FILE:
+            upsert(external_id=external_id, filepath=str(document.file))
+        elif document.document_type == Document.URL:
+            upsert(external_id=external_id, url=document.text_content)
+        elif document.document_type == Document.TEXT:
+            upsert(external_id=external_id, text=document.text_content)
+        else:
+            raise ValueError("Invalid document type.")
