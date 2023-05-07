@@ -4,8 +4,11 @@ from rest_framework.permissions import IsAdminUser
 
 from ayushma.models import Document, Project
 from ayushma.serializers.document import DocumentSerializer, DocumentUpdateSerializer
-from ayushma.utils.upsert import upsert
+from ayushma.utils.upsert import upsert, deleteNamespace
 from utils.views.base import BaseModelViewSet
+
+from rest_framework import status
+from rest_framework.response import Response
 
 
 @extend_schema_view(
@@ -41,3 +44,9 @@ class DocumentViewSet(BaseModelViewSet):
         document = serializer.save(project=project)
         # upsert file
         upsert(filepath=str(document.file), external_id=external_id)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        deleteNamespace(instance.external_id)
+        return Response(status=status.HTTP_204_NO_CONTENT)

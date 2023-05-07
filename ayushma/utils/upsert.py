@@ -63,3 +63,10 @@ def upsert(filepath: str, external_id: str):
         )  # upsert to Pinecone
 
     print(f"Finished upserting to Pinecone index")
+
+def deleteNamespace(namespace: str):
+    pinecone.init(
+        api_key=settings.PINECONE_API_KEY, environment=settings.PINECONE_ENVIRONMENT
+    )
+    pinecone_index = pinecone.Index(index_name=settings.PINECONE_INDEX)
+    pinecone_index.delete(delete_all=True, namespace=namespace)
