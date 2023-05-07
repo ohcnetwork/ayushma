@@ -14,9 +14,6 @@ from ayushma.serializers.users import (
     UserSerializer,
 )
 
-class IsSupervisor(permissions.BasePermission):
-    
-
 @extend_schema_view(
     destroy=extend_schema(exclude=True),
     partial_update=extend_schema(exclude=True),
@@ -28,7 +25,7 @@ class IsSupervisor(permissions.BasePermission):
 class UserViewSet(BaseModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserDetailSerializer
-    permission_classes = (IsSelfOrReadOnly,)
+    permission_classes = (IsSelfOrReadOnly, permissions.IsAdminUser)
     serializer_action_classes = {
         "register": UserCreateSerializer,
         "list": UserSerializer,

@@ -55,21 +55,21 @@ class User(AbstractUser):
         return True
 
     def has_object_read_permission(self, request):
-        return request.user.is_superuser or self == request.user or (int(request.data["user_type"]) == 3)
+        return request.user.is_superuser or self == request.user or (int(request.data["user_type"]) > 1)
 
     @staticmethod
     def has_write_permission(request):
         try:
-            return int(request.data["user_type"]) == 3
+            return int(request.data["user_type"]) == 3 or request.user.is_staff
         except KeyError:
             # No user_type passed, the view shall raise a 400
             return True
 
     def has_object_write_permission(self, request):
-        return self.has_object_read_permission(self, request)
+        return self.has_write_permission(self, request)
 
     def has_object_update_permission(self, request):
-        return self.has_object_read_permission(self, request)
+        return self.has_write_permission(self, request)
 
     @staticmethod
     def has_add_user_permission(request):
