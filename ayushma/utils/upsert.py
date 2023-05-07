@@ -70,3 +70,4 @@ def deleteNamespace(namespace: str):
     )
     pinecone_index = pinecone.Index(index_name=settings.PINECONE_INDEX)
     pinecone_index.delete(delete_all=True, namespace=namespace)
+    

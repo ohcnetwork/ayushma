@@ -45,6 +45,7 @@ class DocumentViewSet(BaseModelViewSet):
         # upsert file
         upsert(filepath=str(document.file), external_id=external_id)
 
+    '''If an admin or a superuser deletes a document, it's vectors are deleted from the pinecone database'''
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         self.perform_destroy(instance)
