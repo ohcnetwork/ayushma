@@ -48,5 +48,6 @@ class DocumentViewSet(BaseModelViewSet):
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         self.perform_destroy(instance)
-        deleteNamespace(instance.external_id)
+        if request.user.is_staff or int(request.data['user_type'] == 3):
+            deleteNamespace(instance.external_id)
         return Response(status=status.HTTP_204_NO_CONTENT)
