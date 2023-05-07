@@ -14,6 +14,7 @@ from ayushma.serializers.users import (
     UserSerializer,
 )
 
+
 @extend_schema_view(
     destroy=extend_schema(exclude=True),
     partial_update=extend_schema(exclude=True),
