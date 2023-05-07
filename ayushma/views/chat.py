@@ -1,9 +1,7 @@
-from typing import List
-
 import openai
 from django.conf import settings
+from django.http import StreamingHttpResponse
 from drf_spectacular.utils import extend_schema, extend_schema_view, inline_serializer
-from pinecone import QueryResponse
 from rest_framework import permissions, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -11,9 +9,9 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework.serializers import CharField, IntegerField
 
-from ayushma.models import Chat, ChatMessage, Project
+from ayushma.models import Chat, Project
 from ayushma.serializers import ChatDetailSerializer, ChatSerializer
-from ayushma.utils.openaiapi import converse, get_embedding, get_sanitized_reference
+from ayushma.utils.openaiapi import converse
 from utils.views.base import BaseModelViewSet
 
 
@@ -137,22 +135,26 @@ class ChatViewSet(BaseModelViewSet):
                 {"error": "Please provide text to generate embedding"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
         text = self.request.data.get("text")
-
         chat = Chat.objects.get(external_id=kwarg["external_id"])
-
         openai_key = self.request.headers.get("OpenAI-Key") or (
             self.request.user.allow_key and settings.OPENAI_API_KEY
         )
 
+        if not openai_key:
+            return Response(
+                {"error": "OpenAI-Key header is required to create a chat"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         match_number = self.request.data.get("match_number") or 100
+        response = StreamingHttpResponse(content_type="text/event-stream")
 
         try:
-            response = converse(
+            response.streaming_content = converse(
                 text=text, openai_key=openai_key, chat=chat, match_number=match_number
             )
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({"answer": response})
+        return response
