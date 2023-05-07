@@ -1,42 +1,20 @@
 from typing import List
 
 import openai
-import tiktoken
 from django.conf import settings
 from drf_spectacular.utils import extend_schema, extend_schema_view, inline_serializer
 from pinecone import QueryResponse
-from rest_framework import authentication, permissions, status
+from rest_framework import permissions, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
+from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework.serializers import CharField, IntegerField
 
+from ayushma.models import Chat, ChatMessage, Project
+from ayushma.serializers import ChatDetailSerializer, ChatSerializer
+from ayushma.utils.openaiapi import converse, get_embedding, get_sanitized_reference
 from utils.views.base import BaseModelViewSet
-
-from ..models import Chat, ChatMessage
-from ..serializers import ChatSerializer, ChatDetailSerializer
-from ..utils.langchain import LangChainHelper
-from ..utils.openaiapi import get_embedding, get_sanitized_reference
-
-
-def num_tokens_from_string(string: str, encoding_name: str) -> int:
-    """Returns the number of tokens in a text string."""
-    encoding = tiktoken.get_encoding(encoding_name)
-    num_tokens = len(encoding.encode(string))
-    return num_tokens
-
-
-def split_text(text):
-    """Returns one string split into n equal length strings"""
-    n = len(str)
-    number_of_chars = 8192
-    parts = []
-
-    for i in range(0, n, number_of_chars):
-        part = text[i : i + number_of_chars]
-        parts.append(part)
-
-    return parts
 
 
 @extend_schema_view(
@@ -49,18 +27,28 @@ def split_text(text):
 )
 class ChatViewSet(BaseModelViewSet):
     queryset = Chat.objects.all()
+    serializer_class = ChatSerializer
     serializer_action_classes = {
-        "list": ChatSerializer,
         "retrieve": ChatDetailSerializer,
-        "create": ChatSerializer,
-        "update": ChatSerializer,
     }
-    permission_classe = (permissions.IsAuthenticated(),)
+    permission_classes = (permissions.IsAuthenticated,)
     lookup_field = "external_id"
 
+    def initialize_request(self, request, *args, **kwargs):
+        self.action = self.action_map.get(request.method.lower())
+        return super().initialize_request(request, *args, **kwargs)
+
     def get_queryset(self):
-        queryset = self.queryset.filter(user=self.request.user)
+        project_id = self.kwargs["project_external_id"]
+        queryset = self.queryset.filter(
+            user=self.request.user, project__external_id=project_id
+        )
         return queryset
+
+    def get_parsers(self):
+        if self.action == "audio_converse":
+            return [MultiPartParser()]
+        return super().get_parsers()
 
     def perform_create(self, serializer):
         if (
@@ -71,14 +59,65 @@ class ChatViewSet(BaseModelViewSet):
                 {"error": "OpenAI-Key header is required to create a chat"}
             )
 
-        if self.request.user.is_authenticated:
-            serializer.save(user=self.request.user)
-        else:
+        project_id = self.kwargs["project_external_id"]
+        project = Project.objects.get(external_id=project_id)
+
+        serializer.save(user=self.request.user, project=project)
+        super().perform_create(serializer)
+
+    @extend_schema(
+        tags=("chats",),
+        request=inline_serializer(
+            name="ConverseRequest",
+            fields={
+                "audio": CharField(),
+                "match_number": IntegerField(default=10),
+            },
+        ),
+        responses={status.HTTP_200_OK: None},
+    )
+    @action(detail=True, methods=["post"])
+    def audio_converse(self, *args, **kwarg):
+        if not self.request.data.get("audio"):
             return Response(
-                {"error": "Please login to create a chat"},
+                {"error": "Please provide audio to generate embedding"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        super().perform_create(serializer)
+
+        audio = self.request.data.get("audio")
+
+        chat = Chat.objects.get(external_id=kwarg["external_id"])
+
+        openai_key = self.request.headers.get("OpenAI-Key") or (
+            self.request.user.allow_key and settings.OPENAI_API_KEY
+        )
+
+        match_number = self.request.data.get("match_number") or 100
+
+        if not openai_key:
+            return Response(
+                {"error": "OpenAI-Key header is required to create a chat"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            transcript = openai.Audio.transcribe(
+                "whisper-1", file=audio, api_key=openai_key
+            )
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            response = converse(
+                text=transcript.text,
+                openai_key=openai_key,
+                chat=chat,
+                match_number=match_number,
+            )
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({"answer": response})
 
     @extend_schema(
         tags=("chats",),
@@ -106,76 +145,14 @@ class ChatViewSet(BaseModelViewSet):
         openai_key = self.request.headers.get("OpenAI-Key") or (
             self.request.user.allow_key and settings.OPENAI_API_KEY
         )
-        if not openai_key:
-            raise ValidationError(
-                {"error": "OpenAI-Key header is required to create a chat or converse"}
+
+        match_number = self.request.data.get("match_number") or 100
+
+        try:
+            response = converse(
+                text=text, openai_key=openai_key, chat=chat, match_number=match_number
             )
-        openai.api_key = openai_key
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        text = text.replace("\n", " ")
-
-        # create a new ChatMessage model with type=USER and message=text and chat=chat
-        ChatMessage.objects.create(message=text, chat=chat, messageType=1)
-
-        openai.api_key = settings.OPENAI_API_KEY
-
-        num_tokens = num_tokens_from_string(text, "cl100k_base")
-
-        embeddings: List[List[List[float]]] = []
-
-        if num_tokens < 8192:
-            embeddings.append(get_embedding(text=[text]))
-
-        else:
-            parts = split_text(text)
-            for part in parts:
-                embeddings.append(get_embedding(text=[part]))
-
-        # find similar embeddings from pinecone index for each embedding
-        pinecone_references: List[QueryResponse] = []
-        top_k = self.request.data.get("match_number") or 10
-        for embedding in embeddings:
-            similar: QueryResponse = settings.PINECONE_INDEX_INSTANCE.query(
-                vector=embedding,
-                top_k=top_k,
-                namespace=chat.namespace,
-                include_metadata=True,
-            )
-
-            pinecone_references.append(similar)
-
-        reference = get_sanitized_reference(pinecone_references=pinecone_references)
-
-        lang_chain_helper = LangChainHelper()
-
-        
-        
-        # get all ChatMessages (model) with chat=chat(defined above) and them through langchain
-        previous_messages = ChatMessage.objects.filter(chat=chat).order_by("created_at")
-        
-        # seperate out into string of USER messages and string of BOT messages sperated by newline (you have type in chatMessage model)
-        # so output string =
-        # "
-        # Nurse: "Hello" (for type = USER)
-        # AYUSHMA: "Hi" (for type = AYUSHMA)
-        # "
-        chat_history = ""
-        for message in previous_messages:
-            if message.messageType == 1: # type=USER
-                chat_history += "Nurse: " + message.message + "\n"
-            elif message.messageType == 3: # type=AYUSHMA
-                chat_history += "Ayushma: " + message.message + "\n"
-
-        # get_response in a new variable say "answer" pass chat_history also
-        response = lang_chain_helper.get_response(user_msg=text, reference=reference, chat_history=chat_history)
-
-        # filter the response
-        response = response.replace("Ayushma: ", "")
-
-        # create a new ChatMessage model with type=AYUSHMA and message=answer and chat=chat
-        ChatMessage.objects.create(message=response, chat=chat, messageType=3)
-
-        # return answer in response
-        return Response(
-            {"answer": response}
-        )
+        return Response({"answer": response})
