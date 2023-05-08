@@ -1,12 +1,16 @@
+import json
+from queue import Queue
 from typing import List
 
 import openai
 import tiktoken
+from anyio.from_thread import start_blocking_portal
 from django.conf import settings
 from langchain.schema import AIMessage, HumanMessage
 from pinecone import QueryResponse
 
-from ayushma.models import Chat, ChatMessage, Project
+from ayushma.models import ChatMessage
+from ayushma.models.enums import ChatMessageType
 from ayushma.utils.langchain import LangChainHelper
 
 
@@ -72,7 +76,7 @@ def num_tokens_from_string(string: str, encoding_name: str) -> int:
 
 def split_text(text):
     """Returns one string split into n equal length strings"""
-    n = len(str)
+    n = len(text)
     number_of_chars = 8192
     parts = []
 
@@ -83,14 +87,18 @@ def split_text(text):
     return parts
 
 
-def converse(text, openai_key, chat, match_number):
-    top_k = match_number
+def create_json_response(input_text, chat_id, delta, message, stop):
+    json_data = {
+        "chat": str(chat_id),
+        "input": input_text,
+        "delta": delta,
+        "message": message,
+        "stop": stop,
+    }
+    return "data: " + json.dumps(json_data) + "\n\n"
 
-    if not openai_key:
-        raise Exception("OpenAI-Key header is required to create a chat or converse")
-    openai.api_key = openai_key
-    text = text.replace("\n", " ")
-    nurse_query = ChatMessage.objects.create(message=text, chat=chat, messageType=1)
+
+def get_reference(text, openai_key, chat, top_k):
     num_tokens = num_tokens_from_string(text, "cl100k_base")
     embeddings: List[List[List[float]]] = []
     if num_tokens < 8192:
@@ -125,10 +133,27 @@ def converse(text, openai_key, chat, match_number):
             raise Exception(
                 e.__str__(),
             )
-    reference = get_sanitized_reference(pinecone_references=pinecone_references)
+    return get_sanitized_reference(pinecone_references=pinecone_references)
+
+
+def converse(text, openai_key, chat, match_number):
+    if not openai_key:
+        raise Exception("OpenAI-Key header is required to create a chat or converse")
+    openai.api_key = openai_key
+
+    text = text.replace("\n", " ")
+    nurse_query = ChatMessage.objects.create(message=text, chat=chat, messageType=1)
+
+    reference = get_reference(text, openai_key, chat, match_number)
+
+    token_queue = Queue()
+    RESPONSE_END = object()
     lang_chain_helper = LangChainHelper(
-        openai_api_key=openai_key, prompt_template=chat.project.prompt
+        token_queue=token_queue,
+        openai_api_key=openai_key,
+        prompt_template=chat.project.prompt,
     )
+
     # excluding the latest query since it is not a history
     previous_messages = (
         ChatMessage.objects.filter(chat=chat)
@@ -137,14 +162,36 @@ def converse(text, openai_key, chat, match_number):
     )
     chat_history = []
     for message in previous_messages:
-        if message.messageType == 1:  # type=USER
+        if message.messageType == ChatMessageType.USER:
             chat_history.append(HumanMessage(content=f"Nurse: {message.message}"))
-        elif message.messageType == 3:  # type=AYUSHMA
+        elif message.messageType == ChatMessageType.AYUSHMA:
             chat_history.append(AIMessage(content=f"Ayushma: {message.message}"))
-    response = lang_chain_helper.get_response(
-        user_msg=text, reference=reference, chat_history=chat_history
-    )
-    response = response.replace("Ayushma: ", "")
-    ChatMessage.objects.create(message=response, chat=chat, messageType=3)
 
-    return response
+    with start_blocking_portal() as portal:
+        portal.start_task_soon(
+            lang_chain_helper.get_response,
+            RESPONSE_END,
+            token_queue,
+            text,
+            reference,
+            chat_history,
+        )
+        chat_response = ""
+        while True:
+            if token_queue.empty():
+                continue
+            next_token = token_queue.get(True, timeout=3)
+            if next_token is RESPONSE_END:
+                ChatMessage.objects.create(
+                    message=chat_response,
+                    chat=chat,
+                    messageType=ChatMessageType.AYUSHMA,
+                )
+                yield create_json_response(
+                    text, chat.external_id, "", chat_response, True
+                )
+                break
+            chat_response += next_token
+            yield create_json_response(
+                text, chat.external_id, next_token, chat_response, False
+            )

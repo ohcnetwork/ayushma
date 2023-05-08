@@ -1,7 +1,6 @@
-import os
-
 from django.conf import settings
 from langchain import LLMChain, PromptTemplate
+from langchain.callbacks.manager import AsyncCallbackManager
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import (
     ChatPromptTemplate,
@@ -9,18 +8,29 @@ from langchain.prompts import (
     MessagesPlaceholder,
     SystemMessagePromptTemplate,
 )
-from langchain.schema import AIMessage, HumanMessage
+from langchain.schema import HumanMessage
+
+from ayushma.utils.stream_callback import StreamingQueueCallbackHandler
 
 
 class LangChainHelper:
-    def __init__(self, openai_api_key=settings.OPENAI_API_KEY, prompt_template=None):
+    def __init__(
+        self, token_queue, openai_api_key=settings.OPENAI_API_KEY, prompt_template=None
+    ):
         # 0 means more deterministic output, 1 means more random output
-        llm = ChatOpenAI(temperature=0.3, openai_api_key=openai_api_key)
+        llm = ChatOpenAI(
+            streaming=True,
+            callback_manager=AsyncCallbackManager(
+                [StreamingQueueCallbackHandler(token_queue)]
+            ),
+            temperature=0.3,
+            openai_api_key=openai_api_key,
+        )
 
         template = """You are a medical assistant called Ayushma in this conversation and you must follow the given algorithm strictly to assist emergency nurses in ICUs.
             Algorithm:
             references = <{reference}>
-            
+
             if "references" is not empty":
             (
             use_your_knowledge = <analyze "chat history with nurse" and "query" and generate an approriate result for the "query">
@@ -30,9 +40,9 @@ class LangChainHelper:
             (
             result = <"Sorry I am not able to find anything related to your query in my database">
             )
-            
+
             Output Format(should contain only one line):
-            Ayushma: <enter_result_here>       
+            Ayushma: <enter_result_here>
             """
         if prompt_template:
             template = prompt_template
@@ -61,14 +71,18 @@ class LangChainHelper:
 
         self.chain = LLMChain(llm=llm, prompt=chat_prompt, verbose=True)
 
-    def get_response(self, user_msg, reference, chat_history):
+    async def get_response(
+        self, job_done, token_queue, user_msg, reference, chat_history
+    ):
         chat_history.append(
             HumanMessage(
                 content="@system remeber only answer the question if it can be answered with the given references"
             )
         )
-        return self.chain.predict(
+        async_response = await self.chain.apredict(
             user_msg=f"Nurse: {user_msg}",
             reference=reference,
             chat_history=chat_history,
         )
+        token_queue.put(job_done)
+        return async_response
