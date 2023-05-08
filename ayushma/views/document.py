@@ -1,8 +1,9 @@
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAdminUser
+from rest_framework.response import Response
 
-from ayushma.models import Document, Project
+from ayushma.models import Document, DocumentType, Project
 from ayushma.serializers.document import DocumentSerializer, DocumentUpdateSerializer
 from ayushma.utils.upsert import upsert
 from utils.views.base import BaseModelViewSet
@@ -39,11 +40,15 @@ class DocumentViewSet(BaseModelViewSet):
         external_id = self.kwargs["project_external_id"]
         project = Project.objects.get(external_id=external_id)
         document = serializer.save(project=project)
-        if document.document_type == Document.FILE:
-            upsert(external_id=external_id, filepath=str(document.file))
-        elif document.document_type == Document.URL:
-            upsert(external_id=external_id, url=document.text_content)
-        elif document.document_type == Document.TEXT:
-            upsert(external_id=external_id, text=document.text_content)
-        else:
-            raise ValueError("Invalid document type.")
+
+        try:
+            if document.document_type == DocumentType.FILE:
+                upsert(external_id=external_id, filepath=str(document.file))
+            elif document.document_type == DocumentType.URL:
+                upsert(external_id=external_id, url=document.text_content)
+            elif document.document_type == DocumentType.TEXT:
+                upsert(external_id=external_id, text=document.text_content)
+            else:
+                raise Exception("Invalid document type.")
+        except Exception as e:
+            return Response({"non_field_errors": str(e)}, status=400)

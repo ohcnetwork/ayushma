@@ -1,7 +1,7 @@
-import urllib.request
 from typing import Optional
 
 import pinecone
+import requests
 from bs4 import BeautifulSoup
 from django.conf import settings
 from PyPDF2 import PdfReader
@@ -41,7 +41,7 @@ def upsert(
         text (str, optional): The text content to upsert. Defaults to None.
 
     Raises:
-        ValueError: If none of filepath, url, or text is provided.
+        Exception: If none of filepath, url, or text is provided.
 
     Returns:
         None
@@ -59,14 +59,14 @@ def upsert(
         filepath = settings.MEDIA_ROOT + "/" + filepath
         document_lines = read_document(filepath).splitlines()
     elif url:
-        response = urllib.request.urlopen(url)
-        html = response.read()
+        html = requests.get(url).text
         soup = BeautifulSoup(html, "html.parser")
         document_lines = soup.get_text().strip().splitlines()
+        print(document_lines)
     elif text:
         document_lines = text.strip().splitlines()
     else:
-        raise ValueError("Either filepath, url or text must be provided")
+        raise Exception("Either filepath, url or text must be provided")
 
     batch_size = (
         100  # process everything in batches of 100 (creates 100 vectors per upset)

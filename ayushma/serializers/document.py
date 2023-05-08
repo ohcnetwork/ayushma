@@ -5,11 +5,12 @@ from ayushma.models import Document
 
 class DocumentSerializer(serializers.ModelSerializer):
     def validate(self, data):
-        if not data.get("file") and not data.get("text_content"):
+        if not "file" in data and not "text_content" in data:
             raise serializers.ValidationError(
                 "Either 'file' or 'text_content' must be provided."
             )
-        return data
+
+        return super().validate(data)
 
     class Meta:
         model = Document
