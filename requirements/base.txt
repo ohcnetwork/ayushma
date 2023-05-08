@@ -33,3 +33,6 @@ langchain==0.0.160
 
 # For asynchronous event loop
 anyio==3.6.2
+
+# Web scraping and parsing
+beautifulsoup4==4.12.2

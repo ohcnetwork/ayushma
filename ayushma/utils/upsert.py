@@ -1,4 +1,8 @@
+from typing import Optional
+
 import pinecone
+import requests
+from bs4 import BeautifulSoup
 from django.conf import settings
 from PyPDF2 import PdfReader
 from tqdm.auto import tqdm
@@ -21,22 +25,54 @@ def read_document(filepath):
     return document_text
 
 
-def upsert(filepath: str, external_id: str):
-    filepath = settings.MEDIA_ROOT + "/" + filepath
+def upsert(
+    external_id: str,
+    filepath: Optional[str] = None,
+    url: Optional[str] = None,
+    text: Optional[str] = None,
+):
+    """
+    Upserts the contents of a file, URL, or text to a Pinecone index with the specified external ID.
+
+    Args:
+        external_id (str): The external ID to use when upserting to the Pinecone index.
+        filepath (str, optional): The path to the file to upsert. Defaults to None.
+        url (str, optional): The URL of the website to upsert. Defaults to None.
+        text (str, optional): The text content to upsert. Defaults to None.
+
+    Raises:
+        Exception: If none of filepath, url, or text is provided.
+
+    Returns:
+        None
+    """
     pinecone.init(
         api_key=settings.PINECONE_API_KEY, environment=settings.PINECONE_ENVIRONMENT
     )
     print("Initialized Pinecone and OpenAI")
 
-    print(f"Processing...")
+    print("Processing...")
 
-    document_lines = read_document(filepath).splitlines()
+    document_lines = []
+
+    if filepath:
+        filepath = settings.MEDIA_ROOT + "/" + filepath
+        document_lines = read_document(filepath).splitlines()
+    elif url:
+        html = requests.get(url).text
+        soup = BeautifulSoup(html, "html.parser")
+        document_lines = soup.get_text().strip().splitlines()
+        print(document_lines)
+    elif text:
+        document_lines = text.strip().splitlines()
+    else:
+        raise Exception("Either filepath, url or text must be provided")
 
     batch_size = (
         100  # process everything in batches of 100 (creates 100 vectors per upset)
     )
 
-    print(f"Fetching Pinecone index...")
+    print("Fetching Pinecone index...")
     if settings.PINECONE_INDEX not in pinecone.list_indexes():
         pinecone.create_index(
             settings.PINECONE_INDEX,
@@ -44,7 +80,7 @@ def upsert(filepath: str, external_id: str):
         )
     pinecone_index = pinecone.Index(index_name=settings.PINECONE_INDEX)
 
-    print(f"Upserting to Pinecone index...")
+    print("Upserting to Pinecone index...")
 
     for i in tqdm(range(0, len(document_lines), batch_size)):
         i_end = min(i + batch_size, len(document_lines))  # set end position of batch
@@ -62,4 +98,4 @@ def upsert(filepath: str, external_id: str):
             vectors=list(to_upsert), namespace=external_id
         )  # upsert to Pinecone
 
-    print(f"Finished upserting to Pinecone index")
+    print("Finished upserting to Pinecone index")
