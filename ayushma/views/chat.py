@@ -105,8 +105,10 @@ class ChatViewSet(BaseModelViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+        response = StreamingHttpResponse(content_type="text/event-stream")
+
         try:
-            response = converse(
+            response.streaming_content = converse(
                 text=transcript.text,
                 openai_key=openai_key,
                 chat=chat,
@@ -115,7 +117,7 @@ class ChatViewSet(BaseModelViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({"answer": response})
+        return response
 
     @extend_schema(
         tags=("chats",),

@@ -87,8 +87,14 @@ def split_text(text):
     return parts
 
 
-def create_json_response(chat_id, delta, message, stop):
-    json_data = {"chat": str(chat_id), "delta": delta, "message": message, "stop": stop}
+def create_json_response(input_text, chat_id, delta, message, stop):
+    json_data = {
+        "chat": str(chat_id),
+        "input": input_text,
+        "delta": delta,
+        "message": message,
+        "stop": stop,
+    }
     return "data: " + json.dumps(json_data) + "\n\n"
 
 
@@ -181,9 +187,11 @@ def converse(text, openai_key, chat, match_number):
                     chat=chat,
                     messageType=ChatMessageType.AYUSHMA,
                 )
-                yield create_json_response(chat.external_id, "", chat_response, True)
+                yield create_json_response(
+                    text, chat.external_id, "", chat_response, True
+                )
                 break
             chat_response += next_token
             yield create_json_response(
-                chat.external_id, next_token, chat_response, False
+                text, chat.external_id, next_token, chat_response, False
             )
