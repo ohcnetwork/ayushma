@@ -180,7 +180,7 @@ def converse(text, openai_key, chat, match_number):
         while True:
             if token_queue.empty():
                 continue
-            next_token = token_queue.get(True, timeout=3)
+            next_token = token_queue.get(True, timeout=10)
             if next_token is RESPONSE_END:
                 ChatMessage.objects.create(
                     message=chat_response,
