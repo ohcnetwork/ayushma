@@ -150,6 +150,7 @@ def converse(text, openai_key, chat, match_number):
     RESPONSE_END = object()
     lang_chain_helper = LangChainHelper(
         token_queue=token_queue,
+        end=RESPONSE_END,
         openai_api_key=openai_key,
         prompt_template=chat.project.prompt,
     )
@@ -178,24 +179,33 @@ def converse(text, openai_key, chat, match_number):
         )
         chat_response = ""
         skip_token = len("Ayushma: ")
-        while True:
-            if token_queue.empty():
-                continue
-            next_token = token_queue.get(True, timeout=10)
-            if skip_token > 0:
-                skip_token -= 1
-                continue
-            if next_token is RESPONSE_END:
-                ChatMessage.objects.create(
-                    message=chat_response,
-                    chat=chat,
-                    messageType=ChatMessageType.AYUSHMA,
-                )
+        try:
+            while True:
+                if token_queue.empty():
+                    continue
+                next_token = token_queue.get(True, timeout=10)
+                if skip_token > 0:
+                    skip_token -= 1
+                    continue
+                if next_token is RESPONSE_END:
+                    ChatMessage.objects.create(
+                        message=chat_response,
+                        chat=chat,
+                        messageType=ChatMessageType.AYUSHMA,
+                    )
+                    yield create_json_response(
+                        text, chat.external_id, "", chat_response, True
+                    )
+                    break
+                chat_response += next_token
                 yield create_json_response(
-                    text, chat.external_id, "", chat_response, True
+                    text, chat.external_id, next_token, chat_response, False
                 )
-                break
-            chat_response += next_token
-            yield create_json_response(
-                text, chat.external_id, next_token, chat_response, False
+        except Exception as e:
+            print(e)
+            ChatMessage.objects.create(
+                message=str(e),
+                chat=chat,
+                messageType=ChatMessageType.AYUSHMA,
             )
+            yield create_json_response(text, chat.external_id, "", str(e), True)

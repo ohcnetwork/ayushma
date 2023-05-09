@@ -15,13 +15,17 @@ from ayushma.utils.stream_callback import StreamingQueueCallbackHandler
 
 class LangChainHelper:
     def __init__(
-        self, token_queue, openai_api_key=settings.OPENAI_API_KEY, prompt_template=None
+        self,
+        token_queue,
+        end,
+        openai_api_key=settings.OPENAI_API_KEY,
+        prompt_template=None,
     ):
         # 0 means more deterministic output, 1 means more random output
         llm = ChatOpenAI(
             streaming=True,
             callback_manager=AsyncCallbackManager(
-                [StreamingQueueCallbackHandler(token_queue)]
+                [StreamingQueueCallbackHandler(token_queue, end)]
             ),
             temperature=0.3,
             openai_api_key=openai_api_key,
@@ -79,10 +83,14 @@ class LangChainHelper:
                 content="@system remeber only answer the question if it can be answered with the given references"
             )
         )
-        async_response = await self.chain.apredict(
-            user_msg=f"Nurse: {user_msg}",
-            reference=reference,
-            chat_history=chat_history,
-        )
-        token_queue.put(job_done)
-        return async_response
+        try:
+            async_response = await self.chain.apredict(
+                user_msg=f"Nurse: {user_msg}",
+                reference=reference,
+                chat_history=chat_history,
+            )
+            token_queue.put(job_done)
+            return async_response
+        except Exception as e:
+            print(e)
+            token_queue.put(job_done)
