@@ -7,8 +7,9 @@ from langchain.schema import AgentAction, AgentFinish, LLMResult
 class StreamingQueueCallbackHandler(BaseCallbackHandler):
     """Callback handler for streaming to Queue."""
 
-    def __init__(self, q):
+    def __init__(self, q, end):
         self.q = q
+        self.end = end
 
     def on_llm_new_token(self, token: str, **kwargs) -> None:
         """Run on new LLM token. Streams to Queue."""
@@ -17,6 +18,7 @@ class StreamingQueueCallbackHandler(BaseCallbackHandler):
 
     def on_llm_end(self, response: LLMResult, **kwargs) -> None:
         """Finish the Queue when the LLM is done."""
+        self.q.put(self.end)
 
     def on_llm_start(
         self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
