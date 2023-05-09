@@ -156,6 +156,7 @@ class ChatViewSet(BaseModelViewSet):
             response.streaming_content = converse(
                 text=text, openai_key=openai_key, chat=chat, match_number=match_number
             )
+
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
