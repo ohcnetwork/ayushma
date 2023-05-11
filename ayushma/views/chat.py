@@ -9,7 +9,7 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework.serializers import CharField, IntegerField
 
-from ayushma.models import Chat, Project
+from ayushma.models import Chat, Project, ChatMessage
 from ayushma.serializers import ChatDetailSerializer, ChatSerializer
 from ayushma.utils.openaiapi import converse
 from utils.views.base import BaseModelViewSet
@@ -158,6 +158,10 @@ class ChatViewSet(BaseModelViewSet):
             )
 
         except Exception as e:
+            # delete chat object if first conversation
+            previous_chats = ChatMessage.objects.filter(chat=chat.id)
+            if len(previous_chats) == 1:
+                chat.delete()
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         return response
