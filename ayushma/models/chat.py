@@ -10,6 +10,7 @@ class Chat(BaseModel):
     title = models.CharField(max_length=50)
     user = models.ForeignKey(User, on_delete=models.PROTECT)
     project = models.ForeignKey(Project, on_delete=models.PROTECT)
+    language_code = models.CharField(max_length=10, blank=False, default="en")
 
     def __str__(self) -> str:
         return f"{self.title} from {self.user.username}"

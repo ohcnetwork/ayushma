@@ -193,6 +193,8 @@ def converse(text, openai_key, chat, match_number):
                         chat=chat,
                         messageType=ChatMessageType.AYUSHMA,
                     )
+
+                    # language_code = chat_response[chat_response.rfind(":")
                     yield create_json_response(
                         text, chat.external_id, "", chat_response, True
                     )

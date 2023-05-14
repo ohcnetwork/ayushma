@@ -9,8 +9,9 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework.serializers import CharField, IntegerField
 
-from ayushma.models import Chat, Project, ChatMessage
+from ayushma.models import Chat, ChatMessage, Project
 from ayushma.serializers import ChatDetailSerializer, ChatSerializer
+from ayushma.utils.language_helpers import speect_to_text
 from ayushma.utils.openaiapi import converse
 from utils.views.base import BaseModelViewSet
 
@@ -84,7 +85,7 @@ class ChatViewSet(BaseModelViewSet):
 
         audio = self.request.data.get("audio")
 
-        chat = Chat.objects.get(external_id=kwarg["external_id"])
+        chat: Chat = Chat.objects.get(external_id=kwarg["external_id"])
 
         openai_key = self.request.headers.get("OpenAI-Key") or (
             self.request.user.allow_key and settings.OPENAI_API_KEY
@@ -99,8 +100,8 @@ class ChatViewSet(BaseModelViewSet):
             )
 
         try:
-            transcript = openai.Audio.transcribe(
-                "whisper-1", file=audio, api_key=openai_key
+            transcript = speect_to_text(
+                audio_file=audio, language_code=chat.language_code
             )
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -109,7 +110,7 @@ class ChatViewSet(BaseModelViewSet):
 
         try:
             response.streaming_content = converse(
-                text=transcript.text,
+                text=transcript,
                 openai_key=openai_key,
                 chat=chat,
                 match_number=match_number,

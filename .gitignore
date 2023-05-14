@@ -170,3 +170,5 @@ cython_debug/
 
 .DS_Store
 upsert/
+
+gc_credential.json
