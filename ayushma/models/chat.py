@@ -22,7 +22,7 @@ class ChatMessage(BaseModel):
         choices=ChatMessageType.choices, default=ChatMessageType.USER
     )
     message = models.TextField()
-    audio = models.FileField(upload_to="audio/", blank=True, null=True)
+    ayushma_audio_url = models.URLField(blank=True, null=True)
 
     def __str__(self) -> str:
         return f"{self.message} : {self.chat}"

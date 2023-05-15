@@ -108,13 +108,10 @@ class ChatViewSet(BaseModelViewSet):
 
         response = StreamingHttpResponse(content_type="text/event-stream")
 
-        print("language code:", chat.language)
-
         trasnlated_text = transcript.text
         if chat.language != "en":
             trasnlated_text = translate_text(chat.language + "-IN", transcript.text)
 
-        print("translated text:", trasnlated_text)
         try:
             response.streaming_content = converse(
                 english_text=transcript.text,

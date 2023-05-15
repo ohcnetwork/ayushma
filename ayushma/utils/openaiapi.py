@@ -212,19 +212,20 @@ def converse(
                         translated_chat_response, user_language
                     )
 
-                    url = upload_file(
-                        audio_file=ayushma_voice, s3_key=f"{chat.id}_{uuid.uuid4()}.mp3"
-                    )
+                    url = None
+                    if ayushma_voice:
+                        url = upload_file(
+                            audio_file=ayushma_voice,
+                            s3_key=f"{chat.id}_{uuid.uuid4()}.mp3",
+                        )
                     print("url: ", url)
 
-                    (chat_message, created) = ChatMessage.objects.get_or_create(
+                    ChatMessage.objects.create(
                         message=translated_chat_response,
                         chat=chat,
                         messageType=ChatMessageType.AYUSHMA,
-                        audio=ContentFile(ayushma_voice, name=f"{uuid.uuid4()}.mp3"),
+                        ayushma_audio_url=url,
                     )
-
-                    print("audio: ", chat_message.audio)
 
                     print("translated chat response:", translated_chat_response)
 
@@ -234,7 +235,7 @@ def converse(
                         "",
                         translated_chat_response,
                         True,
-                        ayushma_voice=chat_message.audio.url,
+                        ayushma_voice=url,
                     )
                     break
                 chat_response += next_token

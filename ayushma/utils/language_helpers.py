@@ -2,13 +2,18 @@ import re
 
 from google.cloud import texttospeech
 from google.cloud import translate_v2 as translate
+from rest_framework.exceptions import APIException
 
 
 def translate_text(target, text):
-    translate_client = translate.Client()
+    try:
+        translate_client = translate.Client()
 
-    result = translate_client.translate(text, target_language=target)
-    return result["translatedText"]
+        result = translate_client.translate(text, target_language=target)
+        return result["translatedText"]
+    except Exception as e:
+        print(e)
+        raise APIException("Translation failed")
 
 
 language_code_voice_map = {
@@ -33,26 +38,30 @@ def sanitize_text(text):
 
 
 def text_to_speech(text, language_code):
-    # in en-IN neural voice is not available
-    if language_code == "en-IN":
-        language_code = "en-US"
+    try:
+        # in en-IN neural voice is not available
+        if language_code == "en-IN":
+            language_code = "en-US"
 
-    client = texttospeech.TextToSpeechClient()
+        client = texttospeech.TextToSpeechClient()
 
-    text = sanitize_text(text)
-    synthesis_input = texttospeech.SynthesisInput(text=text)
+        text = sanitize_text(text)
+        synthesis_input = texttospeech.SynthesisInput(text=text)
 
-    voice = texttospeech.VoiceSelectionParams(
-        language_code=language_code, name=language_code_voice_map[language_code]
-    )
-    audio_config = texttospeech.AudioConfig(
-        audio_encoding=texttospeech.AudioEncoding.MP3
-    )
+        voice = texttospeech.VoiceSelectionParams(
+            language_code=language_code, name=language_code_voice_map[language_code]
+        )
+        audio_config = texttospeech.AudioConfig(
+            audio_encoding=texttospeech.AudioEncoding.MP3
+        )
 
-    response = client.synthesize_speech(
-        input=synthesis_input,
-        voice=voice,
-        audio_config=audio_config,
-    )
+        response = client.synthesize_speech(
+            input=synthesis_input,
+            voice=voice,
+            audio_config=audio_config,
+        )
 
-    return response.audio_content
+        return response.audio_content
+    except Exception as e:
+        print(e)
+        return None
