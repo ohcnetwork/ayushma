@@ -1,4 +1,6 @@
+import base64
 import json
+import uuid
 from queue import Queue
 from typing import List
 
@@ -6,12 +8,15 @@ import openai
 import tiktoken
 from anyio.from_thread import start_blocking_portal
 from django.conf import settings
+from django.core.files.base import ContentFile
 from langchain.schema import AIMessage, HumanMessage
 from pinecone import QueryResponse
 
 from ayushma.models import ChatMessage
 from ayushma.models.enums import ChatMessageType
 from ayushma.utils.langchain import LangChainHelper
+from ayushma.utils.language_helpers import text_to_speech, translate_text
+from ayushma.utils.upload_file import upload_file
 
 
 def get_embedding(
@@ -87,14 +92,17 @@ def split_text(text):
     return parts
 
 
-def create_json_response(input_text, chat_id, delta, message, stop):
+def create_json_response(input_text, chat_id, delta, message, stop, ayushma_voice):
     json_data = {
         "chat": str(chat_id),
         "input": input_text,
         "delta": delta,
         "message": message,
         "stop": stop,
+        "ayushma_voice": ayushma_voice,
     }
+
+    print(json_data)
     return "data: " + json.dumps(json_data) + "\n\n"
 
 
@@ -136,15 +144,21 @@ def get_reference(text, openai_key, chat, top_k):
     return get_sanitized_reference(pinecone_references=pinecone_references)
 
 
-def converse(text, openai_key, chat, match_number):
+def converse(
+    english_text, local_translated_text, openai_key, chat, match_number, user_language
+):
     if not openai_key:
         raise Exception("OpenAI-Key header is required to create a chat or converse")
     openai.api_key = openai_key
 
-    text = text.replace("\n", " ")
-    nurse_query = ChatMessage.objects.create(message=text, chat=chat, messageType=1)
+    english_text = english_text.replace("\n", " ")
+    nurse_query = ChatMessage.objects.create(
+        message=local_translated_text,
+        chat=chat,
+        messageType=ChatMessageType.USER,
+    )
 
-    reference = get_reference(text, openai_key, chat, match_number)
+    reference = get_reference(english_text, openai_key, chat, match_number)
 
     token_queue = Queue()
     RESPONSE_END = object()
@@ -173,7 +187,7 @@ def converse(text, openai_key, chat, match_number):
             lang_chain_helper.get_response,
             RESPONSE_END,
             token_queue,
-            text,
+            english_text,
             reference,
             chat_history,
         )
@@ -188,20 +202,49 @@ def converse(text, openai_key, chat, match_number):
                     skip_token -= 1
                     continue
                 if next_token is RESPONSE_END:
-                    ChatMessage.objects.create(
-                        message=chat_response,
-                        chat=chat,
-                        messageType=ChatMessageType.AYUSHMA,
+                    translated_chat_response = chat_response
+                    if user_language != "en-IN":
+                        translated_chat_response = translate_text(
+                            user_language, chat_response
+                        )
+
+                    ayushma_voice = text_to_speech(
+                        translated_chat_response, user_language
                     )
 
-                    # language_code = chat_response[chat_response.rfind(":")
+                    url = upload_file(
+                        audio_file=ayushma_voice, s3_key=f"{chat.id}_{uuid.uuid4()}.mp3"
+                    )
+                    print("url: ", url)
+
+                    (chat_message, created) = ChatMessage.objects.get_or_create(
+                        message=translated_chat_response,
+                        chat=chat,
+                        messageType=ChatMessageType.AYUSHMA,
+                        audio=ContentFile(ayushma_voice, name=f"{uuid.uuid4()}.mp3"),
+                    )
+
+                    print("audio: ", chat_message.audio)
+
+                    print("translated chat response:", translated_chat_response)
+
                     yield create_json_response(
-                        text, chat.external_id, "", chat_response, True
+                        local_translated_text,
+                        chat.external_id,
+                        "",
+                        translated_chat_response,
+                        True,
+                        ayushma_voice=chat_message.audio.url,
                     )
                     break
                 chat_response += next_token
                 yield create_json_response(
-                    text, chat.external_id, next_token, chat_response, False
+                    local_translated_text,
+                    chat.external_id,
+                    next_token,
+                    chat_response,
+                    False,
+                    None,
                 )
         except Exception as e:
             print(e)
@@ -210,4 +253,6 @@ def converse(text, openai_key, chat, match_number):
                 chat=chat,
                 messageType=ChatMessageType.AYUSHMA,
             )
-            yield create_json_response(text, chat.external_id, "", str(e), True)
+            yield create_json_response(
+                local_translated_text, chat.external_id, "", str(e), True, None
+            )
