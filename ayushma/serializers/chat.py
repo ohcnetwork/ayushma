@@ -40,11 +40,13 @@ class ChatMessageSerializer(serializers.ModelSerializer):
 
 
 class ChatDetailSerializer(serializers.ModelSerializer):
-    chats = ChatMessageSerializer(
-        many=True, read_only=True, source="chatmessage_set"
-    )
+    chats = serializers.SerializerMethodField()
 
     class Meta:
         model = Chat
         fields = ("external_id", "title", "created_at", "modified_at", "chats")
         read_only_fields = ("external_id", "created_at", "modified_at")
+
+    def get_chats(self, obj):
+        chatmessages = ChatMessage.objects.filter(chat=obj).order_by("created_at")
+        return ChatMessageSerializer(chatmessages, many=True).data
