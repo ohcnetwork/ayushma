@@ -106,12 +106,15 @@ class ChatViewSet(BaseModelViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        response = StreamingHttpResponse(content_type="text/event-stream")
-
         trasnlated_text = transcript.text
         if chat.language != "en":
             trasnlated_text = translate_text(chat.language + "-IN", transcript.text)
 
+        if not ChatMessage.objects.filter(chat=chat).exists():
+            chat.title = trasnlated_text[0:50]
+            chat.save()
+
+        response = StreamingHttpResponse(content_type="text/event-stream")
         try:
             response.streaming_content = converse(
                 english_text=transcript.text,
