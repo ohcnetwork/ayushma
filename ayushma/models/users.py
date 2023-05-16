@@ -45,7 +45,7 @@ class User(AbstractUser):
     allow_key = models.BooleanField(default=False)
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["email", "first_name"]
+    REQUIRED_FIELDS = ["username"]
 
     objects = UserManager()
 
