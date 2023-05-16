@@ -55,6 +55,10 @@ ROOT_URLCONF = "core.urls"
 # https://docs.djangoproject.com/en/dev/ref/settings/#wsgi-application
 WSGI_APPLICATION = "core.wsgi.application"
 
+WSGI_APPLICATION_OPTIONS = {
+    "timeout": 300,
+}
+
 # APPS
 # ------------------------------------------------------------------------------
 DJANGO_APPS = [
@@ -114,12 +118,8 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
     },
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"
-    },
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
 # MIDDLEWARE
@@ -264,9 +264,7 @@ CELERY_TASK_SOFT_TIME_LIMIT = 60
 # -------------------------------------------------------------------------------
 # django-rest-framework - https://www.django-rest-framework.org/api-guide/settings/
 REST_FRAMEWORK = {
-    "DEFAULT_PERMISSION_CLASSES": (
-        "rest_framework.permissions.IsAuthenticated",
-    ),
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_PAGINATION_CLASS": "utils.pagination.CustomLimitOffsetPagination",
     "DEFAULT_FILTER_BACKENDS": (
         "django_filters.rest_framework.DjangoFilterBackend",
@@ -342,3 +340,9 @@ PINECONE_INDEX = env("PINECONE_INDEX", default="")
 
 pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENVIRONMENT)
 PINECONE_INDEX_INSTANCE = pinecone.Index(index_name=PINECONE_INDEX)
+
+# S3
+S3_BUCKET_NAME = env("S3_BUCKET_NAME")
+S3_SECRET_KEY = env("S3_SECRET_KEY")
+S3_KEY_ID = env("S3_KEY_ID")
+S3_REGION = env("S3_REGION")
