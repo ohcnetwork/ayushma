@@ -9,8 +9,9 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework.serializers import CharField, IntegerField
 
-from ayushma.models import Chat, Project, ChatMessage
+from ayushma.models import Chat, ChatMessage, Project
 from ayushma.serializers import ChatDetailSerializer, ChatSerializer
+from ayushma.utils.language_helpers import translate_text
 from ayushma.utils.openaiapi import converse
 from utils.views.base import BaseModelViewSet
 
@@ -84,7 +85,7 @@ class ChatViewSet(BaseModelViewSet):
 
         audio = self.request.data.get("audio")
 
-        chat = Chat.objects.get(external_id=kwarg["external_id"])
+        chat: Chat = Chat.objects.get(external_id=kwarg["external_id"])
 
         openai_key = self.request.headers.get("OpenAI-Key") or (
             self.request.user.allow_key and settings.OPENAI_API_KEY
@@ -99,20 +100,29 @@ class ChatViewSet(BaseModelViewSet):
             )
 
         try:
-            transcript = openai.Audio.transcribe(
+            transcript = openai.Audio.translate(
                 "whisper-1", file=audio, api_key=openai_key
             )
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        response = StreamingHttpResponse(content_type="text/event-stream")
+        trasnlated_text = transcript.text
+        if chat.language != "en":
+            trasnlated_text = translate_text(chat.language + "-IN", transcript.text)
 
+        if not ChatMessage.objects.filter(chat=chat).exists():
+            chat.title = trasnlated_text[0:50]
+            chat.save()
+
+        response = StreamingHttpResponse(content_type="text/event-stream")
         try:
             response.streaming_content = converse(
-                text=transcript.text,
+                english_text=transcript.text,
+                local_translated_text=trasnlated_text,
                 openai_key=openai_key,
                 chat=chat,
                 match_number=match_number,
+                user_language=chat.language + "-IN",
             )
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -138,7 +148,7 @@ class ChatViewSet(BaseModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         text = self.request.data.get("text")
-        chat = Chat.objects.get(external_id=kwarg["external_id"])
+        chat: Chat = Chat.objects.get(external_id=kwarg["external_id"])
         openai_key = self.request.headers.get("OpenAI-Key") or (
             self.request.user.allow_key and settings.OPENAI_API_KEY
         )
@@ -152,9 +162,18 @@ class ChatViewSet(BaseModelViewSet):
         match_number = self.request.data.get("match_number") or 100
         response = StreamingHttpResponse(content_type="text/event-stream")
 
+        english_text = text
+        if chat.language != "en":
+            english_text = translate_text("en-IN", text)
+
         try:
             response.streaming_content = converse(
-                text=text, openai_key=openai_key, chat=chat, match_number=match_number
+                english_text=english_text,
+                local_translated_text=text,
+                openai_key=openai_key,
+                chat=chat,
+                match_number=match_number,
+                user_language=chat.language + "-IN",
             )
 
         except Exception as e:
