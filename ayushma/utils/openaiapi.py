@@ -102,7 +102,6 @@ def create_json_response(input_text, chat_id, delta, message, stop, ayushma_voic
         "ayushma_voice": ayushma_voice,
     }
 
-    print(json_data)
     return "data: " + json.dumps(json_data) + "\n\n"
 
 
@@ -218,7 +217,6 @@ def converse(
                             audio_file=ayushma_voice,
                             s3_key=f"{chat.id}_{uuid.uuid4()}.mp3",
                         )
-                    print("url: ", url)
 
                     ChatMessage.objects.create(
                         message=translated_chat_response,
@@ -227,7 +225,6 @@ def converse(
                         ayushma_audio_url=url,
                     )
 
-                    print("translated chat response:", translated_chat_response)
 
                     yield create_json_response(
                         local_translated_text,
