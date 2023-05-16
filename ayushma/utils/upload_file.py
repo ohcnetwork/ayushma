@@ -14,10 +14,7 @@ def upload_file(audio_file, s3_key):
     try:
         audio_file_obj = io.BytesIO(audio_file)
         s3.upload_fileobj(audio_file_obj, settings.S3_BUCKET_NAME, s3_key)
-        url = s3.generate_presigned_url(
-            "get_object", Params={"Bucket": settings.S3_BUCKET_NAME, "Key": s3_key}
-        )
-        return url
+        return f"https://{settings.S3_BUCKET_NAME}.s3.{settings.S3_REGION}.amazonaws.com/{s3_key}"
     except Exception as e:
         print("Error uploading file: ", e)
         return None
