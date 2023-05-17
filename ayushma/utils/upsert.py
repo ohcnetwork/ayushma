@@ -27,6 +27,7 @@ def read_document(filepath):
 
 def upsert(
     external_id: str,
+    document_external_id: str,
     filepath: Optional[str] = None,
     url: Optional[str] = None,
     text: Optional[str] = None,
@@ -91,7 +92,8 @@ def upsert(
         ids_batch = [str(n) for n in range(i, i_end)]  # create IDs
         embeds = get_embedding(lines_batch)  # create embeddings
         meta = [
-            {"text": line} for line in lines_batch
+            {"text": line, "document": str(document_external_id)}
+            for line in lines_batch
         ]  # prep metadata and upsert batch
         to_upsert = zip(ids_batch, embeds, meta)  # zip together
         pinecone_index.upsert(
