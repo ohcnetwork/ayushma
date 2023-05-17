@@ -4,6 +4,7 @@ from ayushma.models.enums import ChatMessageType
 from ayushma.models.project import Project
 from ayushma.models.users import User
 from utils.models.base import BaseModel
+from ayushma.models.document import Document
 
 
 class Chat(BaseModel):
@@ -21,6 +22,7 @@ class ChatMessage(BaseModel):
         choices=ChatMessageType.choices, default=ChatMessageType.USER
     )
     message = models.TextField()
+    reference_documents = models.ManyToManyField(Document, blank=True)
 
     def __str__(self) -> str:
         return f"{self.message} : {self.chat}"
