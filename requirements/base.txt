@@ -36,3 +36,16 @@ anyio==3.6.2
 
 # Web scraping and parsing
 beautifulsoup4==4.12.2
+
+# Google cloud
+google-api-core==2.11.0
+google-auth==2.18.0
+google-cloud-core==2.3.2
+google-cloud-speech==2.19.0
+google-cloud-texttospeech==2.14.1
+google-cloud-translate==3.11.1
+googleapis-common-protos==1.59.0
+
+# s3
+boto3==1.26.133
+botocore==1.29.133
