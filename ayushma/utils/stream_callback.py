@@ -13,8 +13,7 @@ class StreamingQueueCallbackHandler(BaseCallbackHandler):
 
     def on_llm_new_token(self, token: str, **kwargs) -> None:
         """Run on new LLM token. Streams to Queue."""
-        for char in token:
-            self.q.put(char)
+        self.q.put(token)
 
     def on_llm_end(self, response: LLMResult, **kwargs) -> None:
         """Finish the Queue when the LLM is done."""
@@ -28,6 +27,8 @@ class StreamingQueueCallbackHandler(BaseCallbackHandler):
     def on_llm_error(
         self, error: Union[Exception, KeyboardInterrupt], **kwargs: Any
     ) -> None:
+        print("LLM ERROR", error)
+        self.q.put(self.end)
         """Run when LLM errors."""
 
     def on_chain_start(
