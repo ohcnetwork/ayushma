@@ -13,7 +13,8 @@ class StreamingQueueCallbackHandler(BaseCallbackHandler):
 
     def on_llm_new_token(self, token: str, **kwargs) -> None:
         """Run on new LLM token. Streams to Queue."""
-        self.q.put(token)
+        for char in token:
+            self.q.put(char)
 
     def on_llm_end(self, response: LLMResult, **kwargs) -> None:
         """Finish the Queue when the LLM is done."""
