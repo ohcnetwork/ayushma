@@ -16,8 +16,8 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractUser):
-    first_name = models.CharField(max_length=32, blank=False, null=False)
-    last_name = models.CharField(max_length=32, blank=True, null=True)
+    first_name = None
+    last_name = None
 
     external_id = models.UUIDField(default=uuid4, unique=True, db_index=True)
 
