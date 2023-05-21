@@ -43,7 +43,7 @@ class DocumentViewSet(BaseModelViewSet):
 
         try:
             if document.document_type == DocumentType.FILE:
-                upsert(external_id=external_id, filepath=str(document.file))
+                upsert(external_id=external_id, s3_url=str(document.s3_url))
             elif document.document_type == DocumentType.URL:
                 upsert(external_id=external_id, url=document.text_content)
             elif document.document_type == DocumentType.TEXT:

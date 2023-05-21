@@ -1,3 +1,4 @@
+from io import BytesIO
 from typing import Optional
 
 import pinecone
@@ -10,24 +11,25 @@ from tqdm.auto import tqdm
 from ayushma.utils.openaiapi import get_embedding
 
 
-def read_document(filepath):
-    if filepath.endswith(".pdf"):  # Handle pdf files
-        pdf_reader = PdfReader(filepath)
+def read_document(url):
+    if url.endswith(".pdf"):  # Handle pdf files
+        response = requests.get(url)
+        pdf_reader = PdfReader(BytesIO(response.content))
         text = ""
         for i in range(len(pdf_reader.pages)):
             page = pdf_reader.pages[i]
             text += page.extract_text()
         document_text = text
-    else:
-        with open(filepath, "r") as f:  # Handle txt and md files
-            document_text = f.read()
+    else:  # Handle txt and md files
+        response = requests.get(url)
+        document_text = response.text
 
     return document_text
 
 
 def upsert(
     external_id: str,
-    filepath: Optional[str] = None,
+    s3_url: Optional[str] = None,
     url: Optional[str] = None,
     text: Optional[str] = None,
 ):
@@ -36,12 +38,12 @@ def upsert(
 
     Args:
         external_id (str): The external ID to use when upserting to the Pinecone index.
-        filepath (str, optional): The path to the file to upsert. Defaults to None.
+        s3_url (str, optional): The S3 URL of the file to upsert. Defaults to None.
         url (str, optional): The URL of the website to upsert. Defaults to None.
         text (str, optional): The text content to upsert. Defaults to None.
 
     Raises:
-        Exception: If none of filepath, url, or text is provided.
+        Exception: If none of s3_url, url, or text is provided.
 
     Returns:
         None
@@ -55,9 +57,9 @@ def upsert(
 
     document_lines = []
 
-    if filepath:
-        filepath = settings.MEDIA_ROOT + "/" + filepath
-        document_lines = read_document(filepath).splitlines()
+    if s3_url:
+        document_text = read_document(s3_url)
+        document_lines = document_text.strip().splitlines()
     elif url:
         html = requests.get(url).text
         soup = BeautifulSoup(html, "html.parser")

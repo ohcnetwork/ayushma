@@ -1,4 +1,4 @@
-import base64
+import io
 import json
 import uuid
 from queue import Queue
@@ -8,7 +8,6 @@ import openai
 import tiktoken
 from anyio.from_thread import start_blocking_portal
 from django.conf import settings
-from django.core.files.base import ContentFile
 from langchain.schema import AIMessage, HumanMessage
 from pinecone import QueryResponse
 
@@ -214,7 +213,7 @@ def converse(
                     url = None
                     if ayushma_voice:
                         url = upload_file(
-                            audio_file=ayushma_voice,
+                            file=io.BytesIO(ayushma_voice),
                             s3_key=f"{chat.id}_{uuid.uuid4()}.mp3",
                         )
 
@@ -224,7 +223,6 @@ def converse(
                         messageType=ChatMessageType.AYUSHMA,
                         ayushma_audio_url=url,
                     )
-
 
                     yield create_json_response(
                         local_translated_text,

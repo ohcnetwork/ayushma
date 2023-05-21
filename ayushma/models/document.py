@@ -12,7 +12,7 @@ class Document(BaseModel):
     document_type = models.IntegerField(
         choices=DocumentType.choices, default=DocumentType.FILE
     )
-    file = models.FileField(upload_to="documents/", null=True, blank=True)
+    s3_url = models.CharField(max_length=255, null=True, blank=True)
     text_content = models.TextField(null=True, blank=True)
     project = models.ForeignKey(Project, on_delete=models.PROTECT)
 
