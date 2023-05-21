@@ -33,7 +33,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             "messageType",
             "message",
             "ayushma_audio_url",
-            "translated_message",
+            "original_message",
             "language",
             "created_at",
             "modified_at",
@@ -50,7 +50,5 @@ class ChatDetailSerializer(serializers.ModelSerializer):
         read_only_fields = ("external_id", "created_at", "modified_at")
 
     def get_chats(self, obj):
-        chatmessages = ChatMessage.objects.filter(chat=obj).order_by(
-            "created_at"
-        )
+        chatmessages = ChatMessage.objects.filter(chat=obj).order_by("created_at")
         return ChatMessageSerializer(chatmessages, many=True).data

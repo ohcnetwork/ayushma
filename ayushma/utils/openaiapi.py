@@ -66,9 +66,7 @@ def get_sanitized_reference(pinecone_references: List[QueryResponse]) -> str:
 
     for reference in pinecone_references:
         for match in reference.matches:
-            sanitized_reference += (
-                str(match.metadata["text"]).replace("\n", " ") + ","
-            )
+            sanitized_reference += str(match.metadata["text"]).replace("\n", " ") + ","
 
     return sanitized_reference
 
@@ -93,9 +91,7 @@ def split_text(text):
     return parts
 
 
-def create_json_response(
-    input_text, chat_id, delta, message, stop, ayushma_voice
-):
+def create_json_response(input_text, chat_id, delta, message, stop, ayushma_voice):
     json_data = {
         "chat": str(chat_id),
         "input": input_text,
@@ -113,9 +109,7 @@ def get_reference(text, openai_key, chat, top_k):
     embeddings: List[List[List[float]]] = []
     if num_tokens < 8192:
         try:
-            embeddings.append(
-                get_embedding(text=[text], openai_api_key=openai_key)
-            )
+            embeddings.append(get_embedding(text=[text], openai_api_key=openai_key))
         except Exception as e:
             return Exception(
                 e.__str__(),
@@ -124,9 +118,7 @@ def get_reference(text, openai_key, chat, top_k):
         parts = split_text(text)
         for part in parts:
             try:
-                embeddings.append(
-                    get_embedding(text=[part], openai_api_key=openai_key)
-                )
+                embeddings.append(get_embedding(text=[part], openai_api_key=openai_key))
             except Exception as e:
                 raise Exception(
                     e.__str__(),
@@ -159,16 +151,14 @@ def converse(
     user_language,
 ):
     if not openai_key:
-        raise Exception(
-            "OpenAI-Key header is required to create a chat or converse"
-        )
+        raise Exception("OpenAI-Key header is required to create a chat or converse")
     openai.api_key = openai_key
 
     english_text = english_text.replace("\n", " ")
     language = user_language.split("-")[0]
     nurse_query = ChatMessage.objects.create(
-        message=english_text,
-        translated_message=local_translated_text,
+        message=local_translated_text,
+        original_message=english_text,
         chat=chat,
         messageType=ChatMessageType.USER,
         language=language,
@@ -194,13 +184,9 @@ def converse(
     chat_history = []
     for message in previous_messages:
         if message.messageType == ChatMessageType.USER:
-            chat_history.append(
-                HumanMessage(content=f"Nurse: {message.message}")
-            )
+            chat_history.append(HumanMessage(content=f"Nurse: {message.message}"))
         elif message.messageType == ChatMessageType.AYUSHMA:
-            chat_history.append(
-                AIMessage(content=f"Ayushma: {message.message}")
-            )
+            chat_history.append(AIMessage(content=f"Ayushma: {message.message}"))
 
     with start_blocking_portal() as portal:
         portal.start_task_soon(
@@ -240,8 +226,8 @@ def converse(
                         )
 
                     ChatMessage.objects.create(
-                        message=chat_response,
-                        translated_message=translated_chat_response,
+                        message=translated_chat_response,
+                        original_message=translated_chat_response,
                         chat=chat,
                         messageType=ChatMessageType.AYUSHMA,
                         ayushma_audio_url=url,
@@ -271,12 +257,10 @@ def converse(
             error_text = str(e)
             translated_error_text = error_text
             if user_language != "en-IN":
-                translated_error_text = translate_text(
-                    user_language, error_text
-                )
+                translated_error_text = translate_text(user_language, error_text)
             ChatMessage.objects.create(
-                message=error_text,
-                translated_message=translated_error_text,
+                message=translated_error_text,
+                original_message=error_text,
                 chat=chat,
                 messageType=ChatMessageType.AYUSHMA,
                 language=language,

@@ -21,7 +21,7 @@ class ChatMessage(BaseModel):
         choices=ChatMessageType.choices, default=ChatMessageType.USER
     )
     message = models.TextField()
-    translated_message = models.TextField(blank=True, null=True)
+    original_message = models.TextField(blank=True, null=True)
     language = models.CharField(max_length=10, blank=False, default="en")
     ayushma_audio_url = models.URLField(blank=True, null=True)
 
