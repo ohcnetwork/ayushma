@@ -1,8 +1,9 @@
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAdminUser
+from rest_framework.response import Response
 
-from ayushma.models import Document, Project
+from ayushma.models import Document, DocumentType, Project
 from ayushma.serializers.document import DocumentSerializer, DocumentUpdateSerializer
 from ayushma.utils.upsert import upsert, deleteNamespace
 from utils.views.base import BaseModelViewSet
@@ -42,8 +43,19 @@ class DocumentViewSet(BaseModelViewSet):
         external_id = self.kwargs["project_external_id"]
         project = Project.objects.get(external_id=external_id)
         document = serializer.save(project=project)
-        # upsert file
-        upsert(filepath=str(document.file), external_id=external_id)
+    
+        try:
+            if document.document_type == DocumentType.FILE:
+                upsert(external_id=external_id, filepath=str(document.file))
+            elif document.document_type == DocumentType.URL:
+                upsert(external_id=external_id, url=document.text_content)
+            elif document.document_type == DocumentType.TEXT:
+                upsert(external_id=external_id, text=document.text_content)
+            else:
+                raise Exception("Invalid document type.")
+        except Exception as e:
+            return Response({"non_field_errors": str(e)}, status=400)
+
 
     '''If an admin or a superuser deletes a document, it's vectors are deleted from the pinecone database'''
     def destroy(self, request, *args, **kwargs):
@@ -51,4 +63,4 @@ class DocumentViewSet(BaseModelViewSet):
         self.perform_destroy(instance)
         if request.user.is_staff or int(request.data['user_type'] == 3):
             deleteNamespace(instance.external_id)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_204_NO_CONTENT)      

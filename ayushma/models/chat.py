@@ -10,6 +10,7 @@ class Chat(BaseModel):
     title = models.CharField(max_length=50)
     user = models.ForeignKey(User, on_delete=models.PROTECT)
     project = models.ForeignKey(Project, on_delete=models.PROTECT)
+    language = models.CharField(max_length=10, blank=False, default="en")
 
     def __str__(self) -> str:
         return f"{self.title} from {self.user.username}"
@@ -21,6 +22,7 @@ class ChatMessage(BaseModel):
         choices=ChatMessageType.choices, default=ChatMessageType.USER
     )
     message = models.TextField()
+    ayushma_audio_url = models.URLField(blank=True, null=True)
 
     def __str__(self) -> str:
         return f"{self.message} : {self.chat}"
