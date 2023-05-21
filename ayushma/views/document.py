@@ -46,19 +46,19 @@ class DocumentViewSet(BaseModelViewSet):
                 upsert(
                     external_id=external_id,
                     filepath=str(document.file),
-                    document_external_id=document.external_id,
+                    document_id=document.pk,
                 )
             elif document.document_type == DocumentType.URL:
                 upsert(
                     external_id=external_id,
                     url=document.text_content,
-                    document_external_id=document.external_id,
+                    document_id=document.pk,
                 )
             elif document.document_type == DocumentType.TEXT:
                 upsert(
                     external_id=external_id,
                     text=document.text_content,
-                    document_external_id=document.external_id,
+                    document_id=document.pk,
                 )
             else:
                 raise Exception("Invalid document type.")

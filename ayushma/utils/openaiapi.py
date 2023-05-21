@@ -63,19 +63,19 @@ def get_sanitized_reference(pinecone_references: List[QueryResponse]) -> str:
 
     Example usage:
         >>> get_sanitized_reference([QueryResponse(...), QueryResponse(...)])
-        "{'be666676-c6e4-4da7-bd80-133712a6cfbe': 'Hello how are you, I am fine, thank you.', 'af77876-c6e4-4da8-bd80-133712a6cfgw': 'How was your day?, Mine was good.'}"
+        "{'28': 'Hello how are you, I am fine, thank you.', '21': 'How was your day?, Mine was good.'}"
     """
     sanitized_reference = {}
 
     for reference in pinecone_references:
         for match in reference.matches:
             try:
-                document_external_id = str(match.metadata["document"])
+                document_id = str(match.metadata["document"])
                 text = str(match.metadata["text"]).replace("\n", " ") + ","
-                if document_external_id in sanitized_reference:
-                    sanitized_reference[document_external_id] += text
+                if document_id in sanitized_reference:
+                    sanitized_reference[document_id] += text
                 else:
-                    sanitized_reference[document_external_id] = text
+                    sanitized_reference[document_id] = text
             except:
                 pass
 
@@ -162,7 +162,7 @@ def add_reference_documents(chat_message):
         doc_ids = [doc_id.strip(" .,") for doc_id in doc_ids]
         for doc_id in doc_ids:
             try:
-                doc = Document.objects.get(external_id=doc_id)
+                doc = Document.objects.get(pk=int(doc_id))
                 chat_message.reference_documents.add(doc)
             except Document.DoesNotExist:
                 pass
@@ -251,7 +251,6 @@ def converse(
                         ayushma_audio_url=url,
                     )
                     add_reference_documents(chat_message)
-
 
                     yield create_json_response(
                         local_translated_text,
