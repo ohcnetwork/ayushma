@@ -38,11 +38,14 @@ class ChatViewSet(BaseModelViewSet):
         return super().initialize_request(request, *args, **kwargs)
 
     def get_queryset(self):
+        user = self.request.user
         project_id = self.kwargs["project_external_id"]
-        queryset = self.queryset.filter(
-            user=self.request.user, project__external_id=project_id
-        )
-        return queryset
+        queryset = self.queryset.filter(project__external_id=project_id)
+
+        if user.is_superuser:
+            return queryset
+
+        return queryset.filter(user=user)
 
     def get_parsers(self):
         if self.action == "audio_converse":

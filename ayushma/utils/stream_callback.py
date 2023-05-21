@@ -28,6 +28,8 @@ class StreamingQueueCallbackHandler(BaseCallbackHandler):
     def on_llm_error(
         self, error: Union[Exception, KeyboardInterrupt], **kwargs: Any
     ) -> None:
+        print("LLM ERROR", error)
+        self.q.put(self.end)
         """Run when LLM errors."""
 
     def on_chain_start(

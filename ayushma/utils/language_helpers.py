@@ -32,7 +32,7 @@ language_code_voice_map = {
 
 def sanitize_text(text):
     sanitized_text = re.sub(r"(\*\*|__)(.*?)\1", r"\2", text)  # Remove bold
-    sanitized_text = re.sub(r"(\*|_)(.*?)\1", r"\2", text)  # Remove italic
+    sanitized_text = re.sub(r"(\*|_)(.*?)\1", r"\2", sanitized_text)  # Remove italic
 
     return sanitized_text
 
