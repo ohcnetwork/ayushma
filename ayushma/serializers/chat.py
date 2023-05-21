@@ -33,6 +33,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             "chat",
             "messageType",
             "message",
+            "ayushma_audio_url",
             "created_at",
             "modified_at",
         )
