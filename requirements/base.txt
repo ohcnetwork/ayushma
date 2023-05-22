@@ -8,7 +8,7 @@ celery==5.2.7  # pyup: < 6.0  # https://github.com/celery/celery
 
 # Django
 # ------------------------------------------------------------------------------
-django==4.1.7  # pyup: < 5.0  # https://www.djangoproject.com/
+django==4.2.1  # pyup: < 5.0  # https://www.djangoproject.com/
 django-environ==0.9.0  # https://github.com/joke2k/django-environ
 django-model-utils==4.3.1  # https://github.com/jazzband/django-model-utils
 django-filter==23.1  # https://github.com/carltongibson/django-filter
@@ -29,7 +29,7 @@ openai==0.27.6
 pinecone-client==2.2.1
 PyPDF2==3.0.1
 tiktoken==0.3.3
-langchain==0.0.160
+langchain==0.0.173
 
 # For asynchronous event loop
 anyio==3.6.2
