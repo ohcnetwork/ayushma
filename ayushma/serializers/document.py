@@ -40,9 +40,10 @@ class DocumentSerializer(serializers.ModelSerializer):
             "description",
             "document_type",
             "file",
+            "s3_url",
             "text_content",
         )
-        read_only_fields = ("external_id", "created_at", "modified_at")
+        read_only_fields = ("external_id", "created_at", "s3_url", "modified_at")
 
 
 class DocumentUpdateSerializer(serializers.ModelSerializer):
