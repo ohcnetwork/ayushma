@@ -14,7 +14,6 @@ from pinecone import QueryResponse
 from ayushma.models import ChatMessage
 from ayushma.models.document import Document
 from ayushma.models.enums import ChatMessageType
-from ayushma.serializers.document import DocumentSerializer
 from ayushma.utils.langchain import LangChainHelper
 from ayushma.utils.language_helpers import text_to_speech, translate_text
 from ayushma.utils.upload_file import upload_file
@@ -75,7 +74,8 @@ def get_sanitized_reference(pinecone_references: List[QueryResponse]) -> str:
                     sanitized_reference[document_id] += text
                 else:
                     sanitized_reference[document_id] = text
-            except:
+            except Exception as e:
+                print(e)
                 pass
 
     return json.dumps(sanitized_reference)
@@ -159,6 +159,9 @@ def add_reference_documents(chat_message):
     if ref_start_idx != -1:
         doc_ids = chat_text[ref_start_idx + len(ref_text) :].split(",")
         doc_ids = [doc_id.strip(" .,[]*") for doc_id in doc_ids]
+        if len(doc_ids) == 1 and doc_ids[0] == "":
+            doc_ids = []
+        doc_ids = set(doc_ids)
         for doc_id in doc_ids:
             try:
                 doc = Document.objects.get(pk=int(doc_id))
