@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from ayushma.models import Chat, ChatMessage
+from ayushma.serializers.document import DocumentSerializer
 from ayushma.serializers.project import ProjectSerializer
 
 
@@ -26,6 +27,8 @@ class ChatSerializer(serializers.ModelSerializer):
 
 
 class ChatMessageSerializer(serializers.ModelSerializer):
+    reference_documents = DocumentSerializer(many=True, read_only=True)
+
     class Meta:
         model = ChatMessage
         fields = (
@@ -33,11 +36,17 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             "chat",
             "messageType",
             "message",
+            "reference_documents",
             "ayushma_audio_url",
             "created_at",
             "modified_at",
         )
-        read_only_fields = ("external_id", "created_at", "modified_at")
+        read_only_fields = (
+            "external_id",
+            "created_at",
+            "modified_at",
+            "reference_documents",
+        )
 
 
 class ChatDetailSerializer(serializers.ModelSerializer):

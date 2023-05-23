@@ -12,7 +12,9 @@ from langchain.schema import AIMessage, HumanMessage
 from pinecone import QueryResponse
 
 from ayushma.models import ChatMessage
+from ayushma.models.document import Document
 from ayushma.models.enums import ChatMessageType
+from ayushma.serializers.document import DocumentSerializer
 from ayushma.utils.langchain import LangChainHelper
 from ayushma.utils.language_helpers import text_to_speech, translate_text
 from ayushma.utils.upload_file import upload_file
@@ -56,19 +58,27 @@ def get_sanitized_reference(pinecone_references: List[QueryResponse]) -> str:
             the Pinecone index.
 
     Returns:
-        A string containing the text from the Pinecone QueryResponse object.
+        A string containing the document id and text from the Pinecone QueryResponse object.
 
     Example usage:
         >>> get_sanitized_reference([QueryResponse(...), QueryResponse(...)])
-        "Hello, world! How are you?,I am fine. Thank you."
+        "{'28': 'Hello how are you, I am fine, thank you.', '21': 'How was your day?, Mine was good.'}"
     """
-    sanitized_reference = ""
+    sanitized_reference = {}
 
     for reference in pinecone_references:
         for match in reference.matches:
-            sanitized_reference += str(match.metadata["text"]).replace("\n", " ") + ","
+            try:
+                document_id = str(match.metadata["document"])
+                text = str(match.metadata["text"]).replace("\n", " ") + ","
+                if document_id in sanitized_reference:
+                    sanitized_reference[document_id] += text
+                else:
+                    sanitized_reference[document_id] = text
+            except:
+                pass
 
-    return sanitized_reference
+    return json.dumps(sanitized_reference)
 
 
 def num_tokens_from_string(string: str, encoding_name: str) -> int:
@@ -140,6 +150,23 @@ def get_reference(text, openai_key, chat, top_k):
                 e.__str__(),
             )
     return get_sanitized_reference(pinecone_references=pinecone_references)
+
+
+def add_reference_documents(chat_message):
+    ref_text = "References:"
+    chat_text = str(chat_message.message)
+    ref_start_idx = chat_text.find(ref_text)
+    if ref_start_idx != -1:
+        doc_ids = chat_text[ref_start_idx + len(ref_text) :].split(",")
+        doc_ids = [doc_id.strip(" .,[]*") for doc_id in doc_ids]
+        for doc_id in doc_ids:
+            try:
+                doc = Document.objects.get(pk=int(doc_id))
+                chat_message.reference_documents.add(doc)
+            except Document.DoesNotExist:
+                pass
+        chat_message.message = chat_text[:ref_start_idx]
+        chat_message.save()
 
 
 def converse(
@@ -217,12 +244,13 @@ def converse(
                             s3_key=f"{chat.id}_{uuid.uuid4()}.mp3",
                         )
 
-                    ChatMessage.objects.create(
+                    chat_message = ChatMessage.objects.create(
                         message=translated_chat_response,
                         chat=chat,
                         messageType=ChatMessageType.AYUSHMA,
                         ayushma_audio_url=url,
                     )
+                    add_reference_documents(chat_message)
 
                     yield create_json_response(
                         local_translated_text,
@@ -244,7 +272,7 @@ def converse(
                 )
         except Exception as e:
             print(e)
-            ChatMessage.objects.create(
+            chat_message = ChatMessage.objects.create(
                 message=str(e),
                 chat=chat,
                 messageType=ChatMessageType.AYUSHMA,
