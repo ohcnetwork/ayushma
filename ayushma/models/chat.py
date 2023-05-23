@@ -4,6 +4,7 @@ from ayushma.models.enums import ChatMessageType
 from ayushma.models.project import Project
 from ayushma.models.users import User
 from utils.models.base import BaseModel
+from ayushma.models.document import Document
 
 
 class Chat(BaseModel):
@@ -23,6 +24,7 @@ class ChatMessage(BaseModel):
     message = models.TextField()
     original_message = models.TextField(blank=True, null=True)
     language = models.CharField(max_length=10, blank=False, default="en")
+    reference_documents = models.ManyToManyField(Document, blank=True)
     ayushma_audio_url = models.URLField(blank=True, null=True)
 
     def __str__(self) -> str:

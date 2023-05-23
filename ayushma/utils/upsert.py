@@ -29,6 +29,7 @@ def read_document(url):
 
 def upsert(
     external_id: str,
+    document_id: int,
     s3_url: Optional[str] = None,
     url: Optional[str] = None,
     text: Optional[str] = None,
@@ -38,6 +39,7 @@ def upsert(
 
     Args:
         external_id (str): The external ID to use when upserting to the Pinecone index.
+        document_id (int): The pk of the document that is to be upserted (pk of the doc is added to the metadata)
         s3_url (str, optional): The S3 URL of the file to upsert. Defaults to None.
         url (str, optional): The URL of the website to upsert. Defaults to None.
         text (str, optional): The text content to upsert. Defaults to None.
@@ -93,7 +95,8 @@ def upsert(
         ids_batch = [str(n) for n in range(i, i_end)]  # create IDs
         embeds = get_embedding(lines_batch)  # create embeddings
         meta = [
-            {"text": line} for line in lines_batch
+            {"text": line, "document": str(document_id)}
+            for line in lines_batch
         ]  # prep metadata and upsert batch
         to_upsert = zip(ids_batch, embeds, meta)  # zip together
         pinecone_index.upsert(
