@@ -26,6 +26,8 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=False)
+
     class Meta:
         model = User
         fields = (
@@ -35,6 +37,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "email",
             "allow_key",
             "is_staff",
+            "password",
         )
         read_only_fields = ("external_id", "email", "username", "allow_key", "is_staff")
 
