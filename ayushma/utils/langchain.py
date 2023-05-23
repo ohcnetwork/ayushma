@@ -50,8 +50,11 @@ else:
 (
 result = <"Sorry I am not able to find anything related to your query in my database">
 
-Output Format(should contain only one line'):
-Ayushma: <enter_result_here> <"IMPORTANT: display reference ids in comma separated format exactly like this (don't change the format): 'References: id1, id2, id3 etc.' and don't apply any formating to references. You must display references at the end in all responses and display only relevant reference_ids from which you formed the answer">"""
+Output Format (follow the below format strictly and you must provide the references ids array in all your responses after the result):
+'''
+Ayushma: <enter_result_here> 
+References: <array of reference_ids (in the format: [1,2,3]) "include all the reference ids in this array that are relevent and from which you formed the result">
+'''"""
         if prompt_template:
             template = prompt_template
 
