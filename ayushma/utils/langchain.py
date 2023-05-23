@@ -50,10 +50,10 @@ else:
 (
 result = <"Sorry I am not able to find anything related to your query in my database">
 
-Output Format (follow the below format strictly and you must provide the references ids array in all your responses after the result):
+Output Format (follow the below format strictly and you must provide the references ids array in all your responses after the result. Do not mention about the references anywhere else):
 '''
-Ayushma: <enter_result_here> 
-References: <array of reference_ids (in the format: [1,2,3]) "include all the reference ids in this array that are relevent and from which you formed the result">
+Ayushma: <enter_result_here>
+References: <array of reference_ids (in the format: [1,2,3]) "include all the reference ids in this array that are relevant and from which you formed the result">
 '''"""
         if prompt_template:
             template = prompt_template
