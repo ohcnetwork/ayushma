@@ -158,7 +158,7 @@ def add_reference_documents(chat_message):
     ref_start_idx = chat_text.find(ref_text)
     if ref_start_idx != -1:
         doc_ids = chat_text[ref_start_idx + len(ref_text) :].split(",")
-        doc_ids = [doc_id.strip(" .,") for doc_id in doc_ids]
+        doc_ids = [doc_id.strip(" .,[]*") for doc_id in doc_ids]
         for doc_id in doc_ids:
             try:
                 doc = Document.objects.get(pk=int(doc_id))
@@ -167,6 +167,7 @@ def add_reference_documents(chat_message):
                 pass
         chat_message.message = chat_text[:ref_start_idx]
         chat_message.save()
+
 
 def converse(
     english_text, local_translated_text, openai_key, chat, match_number, user_language
