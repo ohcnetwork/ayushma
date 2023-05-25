@@ -36,6 +36,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             "chat",
             "messageType",
             "message",
+            "translated_message",
             "reference_documents",
             "ayushma_audio_url",
             "created_at",

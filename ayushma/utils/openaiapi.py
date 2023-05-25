@@ -2,7 +2,7 @@ import io
 import json
 import uuid
 from queue import Queue
-from typing import List
+from typing import Dict, List
 
 import openai
 import tiktoken
@@ -63,7 +63,7 @@ def get_sanitized_reference(pinecone_references: List[QueryResponse]) -> str:
         >>> get_sanitized_reference([QueryResponse(...), QueryResponse(...)])
         "{'28': 'Hello how are you, I am fine, thank you.', '21': 'How was your day?, Mine was good.'}"
     """
-    sanitized_reference = {}
+    sanitized_reference: Dict[str, str] = {}
 
     for reference in pinecone_references:
         for match in reference.matches:
@@ -76,7 +76,6 @@ def get_sanitized_reference(pinecone_references: List[QueryResponse]) -> str:
                     sanitized_reference[document_id] = text
             except Exception as e:
                 print(e)
-                pass
 
     return json.dumps(sanitized_reference)
 
@@ -168,6 +167,8 @@ def add_reference_documents(chat_message):
                 chat_message.reference_documents.add(doc)
             except Document.DoesNotExist:
                 pass
+            except ValueError:
+                print("Invalid reference document id:", doc_id)
         chat_message.message = chat_text[:ref_start_idx]
         chat_message.save()
 
@@ -252,17 +253,10 @@ def converse(
                             file=io.BytesIO(ayushma_voice),
                             s3_key=f"{chat.id}_{uuid.uuid4()}.mp3",
                         )
-
-                    chat_message.message = translated_chat_response
+                    if translated_chat_response != chat_message.message:
+                        chat_message.translated_message = translated_chat_response
                     chat_message.ayushma_audio_url = url
                     chat_message.save()
-
-                    # chat_message = ChatMessage.objects.create(
-                    #     message=translated_chat_response,
-                    #     chat=chat,
-                    #     messageType=ChatMessageType.AYUSHMA,
-                    #     ayushma_audio_url=url,
-                    # )
 
                     yield create_json_response(
                         local_translated_text,
