@@ -74,6 +74,7 @@ class ChatViewSet(BaseModelViewSet):
             fields={
                 "audio": CharField(),
                 "match_number": IntegerField(default=10),
+                "language": CharField(default="en"),
             },
         ),
         responses={status.HTTP_200_OK: None},
@@ -89,6 +90,8 @@ class ChatViewSet(BaseModelViewSet):
         audio = self.request.data.get("audio")
 
         chat: Chat = Chat.objects.get(external_id=kwarg["external_id"])
+
+        language = self.request.data.get("language") or "en"
 
         openai_key = self.request.headers.get("OpenAI-Key") or (
             self.request.user.allow_key and settings.OPENAI_API_KEY
@@ -109,23 +112,23 @@ class ChatViewSet(BaseModelViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        trasnlated_text = transcript.text
-        if chat.language != "en":
-            trasnlated_text = translate_text(chat.language + "-IN", transcript.text)
+        translated_text = transcript.text
+        if language != "en":
+            translated_text = translate_text(language + "-IN", transcript.text)
 
         if not ChatMessage.objects.filter(chat=chat).exists():
-            chat.title = trasnlated_text[0:50]
+            chat.title = translated_text[0:50]
             chat.save()
 
         response = StreamingHttpResponse(content_type="text/event-stream")
         try:
             response.streaming_content = converse(
                 english_text=transcript.text,
-                local_translated_text=trasnlated_text,
+                local_translated_text=translated_text,
                 openai_key=openai_key,
                 chat=chat,
                 match_number=match_number,
-                user_language=chat.language + "-IN",
+                user_language=language + "-IN",
             )
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -139,6 +142,7 @@ class ChatViewSet(BaseModelViewSet):
             fields={
                 "text": CharField(),
                 "match_number": IntegerField(default=10),
+                "language": CharField(default="en"),
             },
         ),
         responses={status.HTTP_200_OK: None},
@@ -151,6 +155,7 @@ class ChatViewSet(BaseModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         text = self.request.data.get("text")
+        language = self.request.data.get("language") or "en"
         chat: Chat = Chat.objects.get(external_id=kwarg["external_id"])
         openai_key = self.request.headers.get("OpenAI-Key") or (
             self.request.user.allow_key and settings.OPENAI_API_KEY
@@ -166,7 +171,7 @@ class ChatViewSet(BaseModelViewSet):
         response = StreamingHttpResponse(content_type="text/event-stream")
 
         english_text = text
-        if chat.language != "en":
+        if language != "en":
             english_text = translate_text("en-IN", text)
 
         try:
@@ -176,7 +181,7 @@ class ChatViewSet(BaseModelViewSet):
                 openai_key=openai_key,
                 chat=chat,
                 match_number=match_number,
-                user_language=chat.language + "-IN",
+                user_language=language + "-IN",
             )
 
         except Exception as e:

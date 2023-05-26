@@ -173,17 +173,25 @@ def add_reference_documents(chat_message):
 
 
 def converse(
-    english_text, local_translated_text, openai_key, chat, match_number, user_language
+    english_text,
+    local_translated_text,
+    openai_key,
+    chat,
+    match_number,
+    user_language,
 ):
     if not openai_key:
         raise Exception("OpenAI-Key header is required to create a chat or converse")
     openai.api_key = openai_key
 
     english_text = english_text.replace("\n", " ")
+    language = user_language.split("-")[0]
     nurse_query = ChatMessage.objects.create(
         message=local_translated_text,
+        original_message=english_text,
         chat=chat,
         messageType=ChatMessageType.USER,
+        language=language,
     )
 
     reference = get_reference(english_text, openai_key, chat, match_number)
@@ -234,6 +242,7 @@ def converse(
                         message=chat_response,
                         chat=chat,
                         messageType=ChatMessageType.AYUSHMA,
+                        language=language,
                     )
                     add_reference_documents(chat_message)
                     translated_chat_response = chat_message.message
@@ -254,15 +263,10 @@ def converse(
                         )
 
                     chat_message.message = translated_chat_response
+                    chat_message.original_message = chat_response
                     chat_message.ayushma_audio_url = url
                     chat_message.save()
 
-                    # chat_message = ChatMessage.objects.create(
-                    #     message=translated_chat_response,
-                    #     chat=chat,
-                    #     messageType=ChatMessageType.AYUSHMA,
-                    #     ayushma_audio_url=url,
-                    # )
 
                     yield create_json_response(
                         local_translated_text,
@@ -284,10 +288,17 @@ def converse(
                 )
         except Exception as e:
             print(e)
-            chat_message = ChatMessage.objects.create(
-                message=str(e),
+            error_text = str(e)
+            translated_error_text = error_text
+            if user_language != "en-IN":
+                translated_error_text = translate_text(user_language, error_text)
+                
+            ChatMessage.objects.create(
+                message=translated_error_text,
+                original_message=error_text,
                 chat=chat,
                 messageType=ChatMessageType.AYUSHMA,
+                language=language,
             )
             yield create_json_response(
                 local_translated_text, chat.external_id, "", str(e), True, None
