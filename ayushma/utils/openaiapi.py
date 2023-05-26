@@ -154,7 +154,7 @@ def get_reference(text, openai_key, chat, top_k):
 
 def add_reference_documents(chat_message):
     ref_text = "References:"
-    chat_text = str(chat_message.message)
+    chat_text = str(chat_message.original_message)
     ref_start_idx = chat_text.find(ref_text)
     if ref_start_idx != -1:
         doc_ids = chat_text[ref_start_idx + len(ref_text) :].split(",")
@@ -168,7 +168,9 @@ def add_reference_documents(chat_message):
                 chat_message.reference_documents.add(doc)
             except Document.DoesNotExist:
                 pass
-        chat_message.message = chat_text[:ref_start_idx]
+        chat_message.original_message = chat_text[
+            :ref_start_idx
+        ].strip()  # Strip to remove empty line at the end \nRefereces:
         chat_message.save()
 
 
@@ -239,16 +241,16 @@ def converse(
                     continue
                 if next_token is RESPONSE_END:
                     chat_message = ChatMessage.objects.create(
-                        message=chat_response,
+                        original_message=chat_response,
                         chat=chat,
                         messageType=ChatMessageType.AYUSHMA,
                         language=language,
                     )
                     add_reference_documents(chat_message)
-                    translated_chat_response = chat_message.message
+                    translated_chat_response = chat_message.original_message
                     if user_language != "en-IN":
                         translated_chat_response = translate_text(
-                            user_language, chat_message.message
+                            user_language, chat_message.original_message
                         )
 
                     ayushma_voice = text_to_speech(
@@ -263,10 +265,8 @@ def converse(
                         )
 
                     chat_message.message = translated_chat_response
-                    chat_message.original_message = chat_response
                     chat_message.ayushma_audio_url = url
                     chat_message.save()
-
 
                     yield create_json_response(
                         local_translated_text,
@@ -292,7 +292,7 @@ def converse(
             translated_error_text = error_text
             if user_language != "en-IN":
                 translated_error_text = translate_text(user_language, error_text)
-                
+
             ChatMessage.objects.create(
                 message=translated_error_text,
                 original_message=error_text,
