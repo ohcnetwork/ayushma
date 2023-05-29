@@ -9,7 +9,7 @@ services:
     build:
       context: .
       dockerfile: ./compose/local/django/Dockerfile
-    image: ayushma_local_django
+    image: django
     container_name: ayushma_local_django
     platform: linux/x86_64
     depends_on:
@@ -28,7 +28,7 @@ services:
     build:
       context: .
       dockerfile: ./compose/production/postgres/Dockerfile
-    image: ayushma_production_postgres
+    image: postgres
     container_name: ayushma_local_postgres
     volumes:
       - ayushma_local_postgres_data:/var/lib/postgresql/data:Z
