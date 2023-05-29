@@ -1,3 +1,4 @@
+import os
 from io import BytesIO
 from typing import Optional
 
@@ -13,16 +14,23 @@ from ayushma.utils.openaiapi import get_embedding
 
 def read_document(url):
     if url.endswith(".pdf"):  # Handle pdf files
-        response = requests.get(url)
-        pdf_reader = PdfReader(BytesIO(response.content))
+        if url.startswith("http"):
+            response = requests.get(url)
+            pdf_reader = PdfReader(BytesIO(response.content))
+        else:
+            pdf_reader = PdfReader(os.path.join(settings.MEDIA_ROOT, "documents", url))
         text = ""
         for i in range(len(pdf_reader.pages)):
             page = pdf_reader.pages[i]
             text += page.extract_text()
         document_text = text
     else:  # Handle txt and md files
-        response = requests.get(url)
-        document_text = response.text
+        if url.startswith("http"):
+            response = requests.get(url)
+            document_text = response.text
+        else:
+            with open(os.path.join(settings.MEDIA_ROOT, "documents", url), "r") as f:
+                document_text = f.read()
 
     return document_text
 
@@ -95,8 +103,7 @@ def upsert(
         ids_batch = [str(n) for n in range(i, i_end)]  # create IDs
         embeds = get_embedding(lines_batch)  # create embeddings
         meta = [
-            {"text": line, "document": str(document_id)}
-            for line in lines_batch
+            {"text": line, "document": str(document_id)} for line in lines_batch
         ]  # prep metadata and upsert batch
         to_upsert = zip(ids_batch, embeds, meta)  # zip together
         pinecone_index.upsert(
