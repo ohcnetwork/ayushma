@@ -27,7 +27,7 @@ class LangChainHelper:
             callback_manager=AsyncCallbackManager(
                 [StreamingQueueCallbackHandler(token_queue, end)]
             ),
-            temperature=0.3,
+            temperature=0.1,
             openai_api_key=openai_api_key,
         )
 
