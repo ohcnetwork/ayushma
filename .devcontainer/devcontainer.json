@@ -18,8 +18,6 @@
 	// connected. This is typically a file mount in .devcontainer/docker-compose.yml
 	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
 	"features": {
-		"ghcr.io/devcontainers/features/python:1": {},
-		"ghcr.io/devcontainers-contrib/features/postgres-asdf:1": {}
 	}
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
