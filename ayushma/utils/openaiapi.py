@@ -157,22 +157,28 @@ def add_reference_documents(chat_message):
     ref_text = "References:"
     chat_text = str(chat_message.original_message)
     ref_start_idx = chat_text.find(ref_text)
-    if ref_start_idx != -1:
+    if ref_start_idx == -1:
+        return
+
+    try:
         doc_ids = chat_text[ref_start_idx + len(ref_text) :].split(",")
         doc_ids = [doc_id.strip(" .,[]*") for doc_id in doc_ids]
-        if len(doc_ids) == 1 and doc_ids[0] == "":
-            doc_ids = []
-        doc_ids = set(doc_ids)
+        doc_ids = set(
+            [int(doc_id) for doc_id in doc_ids if doc_id != "" and doc_id.isnumeric()]
+        )
         for doc_id in doc_ids:
             try:
-                doc = Document.objects.get(pk=int(doc_id))
+                doc = Document.objects.get(pk=doc_id)
                 chat_message.reference_documents.add(doc)
             except Document.DoesNotExist:
                 pass
-        chat_message.original_message = chat_text[
-            :ref_start_idx
-        ].strip()  # Strip to remove empty line at the end \nRefereces:
-        chat_message.save()
+    except Exception as e:
+        print("Error adding reference documents: ", e)
+
+    chat_message.original_message = chat_text[
+        :ref_start_idx
+    ].strip()  # Strip to remove empty line at the end \nRefereces:
+    chat_message.save()
 
 
 def converse(
