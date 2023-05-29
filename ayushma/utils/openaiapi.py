@@ -188,6 +188,7 @@ def converse(
     chat,
     match_number,
     user_language,
+    temperature,
     stats={},
 ):
     if not openai_key:
@@ -223,6 +224,7 @@ def converse(
         end=RESPONSE_END,
         openai_api_key=openai_key,
         prompt_template=chat.project.prompt,
+        temperature=temperature,
     )
 
     # excluding the latest query since it is not a history
@@ -263,6 +265,8 @@ def converse(
                         original_message=chat_response,
                         chat=chat,
                         messageType=ChatMessageType.AYUSHMA,
+                        top_k=match_number,
+                        temperature=temperature,
                         language=language,
                     )
                     add_reference_documents(chat_message)

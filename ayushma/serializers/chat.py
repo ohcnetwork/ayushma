@@ -42,6 +42,8 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             "created_at",
             "modified_at",
             "meta",
+            "temperature",
+            "top_k",
         )
         read_only_fields = (
             "external_id",
@@ -49,6 +51,8 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             "modified_at",
             "reference_documents",
             "meta",
+            "ayushma_audio_url",
+            "original_message",
         )
 
 

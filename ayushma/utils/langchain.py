@@ -20,6 +20,7 @@ class LangChainHelper:
         end,
         openai_api_key=settings.OPENAI_API_KEY,
         prompt_template=None,
+        temperature=0.1,
     ):
         # 0 means more deterministic output, 1 means more random output
         llm = ChatOpenAI(
@@ -27,7 +28,7 @@ class LangChainHelper:
             callback_manager=AsyncCallbackManager(
                 [StreamingQueueCallbackHandler(token_queue, end)]
             ),
-            temperature=0.1,
+            temperature=temperature,
             openai_api_key=openai_api_key,
         )
 

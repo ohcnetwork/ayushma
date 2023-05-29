@@ -103,7 +103,9 @@ class ChatViewSet(BaseModelViewSet):
             self.request.user.allow_key and settings.OPENAI_API_KEY
         )
 
-        match_number = self.request.data.get("match_number") or 100
+        match_number = self.request.data.get("top_k") or 100
+
+        temperature = self.request.data.get("temperature") or 0.1
 
         if not openai_key:
             return Response(
@@ -140,6 +142,7 @@ class ChatViewSet(BaseModelViewSet):
                 match_number=match_number,
                 user_language=language + "-IN",
                 stats=stats,
+                temperature=temperature,
             )
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -165,6 +168,10 @@ class ChatViewSet(BaseModelViewSet):
                 {"error": "Please provide text to generate embedding"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        stats = dict()
+
+        # store time to complete request
+        stats["start_time"] = time.time()
         text = self.request.data.get("text")
         language = self.request.data.get("language") or "en"
         chat: Chat = Chat.objects.get(external_id=kwarg["external_id"])
@@ -179,11 +186,14 @@ class ChatViewSet(BaseModelViewSet):
             )
 
         match_number = self.request.data.get("match_number") or 100
+        temperature = self.request.data.get("temperature") or 0.1
         response = StreamingHttpResponse(content_type="text/event-stream")
 
         english_text = text
         if language != "en":
+            stats["request_translation_start_time"] = time.time()
             english_text = translate_text("en-IN", text)
+            stats["request_translation_end_time"] = time.time()
 
         try:
             response.streaming_content = converse(
@@ -192,6 +202,8 @@ class ChatViewSet(BaseModelViewSet):
                 openai_key=openai_key,
                 chat=chat,
                 match_number=match_number,
+                stats=stats,
+                temperature=temperature,
                 user_language=language + "-IN",
             )
 
