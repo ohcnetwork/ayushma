@@ -41,12 +41,14 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             "language",
             "created_at",
             "modified_at",
+            "meta",
         )
         read_only_fields = (
             "external_id",
             "created_at",
             "modified_at",
             "reference_documents",
+            "meta",
         )
 
 

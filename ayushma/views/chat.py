@@ -14,6 +14,7 @@ from ayushma.serializers import ChatDetailSerializer, ChatSerializer
 from ayushma.utils.language_helpers import translate_text
 from ayushma.utils.openaiapi import converse
 from utils.views.base import BaseModelViewSet
+import time
 
 
 @extend_schema_view(
@@ -81,6 +82,11 @@ class ChatViewSet(BaseModelViewSet):
     )
     @action(detail=True, methods=["post"])
     def audio_converse(self, *args, **kwarg):
+        stats = dict()
+
+        # store time to complete request
+        stats["start_time"] = time.time()
+
         if not self.request.data.get("audio"):
             return Response(
                 {"error": "Please provide audio to generate embedding"},
@@ -106,15 +112,19 @@ class ChatViewSet(BaseModelViewSet):
             )
 
         try:
+            stats["transcript_start_time"] = time.time()
             transcript = openai.Audio.translate(
                 "whisper-1", file=audio, api_key=openai_key
             )
+            stats["transcript_end_time"] = time.time()
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         translated_text = transcript.text
         if language != "en":
+            stats["request_translation_start_time"] = time.time()
             translated_text = translate_text(language + "-IN", transcript.text)
+            stats["request_translation_end_time"] = time.time()
 
         if not ChatMessage.objects.filter(chat=chat).exists():
             chat.title = translated_text[0:50]
@@ -129,6 +139,7 @@ class ChatViewSet(BaseModelViewSet):
                 chat=chat,
                 match_number=match_number,
                 user_language=language + "-IN",
+                stats=stats,
             )
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

@@ -26,6 +26,7 @@ class ChatMessage(BaseModel):
     language = models.CharField(max_length=10, blank=False, default="en")
     reference_documents = models.ManyToManyField(Document, blank=True)
     ayushma_audio_url = models.URLField(blank=True, null=True)
+    meta = models.JSONField(blank=True, null=True)
 
     def __str__(self) -> str:
         return f"{self.message} : {self.chat}"
