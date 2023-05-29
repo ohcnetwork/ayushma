@@ -342,6 +342,6 @@ pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENVIRONMENT)
 PINECONE_INDEX_INSTANCE = pinecone.Index(index_name=PINECONE_INDEX)
 
 # S3
-S3_BUCKET_NAME = env("S3_BUCKET_NAME")
-S3_SECRET_KEY = env("S3_SECRET_KEY")
-S3_KEY_ID = env("S3_KEY_ID")
+S3_BUCKET_NAME = env("S3_BUCKET_NAME", default="")
+S3_SECRET_KEY = env("S3_SECRET_KEY", default="")
+S3_KEY_ID = env("S3_KEY_ID", default="")
