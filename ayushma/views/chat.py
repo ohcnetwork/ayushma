@@ -30,6 +30,7 @@ class ChatViewSet(BaseModelViewSet):
     serializer_class = ChatSerializer
     serializer_action_classes = {
         "retrieve": ChatDetailSerializer,
+        "list_all": ChatDetailSerializer,
     }
     permission_classes = (permissions.IsAuthenticated,)
     lookup_field = "external_id"
@@ -43,7 +44,7 @@ class ChatViewSet(BaseModelViewSet):
         project_id = self.kwargs["project_external_id"]
         queryset = self.queryset.filter(project__external_id=project_id)
 
-        if user.is_superuser:
+        if user.is_superuser and self.action == "list_all":
             return queryset
 
         return queryset.filter(user=user)
@@ -80,6 +81,12 @@ class ChatViewSet(BaseModelViewSet):
         ),
         responses={status.HTTP_200_OK: None},
     )
+    @action(detail=False, methods=["get"])
+    def list_all(self, *args, **kwarg):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
     @action(detail=True, methods=["post"])
     def audio_converse(self, *args, **kwarg):
         stats = dict()
