@@ -102,7 +102,6 @@ def upsert(
         ]  # remove blank lines
         ids_batch = [f"{document_id}_{n}" for n in range(i, i_end)]  # create IDs
 
-        print(f"ids_batch: {ids_batch}")
         embeds = get_embedding(lines_batch)  # create embeddings
         meta = [
             {"text": line, "document": str(document_id)} for line in lines_batch
