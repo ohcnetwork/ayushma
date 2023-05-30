@@ -1,5 +1,8 @@
+import os
 import uuid
 
+from django.conf import settings
+from django.core.files.storage import FileSystemStorage
 from rest_framework import serializers
 
 from ayushma.models import Document
@@ -21,12 +24,24 @@ class DocumentSerializer(serializers.ModelSerializer):
         if "file" in self.validated_data:
             doc_file = self.validated_data.pop("file")
             file_name, file_extension = doc_file.name.split(".")
+            full_file_name = f"{file_name}_{uuid.uuid4()}.{file_extension}"
             s3_url = upload_file(
                 file=doc_file,
-                s3_key=f"{file_name}_{uuid.uuid4()}.{file_extension}",
+                s3_key=full_file_name,
             )
             if not s3_url:
-                raise serializers.ValidationError("File upload failed.")
+                # saves file to media folder
+                folder = os.path.join(settings.MEDIA_ROOT, "documents")
+                try:
+                    os.mkdir(folder)
+                except:
+                    pass
+
+                fs = FileSystemStorage(location=folder)
+                fs.save(full_file_name, doc_file)
+
+                s3_url = full_file_name
+
             self.validated_data["s3_url"] = s3_url
         return super().save(**kwargs)
 
