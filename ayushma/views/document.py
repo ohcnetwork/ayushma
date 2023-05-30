@@ -1,3 +1,4 @@
+from django.conf import settings
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAdminUser
@@ -43,7 +44,11 @@ class DocumentViewSet(BaseModelViewSet):
 
         try:
             if document.document_type == DocumentType.FILE:
-                upsert(external_id=external_id, s3_url=str(document.s3_url), document_id=document.pk,)
+                upsert(
+                    external_id=external_id,
+                    s3_url=str(document.s3_url),
+                    document_id=document.pk,
+                )
             elif document.document_type == DocumentType.URL:
                 upsert(
                     external_id=external_id,
@@ -60,3 +65,18 @@ class DocumentViewSet(BaseModelViewSet):
                 raise Exception("Invalid document type.")
         except Exception as e:
             return Response({"non_field_errors": str(e)}, status=400)
+
+    def perform_destroy(self, instance):
+        # delete namespace from vectorDB
+        try:
+            settings.PINECONE_INDEX_INSTANCE.delete(
+                namespace=self.kwargs["project_external_id"],
+                filter={"document": str(instance.pk)},
+            )
+        except Exception as e:
+            print(e)
+            return Response(
+                {"non_field_errors": "Error deleting document from vectorDB"},
+                status=400,
+            )
+        return super().perform_destroy(instance)

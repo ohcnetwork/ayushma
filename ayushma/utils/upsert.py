@@ -94,13 +94,14 @@ def upsert(
 
     print("Upserting to Pinecone index...")
 
-    for i in tqdm(range(0, len(document_lines), batch_size)):
+    for i in range(0, len(document_lines), batch_size):
         i_end = min(i + batch_size, len(document_lines))  # set end position of batch
         lines_batch = document_lines[i : i + batch_size]  # get batch of lines and IDs
         lines_batch = [
             line.strip() for line in lines_batch if line.strip()
         ]  # remove blank lines
-        ids_batch = [str(n) for n in range(i, i_end)]  # create IDs
+        ids_batch = [f"{document_id}_{n}" for n in range(i, i_end)]  # create IDs
+
         embeds = get_embedding(lines_batch)  # create embeddings
         meta = [
             {"text": line, "document": str(document_id)} for line in lines_batch

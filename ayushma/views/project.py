@@ -1,5 +1,7 @@
+from django.conf import settings
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
 
 from ayushma.models import Project
 from ayushma.serializers.project import ProjectSerializer, ProjectUpdateSerializer
@@ -38,3 +40,20 @@ class ProjectViewSet(BaseModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(creator=self.request.user)
+
+    def perform_destroy(self, instance):
+        # delete namespaces from vectorDB
+        try:
+            settings.PINECONE_INDEX_INSTANCE.delete(
+                namespace=str(instance.external_id),
+                deleteAll=True,
+            )
+        except Exception as e:
+            print(e)
+            return Response(
+                {
+                    "non_field_errors": "Error deleting documents from vectorDB for this project"
+                },
+                status=400,
+            )
+        return super().perform_destroy(instance)
