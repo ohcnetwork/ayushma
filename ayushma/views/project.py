@@ -45,7 +45,7 @@ class ProjectViewSet(BaseModelViewSet):
         # delete namespaces from vectorDB
         try:
             settings.PINECONE_INDEX_INSTANCE.delete(
-                namespace=instance.external_id,
+                namespace=str(instance.external_id),
                 deleteAll=True,
             )
         except Exception as e:
