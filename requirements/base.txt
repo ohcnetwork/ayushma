@@ -29,7 +29,7 @@ openai==0.27.6
 pinecone-client==2.2.1
 PyPDF2==3.0.1
 tiktoken==0.3.3
-langchain==0.0.173
+langchain==0.0.186
 
 # For asynchronous event loop
 anyio==3.6.2
