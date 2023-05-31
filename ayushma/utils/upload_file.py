@@ -9,7 +9,6 @@ def upload_file(file, s3_key):
             aws_access_key_id=settings.S3_KEY_ID,
             aws_secret_access_key=settings.S3_SECRET_KEY,
         )
-        response = s3.list_buckets()
         s3.upload_fileobj(file, settings.S3_BUCKET_NAME, s3_key)
         presigned_url = s3.generate_presigned_url(
             ClientMethod="get_object",
