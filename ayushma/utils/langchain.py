@@ -23,14 +23,22 @@ class LangChainHelper:
         temperature=0.1,
     ):
         # 0 means more deterministic output, 1 means more random output
-        llm = ChatOpenAI(
-            streaming=True,
-            callback_manager=AsyncCallbackManager(
+
+        llm_args = {
+            "streaming": True,
+            "callback_manager": AsyncCallbackManager(
                 [StreamingQueueCallbackHandler(token_queue, end)]
             ),
-            temperature=temperature,
-            openai_api_key=openai_api_key,
-        )
+            "temperature": temperature,
+            "openai_api_key": openai_api_key,
+        }
+
+        if settings.AZURE_OPENAI_DEPLOYMENT_ID:
+            llm = ChatOpenAI(
+                deployment_id=settings.AZURE_OPENAI_DEPLOYMENT_ID, **llm_args
+            )
+        else:
+            llm = ChatOpenAI(**llm_args)
 
         template = """You are a female medical assistant called Ayushma who understands all languages and repsonds only in english and you must follow the given algorithm strictly to assist emergency nurses in ICUs. Remember you must give accurate answers otherwise it can risk the patient's life, so stick strictly to the references as explained in algorithm. Your output must be in markdown format find important terms and add bold to it (example **word**) find numbers and add italic to it(example *word*) add bullet points to a list(example -word1\n-word2):
 Algorithm:
