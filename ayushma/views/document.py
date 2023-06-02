@@ -47,19 +47,19 @@ class DocumentViewSet(BaseModelViewSet):
                 upsert(
                     external_id=external_id,
                     s3_url=str(document.s3_url),
-                    document_id=document.pk,
+                    document_id=document.external_id,
                 )
             elif document.document_type == DocumentType.URL:
                 upsert(
                     external_id=external_id,
                     url=document.text_content,
-                    document_id=document.pk,
+                    document_id=document.external_id,
                 )
             elif document.document_type == DocumentType.TEXT:
                 upsert(
                     external_id=external_id,
                     text=document.text_content,
-                    document_id=document.pk,
+                    document_id=document.external_id,
                 )
             else:
                 raise Exception("Invalid document type.")
@@ -71,7 +71,7 @@ class DocumentViewSet(BaseModelViewSet):
         try:
             settings.PINECONE_INDEX_INSTANCE.delete(
                 namespace=self.kwargs["project_external_id"],
-                filter={"document": str(instance.pk)},
+                filter={"document": str(instance.external_id)},
             )
         except Exception as e:
             print(e)
