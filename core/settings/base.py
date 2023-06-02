@@ -5,6 +5,7 @@ Base settings to build other settings files upon.
 from pathlib import Path
 
 import environ
+import openai
 import pinecone
 from corsheaders.defaults import default_headers
 from django.urls import reverse_lazy
@@ -332,8 +333,16 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_HEADERS = list(default_headers) + ["sentry-trace", "OpenAI-Key"]
 
-# OpenAI, Pincone
+# OpenAI
+OPENAI_API_TYPE = env("OPENAI_API_TYPE", default="openai")
 OPENAI_API_KEY = env("OPENAI_API_KEY", default="")
+
+if OPENAI_API_TYPE == "azure":
+    openai.api_base = env("AZURE_OPENAI_ENDPOINT")
+    openai.api_version = env("AZURE_OPENAI_API_VERSION")
+AZURE_OPENAI_DEPLOYMENT_ID = env("AZURE_OPENAI_DEPLOYMENT_ID", default="")
+
+# Pinecone
 PINECONE_API_KEY = env("PINECONE_API_KEY", default="")
 PINECONE_ENVIRONMENT = env("PINECONE_ENVIRONMENT", default="")
 PINECONE_INDEX = env("PINECONE_INDEX", default="")
