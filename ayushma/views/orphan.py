@@ -86,11 +86,11 @@ class OrphanChatViewSet(BaseModelViewSet):
     @action(detail=True, methods=["post"])
     def converse(self, *args, **kwarg):
         chat: Chat = Chat.objects.get(external_id=kwarg["external_id"])
-        # try:
-        response = converse_api(
-            request=self.request,
-            chat=chat,
-        )
-        return response
-        # except Exception as e:
-        #    return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            response = converse_api(
+                request=self.request,
+                chat=chat,
+            )
+            return response
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
