@@ -1,35 +1,27 @@
-from drf_spectacular.utils import (
-    extend_schema,
-    extend_schema_view,
-)
+from drf_spectacular.utils import extend_schema
 from rest_framework import permissions
 from rest_framework.decorators import action
 
-from utils.views.base import BaseModelViewSet
 from ayushma.models import User
 from ayushma.permissions import IsSelfOrReadOnly
 from ayushma.serializers.users import (
     UserCreateSerializer,
     UserDetailSerializer,
     UserSerializer,
+    UserUpdateSerializer,
 )
+from utils.views.base import BaseModelViewSet
 
 
-@extend_schema_view(
-    destroy=extend_schema(exclude=True),
-    partial_update=extend_schema(exclude=True),
-    create=extend_schema(exclude=True),
-    retrieve=extend_schema(
-        description="Get User",
-    ),
-)
 class UserViewSet(BaseModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserDetailSerializer
-    permission_classes = (IsSelfOrReadOnly,)
+    permission_classes = (permissions.IsAdminUser,)
     serializer_action_classes = {
         "register": UserCreateSerializer,
         "list": UserSerializer,
+        "update": UserUpdateSerializer,
+        "partial_update": UserUpdateSerializer,
     }
     permission_action_classes = {
         "me": (permissions.IsAuthenticated(),),
