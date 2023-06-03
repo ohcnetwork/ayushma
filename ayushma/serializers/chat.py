@@ -83,3 +83,4 @@ class ConverseSerializer(serializers.Serializer):
     top_k = serializers.IntegerField(default=100)
     temperature = serializers.FloatField(default=0.1)
     stream = serializers.BooleanField(default=True)
+    generate_audio = serializers.BooleanField(default=True)

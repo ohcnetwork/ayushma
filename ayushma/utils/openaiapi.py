@@ -184,6 +184,7 @@ def handle_post_response(
     temperature,
     stats,
     language,
+    generate_audio=True,
 ):
     chat_message: ChatMessage = ChatMessage.objects.create(
         original_message=chat_response,
@@ -202,9 +203,11 @@ def handle_post_response(
         )
     stats["response_translation_end_time"] = time.time()
 
-    stats["tts_start_time"] = time.time()
-    ayushma_voice = text_to_speech(translated_chat_response, user_language)
-    stats["tts_end_time"] = time.time()
+    ayushma_voice = None
+    if generate_audio == True:
+        stats["tts_start_time"] = time.time()
+        ayushma_voice = text_to_speech(translated_chat_response, user_language)
+        stats["tts_end_time"] = time.time()
 
     url = None
     if ayushma_voice:
@@ -244,6 +247,7 @@ def converse(
     stats={},
     stream=True,
     references=None,
+    generate_audio=True,
 ):
     if not openai_key:
         raise Exception("OpenAI-Key header is required to create a chat or converse")
@@ -310,6 +314,7 @@ def converse(
             temperature,
             stats,
             language,
+            generate_audio,
         )
 
         yield chat_message
@@ -360,6 +365,7 @@ def converse(
                             temperature,
                             stats,
                             language,
+                            generate_audio,
                         )
 
                         yield create_json_response(

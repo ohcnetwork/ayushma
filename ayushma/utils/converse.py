@@ -35,6 +35,7 @@ def converse_api(
     top_k = request.data.get("top_k") or 100
     temperature = request.data.get("temperature") or 0.1
     stream = request.data.get("stream")
+    generate_audio = request.data.get("generate_audio")
 
     converse_type = "audio" if audio else "text"
 
@@ -43,6 +44,11 @@ def converse_api(
         stream = False
     else:
         stream = True
+
+    if generate_audio == "false":
+        generate_audio = False
+    else:
+        generate_audio = True
 
     if not open_ai_key:
         return Response(
@@ -66,6 +72,7 @@ def converse_api(
     top_k: {top_k}
     temperature: {temperature}
     stream: {stream}
+    generate_audio: {generate_audio}
     """
     )
 
@@ -113,6 +120,7 @@ def converse_api(
             stats=stats,
             temperature=temperature,
             user_language=language + "-IN",
+            generate_audio=generate_audio,
         )
     else:
         response_message = converse(
@@ -125,6 +133,7 @@ def converse_api(
             temperature=temperature,
             user_language=language + "-IN",
             stream=False,
+            generate_audio=generate_audio,
         )
 
         # convert yielded response to list
