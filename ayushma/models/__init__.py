@@ -1,3 +1,4 @@
+from .apikeys import *  # noqa
 from .chat import *  # noqa
 from .document import *  # noqa
 from .enums import *  # noqa
