@@ -1,5 +1,6 @@
 import io
 import json
+import time
 import uuid
 from queue import Queue
 from typing import List
@@ -17,7 +18,6 @@ from ayushma.models.enums import ChatMessageType
 from ayushma.utils.langchain import LangChainHelper
 from ayushma.utils.language_helpers import text_to_speech, translate_text
 from ayushma.utils.upload_file import upload_file
-import time
 
 
 def get_embedding(
@@ -115,7 +115,7 @@ def create_json_response(input_text, chat_id, delta, message, stop, ayushma_voic
     return "data: " + json.dumps(json_data) + "\n\n"
 
 
-def get_reference(text, openai_key, chat, top_k):
+def get_reference(text, openai_key, namespace, top_k):
     num_tokens = num_tokens_from_string(text, "cl100k_base")
     embeddings: List[List[List[float]]] = []
     if num_tokens < 8192:
@@ -138,18 +138,13 @@ def get_reference(text, openai_key, chat, top_k):
     pinecone_references: List[QueryResponse] = []
 
     for embedding in embeddings:
-        try:
-            similar: QueryResponse = settings.PINECONE_INDEX_INSTANCE.query(
-                vector=embedding,
-                top_k=top_k,
-                namespace=str(chat.project.external_id),
-                include_metadata=True,
-            )
-            pinecone_references.append(similar)
-        except Exception as e:
-            raise Exception(
-                e.__str__(),
-            )
+        similar: QueryResponse = settings.PINECONE_INDEX_INSTANCE.query(
+            vector=embedding,
+            top_k=int(top_k),
+            namespace=namespace,
+            include_metadata=True,
+        )
+        pinecone_references.append(similar)
     return get_sanitized_reference(pinecone_references=pinecone_references)
 
 
@@ -181,6 +176,66 @@ def add_reference_documents(chat_message):
     chat_message.save()
 
 
+def handle_post_response(
+    chat_response,
+    chat,
+    match_number,
+    user_language,
+    temperature,
+    stats,
+    language,
+    generate_audio=True,
+):
+    chat_message: ChatMessage = ChatMessage.objects.create(
+        original_message=chat_response,
+        chat=chat,
+        messageType=ChatMessageType.AYUSHMA,
+        top_k=match_number,
+        temperature=temperature,
+        language=language,
+    )
+    add_reference_documents(chat_message)
+    translated_chat_response = chat_message.original_message
+    if user_language != "en-IN":
+        stats["response_translation_start_time"] = time.time()
+        translated_chat_response = translate_text(
+            user_language, chat_message.original_message
+        )
+    stats["response_translation_end_time"] = time.time()
+
+    ayushma_voice = None
+    if generate_audio == True:
+        stats["tts_start_time"] = time.time()
+        ayushma_voice = text_to_speech(translated_chat_response, user_language)
+        stats["tts_end_time"] = time.time()
+
+    url = None
+    if ayushma_voice:
+        stats["upload_start_time"] = time.time()
+        url = upload_file(
+            file=io.BytesIO(ayushma_voice),
+            s3_key=f"{chat.id}_{uuid.uuid4()}.mp3",
+        )
+        stats["upload_end_time"] = time.time()
+
+    chat_message.message = translated_chat_response
+    chat_message.ayushma_audio_url = url
+    chat_message.meta = {
+        "translate_start": stats.get("response_translation_start_time"),
+        "translate_end": stats.get("response_translation_end_time"),
+        "reference_start": stats.get("reference_start_time"),
+        "reference_end": stats.get("reference_end_time"),
+        "response_start": stats.get("response_start_time"),
+        "response_end": stats.get("response_end_time"),
+        "tts_start": stats.get("tts_start_time"),
+        "tts_end": stats.get("tts_end_time"),
+        "upload_start": stats.get("upload_start_time"),
+        "upload_end": stats.get("upload_end_time"),
+    }
+    chat_message.save()
+    return translated_chat_response, url, chat_message
+
+
 def converse(
     english_text,
     local_translated_text,
@@ -190,10 +245,12 @@ def converse(
     user_language,
     temperature,
     stats={},
+    stream=True,
+    references=None,
+    generate_audio=True,
 ):
     if not openai_key:
         raise Exception("OpenAI-Key header is required to create a chat or converse")
-    openai.api_key = openai_key
 
     english_text = english_text.replace("\n", " ")
     language = user_language.split("-")[0]
@@ -211,21 +268,20 @@ def converse(
 
     stats["reference_start_time"] = time.time()
 
-    reference = get_reference(english_text, openai_key, chat, match_number)
+    if references:
+        reference = references
+    elif chat.project and chat.project.external_id:
+        reference = get_reference(
+            english_text, openai_key, str(chat.project.external_id), match_number
+        )
+    else:
+        reference = ""
 
     stats["reference_end_time"] = time.time()
 
     stats["response_start_time"] = time.time()
 
-    token_queue = Queue()
-    RESPONSE_END = object()
-    lang_chain_helper = LangChainHelper(
-        token_queue=token_queue,
-        end=RESPONSE_END,
-        openai_api_key=openai_key,
-        prompt_template=chat.project.prompt,
-        temperature=temperature,
-    )
+    prompt = chat.prompt or (chat.project and chat.project.prompt)
 
     # excluding the latest query since it is not a history
     previous_messages = (
@@ -240,62 +296,110 @@ def converse(
         elif message.messageType == ChatMessageType.AYUSHMA:
             chat_history.append(AIMessage(content=f"Ayushma: {message.message}"))
 
-    with start_blocking_portal() as portal:
-        portal.start_task_soon(
-            lang_chain_helper.get_response,
-            RESPONSE_END,
-            token_queue,
-            english_text,
-            reference,
-            chat_history,
+    if stream == False:
+        lang_chain_helper = LangChainHelper(
+            stream=False,
+            openai_api_key=openai_key,
+            prompt_template=prompt,
+            temperature=temperature,
         )
-        chat_response = ""
-        skip_token = len("Ayushma: ")
-        try:
-            while True:
-                if token_queue.empty():
-                    continue
-                next_token = token_queue.get(True, timeout=10)
-                if skip_token > 0:
-                    skip_token -= 1
-                    continue
-                if next_token is RESPONSE_END:
-                    stats["response_end_time"] = time.time()
-                    chat_message = ChatMessage.objects.create(
-                        original_message=chat_response,
-                        chat=chat,
-                        messageType=ChatMessageType.AYUSHMA,
-                        top_k=match_number,
-                        temperature=temperature,
-                        language=language,
-                    )
-                    add_reference_documents(chat_message)
-                    translated_chat_response = chat_message.original_message
-                    if user_language != "en-IN":
-                        stats["response_translation_start_time"] = time.time()
-                        translated_chat_response = translate_text(
-                            user_language, chat_message.original_message
+        response = lang_chain_helper.get_response(english_text, reference, chat_history)
+        chat_response = response.replace("Ayushma: ", "")
+        stats["response_end_time"] = time.time()
+        translated_chat_response, url, chat_message = handle_post_response(
+            chat_response,
+            chat,
+            match_number,
+            user_language,
+            temperature,
+            stats,
+            language,
+            generate_audio,
+        )
+
+        yield chat_message
+
+    else:
+        token_queue = Queue()
+        RESPONSE_END = object()
+
+        lang_chain_helper = LangChainHelper(
+            stream=stream,
+            token_queue=token_queue,
+            end=RESPONSE_END,
+            openai_api_key=openai_key,
+            prompt_template=prompt,
+            temperature=temperature,
+        )
+
+        with start_blocking_portal() as portal:
+            portal.start_task_soon(
+                lang_chain_helper.get_aresponse,
+                RESPONSE_END,
+                token_queue,
+                english_text,
+                reference,
+                chat_history,
+            )
+            chat_response = ""
+            skip_token = len("Ayushma: ")
+            try:
+                while True:
+                    if token_queue.empty():
+                        continue
+                    next_token = token_queue.get(True, timeout=10)
+                    if skip_token > 0:
+                        skip_token -= 1
+                        continue
+                    if next_token is RESPONSE_END:
+                        stats["response_end_time"] = time.time()
+                        (
+                            translated_chat_response,
+                            url,
+                            chat_message,
+                        ) = handle_post_response(
+                            chat_response,
+                            chat,
+                            match_number,
+                            user_language,
+                            temperature,
+                            stats,
+                            language,
+                            generate_audio,
                         )
-                        stats["response_translation_end_time"] = time.time()
 
-                    stats["tts_start_time"] = time.time()
-                    ayushma_voice = text_to_speech(
-                        translated_chat_response, user_language
-                    )
-                    stats["tts_end_time"] = time.time()
-
-                    url = None
-                    if ayushma_voice:
-                        stats["upload_start_time"] = time.time()
-                        url = upload_file(
-                            file=io.BytesIO(ayushma_voice),
-                            s3_key=f"{chat.id}_{uuid.uuid4()}.mp3",
+                        yield create_json_response(
+                            local_translated_text,
+                            chat.external_id,
+                            "",
+                            translated_chat_response,
+                            True,
+                            ayushma_voice=url,
                         )
-                        stats["upload_end_time"] = time.time()
+                        break
+                    chat_response += next_token
+                    yield create_json_response(
+                        local_translated_text,
+                        chat.external_id,
+                        next_token,
+                        chat_response,
+                        False,
+                        None,
+                    )
+            except Exception as e:
+                print(e)
+                error_text = str(e)
+                translated_error_text = error_text
+                if user_language != "en-IN":
+                    translated_error_text = translate_text(user_language, error_text)
 
-                    chat_message.message = translated_chat_response
-                    chat_message.ayushma_audio_url = url
-                    chat_message.meta = {
+                ChatMessage.objects.create(
+                    message=translated_error_text,
+                    original_message=error_text,
+                    chat=chat,
+                    messageType=ChatMessageType.AYUSHMA,
+                    language=language,
+                    meta={
                         "translate_start": stats.get("response_translation_start_time"),
                         "translate_end": stats.get("response_translation_end_time"),
                         "reference_start": stats.get("reference_start_time"),
@@ -306,53 +410,8 @@ def converse(
                         "tts_end": stats.get("tts_end_time"),
                         "upload_start": stats.get("upload_start_time"),
                         "upload_end": stats.get("upload_end_time"),
-                    }
-                    chat_message.save()
-
-                    yield create_json_response(
-                        local_translated_text,
-                        chat.external_id,
-                        "",
-                        translated_chat_response,
-                        True,
-                        ayushma_voice=url,
-                    )
-                    break
-                chat_response += next_token
-                yield create_json_response(
-                    local_translated_text,
-                    chat.external_id,
-                    next_token,
-                    chat_response,
-                    False,
-                    None,
+                    },
                 )
-        except Exception as e:
-            print(e)
-            error_text = str(e)
-            translated_error_text = error_text
-            if user_language != "en-IN":
-                translated_error_text = translate_text(user_language, error_text)
-
-            ChatMessage.objects.create(
-                message=translated_error_text,
-                original_message=error_text,
-                chat=chat,
-                messageType=ChatMessageType.AYUSHMA,
-                language=language,
-                meta={
-                    "translate_start": stats.get("response_translation_start_time"),
-                    "translate_end": stats.get("response_translation_end_time"),
-                    "reference_start": stats.get("reference_start_time"),
-                    "reference_end": stats.get("reference_end_time"),
-                    "response_start": stats.get("response_start_time"),
-                    "response_end": stats.get("response_end_time"),
-                    "tts_start": stats.get("tts_start_time"),
-                    "tts_end": stats.get("tts_end_time"),
-                    "upload_start": stats.get("upload_start_time"),
-                    "upload_end": stats.get("upload_end_time"),
-                },
-            )
-            yield create_json_response(
-                local_translated_text, chat.external_id, "", str(e), True, None
-            )
+                yield create_json_response(
+                    local_translated_text, chat.external_id, "", str(e), True, None
+                )
