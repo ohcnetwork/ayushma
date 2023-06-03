@@ -3,7 +3,6 @@ from rest_framework import permissions
 from rest_framework.decorators import action
 
 from ayushma.models import User
-from ayushma.permissions import IsSelfOrReadOnly
 from ayushma.serializers.users import (
     UserCreateSerializer,
     UserDetailSerializer,
