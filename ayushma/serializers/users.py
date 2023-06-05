@@ -45,3 +45,13 @@ class UserDetailSerializer(serializers.ModelSerializer):
         if password := validated_data.pop("password", None):
             instance.set_password(password)
         return super().update(instance, validated_data)
+
+class UserUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            "username",
+            "full_name",
+            "allow_key",
+            "is_staff",
+        )
