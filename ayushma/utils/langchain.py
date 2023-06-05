@@ -16,29 +16,28 @@ from ayushma.utils.stream_callback import StreamingQueueCallbackHandler
 class LangChainHelper:
     def __init__(
         self,
-        token_queue,
-        end,
         openai_api_key=settings.OPENAI_API_KEY,
         prompt_template=None,
         temperature=0.1,
+        stream=True,
+        token_queue=None,
+        end=None,
     ):
-        # 0 means more deterministic output, 1 means more random output
-
         llm_args = {
-            "streaming": True,
-            "callback_manager": AsyncCallbackManager(
-                [StreamingQueueCallbackHandler(token_queue, end)]
-            ),
             "temperature": temperature,
             "openai_api_key": openai_api_key,
         }
+        if stream:
+            llm_args["streaming"] = True
+            llm_args["callback_manager"] = AsyncCallbackManager(
+                [StreamingQueueCallbackHandler(token_queue, end)]
+            )
 
         if settings.AZURE_OPENAI_DEPLOYMENT_ID:
-            llm = ChatOpenAI(
-                deployment_id=settings.AZURE_OPENAI_DEPLOYMENT_ID, **llm_args
-            )
-        else:
-            llm = ChatOpenAI(**llm_args)
+            llm_args["deployment_id"] = settings.AZURE_OPENAI_DEPLOYMENT_ID
+
+        # 0 means more deterministic output, 1 means more random output
+        llm = ChatOpenAI(**llm_args)
 
         template = """You are a female medical assistant called Ayushma who understands all languages and repsonds only in english and you must follow the given algorithm strictly to assist emergency nurses in ICUs. Remember you must give accurate answers otherwise it can risk the patient's life, so stick strictly to the references as explained in algorithm. Your output must be in markdown format find important terms and add bold to it (example **word**) find numbers and add italic to it(example *word*) add bullet points to a list(example -word1\n-word2):
 Algorithm:
@@ -91,7 +90,7 @@ References: <array of reference_ids (in the format: [1,2,3]) "include all the re
 
         self.chain = LLMChain(llm=llm, prompt=chat_prompt, verbose=True)
 
-    async def get_response(
+    async def get_aresponse(
         self, job_done, token_queue, user_msg, reference, chat_history
     ):
         chat_history.append(
@@ -110,3 +109,15 @@ References: <array of reference_ids (in the format: [1,2,3]) "include all the re
         except Exception as e:
             print(e)
             token_queue.put(job_done)
+
+    def get_response(self, user_msg, reference, chat_history):
+        chat_history.append(
+            HumanMessage(
+                content="@system remeber only answer the question if it can be answered with the given references"
+            )
+        )
+        return self.chain.predict(
+            user_msg=f"Nurse: {user_msg}",
+            reference=reference,
+            chat_history=chat_history,
+        )
