@@ -91,7 +91,12 @@ class OrphanChatViewSet(BaseModelViewSet):
                 request=self.request,
                 chat=chat,
             )
-            return response
+            return Response(
+                {
+                    "chat_object": do_create.data,
+                    **response.data,
+                }
+            )
         else:
             return do_create
 
