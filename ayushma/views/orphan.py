@@ -87,16 +87,19 @@ class OrphanChatViewSet(BaseModelViewSet):
         if message:
             chat = Chat.objects.get(external_id=do_create.data["external_id"])
             self.request.data.update(message)
-            response = converse_api(
-                request=self.request,
-                chat=chat,
-            )
-            return Response(
-                {
-                    "chat_object": do_create.data,
-                    **response.data,
-                }
-            )
+            try:
+                response = converse_api(
+                    request=self.request,
+                    chat=chat,
+                )
+                return Response(
+                    {
+                        "chat_object": do_create.data,
+                        **response.data,
+                    }
+                )
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return do_create
 
