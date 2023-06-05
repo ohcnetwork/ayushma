@@ -1,4 +1,5 @@
 import time
+from types import SimpleNamespace
 
 import openai
 from django.conf import settings
@@ -19,6 +20,11 @@ from ayushma.utils.openaiapi import converse
 from utils.views.base import BaseModelViewSet
 
 from .chat import ChatViewSet
+
+
+class Struct:
+    def __init__(self, **entries):
+        self.__dict__.update(entries)
 
 
 class APIKeyAuth(permissions.BasePermission):
@@ -65,7 +71,7 @@ class OrphanChatViewSet(BaseModelViewSet):
         queryset = self.queryset.filter(api_key=key)
         return queryset
 
-    def perform_create(self, serializer):
+    def create(self, request, *args, **kwargs):
         if (
             not self.request.headers.get("OpenAI-Key")
             and not self.request.user.allow_key
@@ -74,11 +80,26 @@ class OrphanChatViewSet(BaseModelViewSet):
                 {"error": "OpenAI-Key header is required to create a chat"}
             )
 
+        message = self.request.data.pop("message", None)
+
+        do_create = super().create(request, *args, **kwargs)
+
+        if message:
+            chat = Chat.objects.get(external_id=do_create.data["external_id"])
+            self.request.data.update(message)
+            response = converse_api(
+                request=self.request,
+                chat=chat,
+            )
+            return response
+        else:
+            return do_create
+
+    def perform_create(self, serializer):
         api_key = self.request.headers.get("X-API-KEY")
         key = APIKey.objects.get(key=api_key)
 
         serializer.save(api_key=key)
-        super().perform_create(serializer)
 
     @extend_schema(
         tags=("orphan_chats",),

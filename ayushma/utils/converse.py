@@ -40,15 +40,17 @@ def converse_api(
     converse_type = "audio" if audio else "text"
 
     # convert stream to boolean
-    if stream == "false":
-        stream = False
-    else:
-        stream = True
+    if type(stream) != bool:
+        if stream == "false":
+            stream = False
+        else:
+            stream = True
 
-    if generate_audio == "false":
-        generate_audio = False
-    else:
-        generate_audio = True
+    if type(generate_audio) != bool:
+        if generate_audio == "false":
+            generate_audio = False
+        else:
+            generate_audio = True
 
     if not open_ai_key:
         return Response(
