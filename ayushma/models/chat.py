@@ -1,19 +1,24 @@
 from django.db import models
 
+from ayushma.models.apikeys import APIKey
+from ayushma.models.document import Document
 from ayushma.models.enums import ChatMessageType
 from ayushma.models.project import Project
 from ayushma.models.users import User
 from utils.models.base import BaseModel
-from ayushma.models.document import Document
 
 
 class Chat(BaseModel):
     title = models.CharField(max_length=50)
-    user = models.ForeignKey(User, on_delete=models.PROTECT)
-    project = models.ForeignKey(Project, on_delete=models.PROTECT)
+    user = models.ForeignKey(User, on_delete=models.PROTECT, blank=True, null=True)
+    project = models.ForeignKey(
+        Project, on_delete=models.PROTECT, blank=True, null=True
+    )
+    prompt = models.TextField(blank=True, null=True)
+    api_key = models.ForeignKey(APIKey, on_delete=models.PROTECT, blank=True, null=True)
 
     def __str__(self) -> str:
-        return f"{self.title} from {self.user.username}"
+        return f"{self.title} from {self.user.username if self.user else self.api_key.creator.username}"
 
 
 class ChatMessage(BaseModel):
