@@ -72,14 +72,6 @@ class OrphanChatViewSet(BaseModelViewSet):
         return queryset
 
     def create(self, request, *args, **kwargs):
-        if (
-            not self.request.headers.get("OpenAI-Key")
-            and not self.request.user.allow_key
-        ):
-            raise ValidationError(
-                {"error": "OpenAI-Key header is required to create a chat"}
-            )
-
         message = self.request.data.pop("message", None)
 
         do_create = super().create(request, *args, **kwargs)
@@ -94,14 +86,14 @@ class OrphanChatViewSet(BaseModelViewSet):
                 )
                 return Response(
                     {
-                        "chat_object": do_create.data,
-                        **response.data,
+                        **do_create.data,
+                        "response": response.data,
                     }
                 )
             except Exception as e:
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return do_create
+
+        return do_create
 
     def perform_create(self, serializer):
         api_key = self.request.headers.get("X-API-KEY")

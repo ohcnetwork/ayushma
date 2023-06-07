@@ -26,12 +26,30 @@ def converse_api(
     request,
     chat,
 ):
+    if request.headers.get("X-API-KEY"):
+        api_key = request.headers.get("X-API-KEY")
+        key: APIKey = APIKey.objects.get(key=api_key)
+        user = key.creator
+    else:
+        if not request.user.is_authenticated:
+            return Response(
+                {"error": "Authentication credentials were not provided."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+        user = request.user
+
     audio = request.data.get("audio")
     text = request.data.get("text")
     language = request.data.get("language") or "en"
     open_ai_key = request.headers.get("OpenAI-Key") or (
-        request.user.allow_key and settings.OPENAI_API_KEY
+        user.allow_key and settings.OPENAI_API_KEY
     )
+
+    if not open_ai_key:
+        raise ValidationError(
+            {"error": "OpenAI-Key header is required to create a chat"}
+        )
+
     top_k = request.data.get("top_k") or 100
     temperature = request.data.get("temperature") or 0.1
     stream = request.data.get("stream")
