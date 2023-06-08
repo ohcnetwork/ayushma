@@ -3,7 +3,7 @@ import json
 import time
 import uuid
 from queue import Queue
-from typing import List
+from typing import Dict, List
 
 import openai
 import tiktoken
@@ -45,7 +45,16 @@ def get_embedding(
 
     """
     openai.api_key = openai_api_key
-    res = openai.Embedding.create(input=text, model=model)
+
+    embedding_args: Dict[str, str | List[str]] = {"input": text}
+
+    if settings.OPENAI_API_TYPE == "azure":
+        embedding_args["engine"] = settings.AZURE_EMBEDDING_DEPLOYMENT
+    else:
+        embedding_args["model"] = model
+
+    res = openai.Embedding.create(**embedding_args)
+
     return [record["embedding"] for record in res["data"]]
 
 
@@ -202,7 +211,7 @@ def handle_post_response(
     stats["response_translation_end_time"] = time.time()
 
     ayushma_voice = None
-    if generate_audio == True:
+    if generate_audio:
         stats["tts_start_time"] = time.time()
         ayushma_voice = text_to_speech(translated_chat_response, user_language)
         stats["tts_end_time"] = time.time()
@@ -294,7 +303,7 @@ def converse(
         elif message.messageType == ChatMessageType.AYUSHMA:
             chat_history.append(AIMessage(content=f"Ayushma: {message.message}"))
 
-    if stream == False:
+    if not stream:
         lang_chain_helper = LangChainHelper(
             stream=False,
             openai_api_key=openai_key,

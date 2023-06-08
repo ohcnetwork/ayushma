@@ -1,7 +1,9 @@
+import openai
 from django.conf import settings
 from langchain import LLMChain, PromptTemplate
 from langchain.callbacks.manager import AsyncCallbackManager
 from langchain.chat_models import ChatOpenAI
+from langchain.llms import AzureOpenAI
 from langchain.prompts import (
     ChatPromptTemplate,
     HumanMessagePromptTemplate,
@@ -24,7 +26,7 @@ class LangChainHelper:
         end=None,
     ):
         llm_args = {
-            "temperature": temperature,
+            "temperature": temperature,  # 0 means more deterministic output, 1 means more random output
             "openai_api_key": openai_api_key,
         }
         if stream:
@@ -33,11 +35,13 @@ class LangChainHelper:
                 [StreamingQueueCallbackHandler(token_queue, end)]
             )
 
-        if settings.AZURE_OPENAI_DEPLOYMENT_ID:
-            llm_args["deployment_id"] = settings.AZURE_OPENAI_DEPLOYMENT_ID
-
-        # 0 means more deterministic output, 1 means more random output
-        llm = ChatOpenAI(**llm_args)
+        if settings.OPENAI_API_TYPE == "azure":
+            llm_args["deployment_name"] = settings.AZURE_CHAT_DEPLOYMENT
+            llm_args["openai_api_version"] = openai.api_version
+            llm_args["model_name"] = settings.AZURE_CHAT_MODEL
+            llm = AzureOpenAI(**llm_args)
+        else:
+            llm = ChatOpenAI(**llm_args)
 
         template = """You are a female medical assistant called Ayushma who understands all languages and repsonds only in english and you must follow the given algorithm strictly to assist emergency nurses in ICUs. Remember you must give accurate answers otherwise it can risk the patient's life, so stick strictly to the references as explained in algorithm. Your output must be in markdown format find important terms and add bold to it (example **word**) find numbers and add italic to it(example *word*) add bullet points to a list(example -word1\n-word2):
 Algorithm:
