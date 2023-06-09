@@ -338,9 +338,12 @@ OPENAI_API_TYPE = env("OPENAI_API_TYPE", default="openai")
 OPENAI_API_KEY = env("OPENAI_API_KEY", default="")
 
 if OPENAI_API_TYPE == "azure":
-    openai.api_base = env("AZURE_OPENAI_ENDPOINT")
-    openai.api_version = env("AZURE_OPENAI_API_VERSION")
-AZURE_OPENAI_DEPLOYMENT_ID = env("AZURE_OPENAI_DEPLOYMENT_ID", default="")
+    openai.api_type = "azure"
+    openai.api_base = env("AZURE_ENDPOINT")
+    openai.api_version = env("AZURE_API_VERSION")
+AZURE_CHAT_DEPLOYMENT = env("AZURE_CHAT_DEPLOYMENT", default="")
+AZURE_CHAT_MODEL = env("AZURE_CHAT_MODEL", default="")
+AZURE_EMBEDDING_DEPLOYMENT = env("AZURE_EMBEDDING_DEPLOYMENT", default="")
 
 # Pinecone
 PINECONE_API_KEY = env("PINECONE_API_KEY", default="")
