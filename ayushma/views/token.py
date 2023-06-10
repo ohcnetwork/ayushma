@@ -61,18 +61,19 @@ class ResetPasswordViewset(GenericViewSet):
 
         ResetPasswordToken.objects.filter(created_at__lte=expiry_time).delete()
 
-        print("email", email)
-        # checking if the user is active or not
+        # checking if the user is present or not
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
-            print("user does not exist")
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
+        # bad request if user is inactive
         if not user.is_active:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={"detail": "This account is inactive. Please contact admin."},
+            )
 
-        print("user", user)
         # creating a new token
         token = None
         if user.password_reset_tokens.all().count() > 0:
@@ -97,16 +98,9 @@ class ResetPasswordViewset(GenericViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        token = serializer.validated_data.get("token")
         email = serializer.validated_data.get("email")
-
-        if not ResetPasswordToken.objects.filter(key=token, user__email=email).exists():
-            return Response(
-                status=status.HTTP_400_BAD_REQUEST,
-                data={"token": "Invalid token"},
-            )
-
         user = User.objects.get(email=email)
+
         return Response(
             status=status.HTTP_202_ACCEPTED,
             data={
@@ -132,7 +126,6 @@ class ResetPasswordViewset(GenericViewSet):
                 raise serializers.ValidationError({"password": e.messages})
 
         if request.user.is_authenticated:
-            print("user is authenticated")
             password = request.data.get("password")
             validation(password)
             request.user.set_password(password)
@@ -143,18 +136,9 @@ class ResetPasswordViewset(GenericViewSet):
         serializer.is_valid(raise_exception=True)
 
         password = serializer.validated_data.get("password")
-        token = serializer.validated_data.get("token")
         email = serializer.validated_data.get("email")
 
-        # find the token
-        try:
-            reset_password_token = ResetPasswordToken.objects.get(key=token)
-        except ResetPasswordToken.DoesNotExist:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
         user = User.objects.get(email=email)
-        if not user.is_active:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         # set the new password
         validation(password)
