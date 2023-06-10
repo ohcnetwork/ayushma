@@ -24,6 +24,7 @@ class UserViewSet(BaseModelViewSet):
     }
     permission_action_classes = {
         "me": (permissions.IsAuthenticated(),),
+        "partial_update_me": (permissions.IsAuthenticated(),),
     }
     lookup_field = "username"
 
