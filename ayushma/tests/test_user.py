@@ -49,7 +49,11 @@ class TestSuperUser(TestBase):
 
     def test_delete_superuser(self):
         """Testing the delete super user API"""
-        username = self.superuser.username
+        superuser = self.create_super_user(
+            username="admin",
+            email="admin@g.com",
+        )
+        username = superuser.username
         response = self.client.delete(f"/api/users/{username}")
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(User.objects.filter(username=username).exists())

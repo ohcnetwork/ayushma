@@ -4,6 +4,8 @@ from django.contrib.auth.hashers import make_password
 from django.utils import timezone
 from rest_framework.test import APITestCase
 
+from ayushma.models.document import Document
+from ayushma.models.project import Project
 from ayushma.models.token import ResetPasswordToken
 from ayushma.models.users import User
 
@@ -18,6 +20,8 @@ class TestBase(APITestCase):
         super(TestBase, cls).setUpTestData()
         cls.user = cls.create_user()
         cls.superuser = cls.create_super_user()
+        cls.project = cls.create_project(cls.superuser, is_default=True)
+        cls.document = cls.create_document(cls.project)
 
     @classmethod
     def create_user(
@@ -38,11 +42,15 @@ class TestBase(APITestCase):
         return User.objects.create(**data)
 
     @classmethod
-    def create_super_user(cls, username: str = "superuser") -> User:
+    def create_super_user(
+        cls,
+        username: str = "superuser",
+        email: str = "superuser@g.com",
+    ) -> User:
         user = cls.create_user(
             username=username,
             full_name="Super User",
-            email="admin@g.com",
+            email=email,
             password="admin123",
         )
         user.is_superuser = True
@@ -59,3 +67,24 @@ class TestBase(APITestCase):
             token.created_at = timezone.now() - timedelta(minutes=10)
             token.save()
         return token
+
+    @classmethod
+    def create_project(cls, user: User, is_default: bool = False, **kwargs) -> Project:
+        data = {
+            "title": "Test Project",
+            "description": "Test Description",
+            "prompt": "Test Prompt",
+            "is_default": is_default,
+        }
+        data.update(kwargs)
+        return Project.objects.create(creator=user, **data)
+
+    @classmethod
+    def create_document(cls, project: Project, **kwargs) -> Document:
+        data = {
+            "title": "Test Document",
+            "description": "Test Description",
+            "project": project,
+        }
+        data.update(kwargs)
+        return Document.objects.create(**data)

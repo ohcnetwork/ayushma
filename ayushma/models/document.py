@@ -1,9 +1,8 @@
 from django.db import models
 
+from ayushma.models.enums import DocumentType
+from ayushma.models.project import Project
 from utils.models.base import BaseModel
-
-from .enums import DocumentType
-from .project import Project
 
 
 class Document(BaseModel):

@@ -7,10 +7,6 @@ from ayushma.tests.test_base import TestBase
 
 
 class TestAuth(TestBase):
-    @classmethod
-    def setUpTestData(cls) -> None:
-        super(TestAuth, cls).setUpTestData()
-
     def test_register(self):
         """Testing the register API"""
 
