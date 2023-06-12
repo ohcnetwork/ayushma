@@ -14,11 +14,9 @@ from ayushma.utils.openaiapi import get_embedding
 
 def read_document(url):
     if url.endswith(".pdf"):  # Handle pdf files
-        if url.startswith("http"):
-            response = requests.get(url)
-            pdf_reader = PdfReader(BytesIO(response.content))
-        else:
-            pdf_reader = PdfReader(os.path.join(settings.MEDIA_ROOT, "documents", url))
+        print("PDF file detected")
+        response = requests.get(url)
+        pdf_reader = PdfReader(BytesIO(response.content))
         text = ""
         for i in range(len(pdf_reader.pages)):
             page = pdf_reader.pages[i]
@@ -74,11 +72,14 @@ def upsert(
         html = requests.get(url).text
         soup = BeautifulSoup(html, "html.parser")
         document_lines = soup.get_text().strip().splitlines()
-        print(document_lines)
+
     elif text:
         document_lines = text.strip().splitlines()
     else:
         raise Exception("Either filepath, url or text must be provided")
+
+    if len(document_lines) == 0:
+        raise Exception("No text found in document")
 
     batch_size = (
         100  # process everything in batches of 100 (creates 100 vectors per upset)

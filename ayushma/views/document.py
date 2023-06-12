@@ -1,3 +1,5 @@
+import json
+
 from django.conf import settings
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework.parsers import MultiPartParser
@@ -44,9 +46,10 @@ class DocumentViewSet(BaseModelViewSet):
 
         try:
             if document.document_type == DocumentType.FILE:
+                print(document.file)
                 upsert(
                     external_id=external_id,
-                    s3_url=str(document.s3_url),
+                    s3_url=str(document.file),
                     document_id=document.external_id,
                 )
             elif document.document_type == DocumentType.URL:

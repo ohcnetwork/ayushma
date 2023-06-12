@@ -1,5 +1,8 @@
+import os
+
 import boto3
 from django.conf import settings
+from django.core.files.storage import default_storage
 
 
 def upload_file(file, s3_key):
@@ -17,4 +20,9 @@ def upload_file(file, s3_key):
         return presigned_url.split("?")[0]
     except Exception as e:
         print("Error uploading file: ", e)
-        return None
+        print("Fallbacking file to media folder.")
+
+        # open the file in write binary mode
+        print(file.closed)
+        file_url = default_storage.save(s3_key, file)
+        return file_url
