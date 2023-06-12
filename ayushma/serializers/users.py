@@ -1,3 +1,4 @@
+from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 
 from ayushma.models import User
@@ -14,6 +15,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserCreateSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(required=True)
+    password = serializers.CharField(write_only=True, required=True)
 
     class Meta:
         model = User
@@ -23,6 +25,10 @@ class UserCreateSerializer(serializers.ModelSerializer):
             "password",
             "email",
         )
+
+    def create(self, validated_data):
+        validated_data["password"] = make_password(validated_data["password"])
+        return super().create(validated_data)
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
@@ -45,6 +51,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
         if password := validated_data.pop("password", None):
             instance.set_password(password)
         return super().update(instance, validated_data)
+
 
 class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
