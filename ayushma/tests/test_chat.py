@@ -20,6 +20,15 @@ class TestChat(TestBase):
         super(TestChat, self).setUp()
         self.client.login(email=self.user.email, password="testing123")
 
+    def request(self, data={}, api_key: str = None, key: str = None):
+        return self.client.post(
+            f"/api/projects/{self.project.external_id}/chats/{self.chat.external_id}/converse",
+            data=encode_multipart(boundary=BOUNDARY, data=data),
+            HTTP_X_API_KEY=api_key,
+            HTTP_OpenAI_Key=key,
+            content_type=MULTIPART_CONTENT,
+        )
+
     def test_create_chat(self):
         """Testing create chat API"""
 
@@ -160,21 +169,12 @@ class TestChat(TestBase):
             self.chat_message.message,
         )
 
-
-class TestConverse(TestBase):
-    def request(self, data={}, api_key: str = None, key: str = None):
-        return self.client.post(
-            f"/api/projects/{self.project.external_id}/chats/{self.chat.external_id}/converse",
-            data=encode_multipart(boundary=BOUNDARY, data=data),
-            HTTP_X_API_KEY=api_key,
-            HTTP_OpenAI_Key=key,
-            content_type=MULTIPART_CONTENT,
-        )
-
     def test_converse(self):
         """Testing converse API"""
 
         data = dict(text="Hello", stream="false")
+
+        self.client.logout()
 
         # Testing with no authentication
         response = self.request(data)
@@ -184,7 +184,6 @@ class TestConverse(TestBase):
             "Authentication credentials were not provided.",
         )
 
-        # Testing with authenticated user with no openai key
         user = self.create_user(username="test_user", email="test1@g.com")
         self.client.force_login(user)
         response = self.request(data)

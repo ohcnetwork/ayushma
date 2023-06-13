@@ -137,7 +137,7 @@ class TestBase(APITestCase):
             "message": message,
             "original_message": message,
             "language": "en",
-            "ayushma_audio_url": "https://test.com",
+            "audio": "https://test.com",
             "temperature": temperature,
             "top_k": top_k,
             "meta": meta,
