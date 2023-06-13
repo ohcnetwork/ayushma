@@ -73,7 +73,7 @@ class TestBase(APITestCase):
     ) -> ResetPasswordToken:
         token = ResetPasswordToken.objects.create(user=user)
         if expired:
-            token.created_at = timezone.now() - timedelta(minutes=10)
+            token.created_at = timezone.now() - timedelta(minutes=11)
             token.save()
         return token
 

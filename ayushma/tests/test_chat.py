@@ -1,6 +1,8 @@
 from uuid import uuid4
 
+from django.test.client import BOUNDARY, MULTIPART_CONTENT, encode_multipart
 from rest_framework import status
+from rest_framework.exceptions import APIException
 
 from ayushma.models.chat import Chat
 from ayushma.tests.test_base import TestBase
@@ -157,3 +159,57 @@ class TestChat(TestBase):
             response.data[0]["chats"][0]["message"],
             self.chat_message.message,
         )
+
+
+class TestConverse(TestBase):
+    def request(self, data={}, api_key: str = None, key: str = None):
+        return self.client.post(
+            f"/api/projects/{self.project.external_id}/chats/{self.chat.external_id}/converse",
+            data=encode_multipart(boundary=BOUNDARY, data=data),
+            HTTP_X_API_KEY=api_key,
+            HTTP_OpenAI_Key=key,
+            content_type=MULTIPART_CONTENT,
+        )
+
+    def test_converse(self):
+        """Testing converse API"""
+
+        data = dict(text="Hello", stream="false")
+
+        # Testing with no authentication
+        response = self.request(data)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(
+            response.data["detail"],
+            "Authentication credentials were not provided.",
+        )
+
+        # Testing with authenticated user with no openai key
+        user = self.create_user(username="test_user", email="test1@g.com")
+        self.client.force_login(user)
+        response = self.request(data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data["error"],
+            "OpenAI-Key header is required to create a chat",
+        )
+
+        self.client.force_login(self.user)
+
+        # Testing with missing fields
+        response = self.request(data=dict())
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data["error"],
+            "Please provide text to generate transcript",
+        )
+
+        # Testing with translation failed
+        response = self.request(
+            data=dict(text="Hello", language="hi"),
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertRaises(expected_exception=APIException)
+
+        response = self.request(data=data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

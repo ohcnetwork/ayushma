@@ -4,7 +4,6 @@ import openai
 from django.conf import settings
 from django.http import StreamingHttpResponse
 from rest_framework import status
-from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from ayushma.models import APIKey, ChatMessage
@@ -35,11 +34,6 @@ def converse_api(
     open_ai_key = request.headers.get("OpenAI-Key") or (
         user.allow_key and settings.OPENAI_API_KEY
     )
-
-    if not open_ai_key:
-        raise ValidationError(
-            {"error": "OpenAI-Key header is required to create a chat"}
-        )
 
     top_k = request.data.get("top_k") or 100
     temperature = request.data.get("temperature") or 0.1
@@ -90,9 +84,15 @@ def converse_api(
     # store time to complete request
     stats["start_time"] = time.time()
     if converse_type == "audio" and not audio:
-        return Exception("Please provide audio to generate transcript")
+        return Response(
+            {"error": "Please provide audio to generate transcript"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
     if converse_type == "text" and not text:
-        return Exception("Please provide text to generate transcript")
+        return Response(
+            {"error": "Please provide text to generate transcript"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     if converse_type == "audio":
         stats["transcript_start_time"] = time.time()
