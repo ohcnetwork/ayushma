@@ -338,9 +338,12 @@ OPENAI_API_TYPE = env("OPENAI_API_TYPE", default="openai")
 OPENAI_API_KEY = env("OPENAI_API_KEY", default="")
 
 if OPENAI_API_TYPE == "azure":
-    openai.api_base = env("AZURE_OPENAI_ENDPOINT")
-    openai.api_version = env("AZURE_OPENAI_API_VERSION")
-AZURE_OPENAI_DEPLOYMENT_ID = env("AZURE_OPENAI_DEPLOYMENT_ID", default="")
+    openai.api_type = "azure"
+    openai.api_base = env("AZURE_ENDPOINT")
+    openai.api_version = env("AZURE_API_VERSION")
+AZURE_CHAT_DEPLOYMENT = env("AZURE_CHAT_DEPLOYMENT", default="")
+AZURE_CHAT_MODEL = env("AZURE_CHAT_MODEL", default="")
+AZURE_EMBEDDING_DEPLOYMENT = env("AZURE_EMBEDDING_DEPLOYMENT", default="")
 
 # Pinecone
 PINECONE_API_KEY = env("PINECONE_API_KEY", default="")
@@ -351,6 +354,11 @@ pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENVIRONMENT)
 PINECONE_INDEX_INSTANCE = pinecone.Index(index_name=PINECONE_INDEX)
 
 # S3
-S3_BUCKET_NAME = env("S3_BUCKET_NAME", default="")
-S3_SECRET_KEY = env("S3_SECRET_KEY", default="")
-S3_KEY_ID = env("S3_KEY_ID", default="")
+AWS_STORAGE_BUCKET_NAME = env("S3_BUCKET_NAME", default=None)
+AWS_SECRET_ACCESS_KEY = env("S3_SECRET_KEY", default=None)
+AWS_ACCESS_KEY_ID = env("S3_KEY_ID", default=None)
+AWS_S3_REGION_NAME = env("S3_REGION", default=None)
+
+# check if s3 is configured
+if AWS_STORAGE_BUCKET_NAME and AWS_SECRET_ACCESS_KEY and AWS_ACCESS_KEY_ID:
+    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"

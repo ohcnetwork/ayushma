@@ -23,13 +23,14 @@ drf-nested-routers==0.93.4 # https://github.com/alanjds/drf-nested-routers
 drf-spectacular==0.26.1 # https://github.com/tfranzel/drf-spectacular
 #mysqlclient
 requests
+django-storages==1.13.2 #
 
 # OpenAI, Pinecone, PyPDF2 and Langchain
-openai==0.27.6
+openai==0.27.8
 pinecone-client==2.2.1
 PyPDF2==3.0.1
 tiktoken==0.4.0
-langchain==0.0.192
+langchain==0.0.194
 
 # For asynchronous event loop
 anyio==3.6.2
