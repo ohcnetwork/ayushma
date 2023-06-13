@@ -17,7 +17,6 @@ from ayushma.models.document import Document
 from ayushma.models.enums import ChatMessageType
 from ayushma.utils.langchain import LangChainHelper
 from ayushma.utils.language_helpers import text_to_speech, translate_text
-from ayushma.utils.upload_file import upload_file
 
 
 def get_embedding(
@@ -219,14 +218,12 @@ def handle_post_response(
     url = None
     if ayushma_voice:
         stats["upload_start_time"] = time.time()
-        url = upload_file(
-            file=io.BytesIO(ayushma_voice),
-            s3_key=f"{chat.id}_{uuid.uuid4()}.mp3",
+        chat_message.audio.save(
+            f"{chat_message.external_id}.mp3", io.BytesIO(ayushma_voice)
         )
         stats["upload_end_time"] = time.time()
 
     chat_message.message = translated_chat_response
-    chat_message.ayushma_audio_url = url
     chat_message.meta = {
         "translate_start": stats.get("response_translation_start_time"),
         "translate_end": stats.get("response_translation_end_time"),

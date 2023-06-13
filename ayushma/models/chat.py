@@ -30,7 +30,7 @@ class ChatMessage(BaseModel):
     original_message = models.TextField(blank=True, null=True)
     language = models.CharField(max_length=10, blank=False, default="en")
     reference_documents = models.ManyToManyField(Document, blank=True)
-    ayushma_audio_url = models.URLField(blank=True, null=True)
+    audio = models.FileField(blank=True, null=True)
     meta = models.JSONField(blank=True, null=True)
     temperature = models.FloatField(blank=True, null=True)
     top_k = models.IntegerField(blank=True, null=True)

@@ -36,7 +36,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             "messageType",
             "message",
             "reference_documents",
-            "ayushma_audio_url",
+            "audio",
             "original_message",
             "language",
             "created_at",
@@ -51,7 +51,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             "modified_at",
             "reference_documents",
             "meta",
-            "ayushma_audio_url",
+            "audio",
             "original_message",
         )
 
@@ -85,4 +85,5 @@ class ChatDetailSerializer(serializers.ModelSerializer):
 
     def get_chats(self, obj):
         chatmessages = ChatMessage.objects.filter(chat=obj).order_by("created_at")
-        return ChatMessageSerializer(chatmessages, many=True).data
+        context = {"request": self.context.get("request")}
+        return ChatMessageSerializer(chatmessages, many=True, context=context).data
