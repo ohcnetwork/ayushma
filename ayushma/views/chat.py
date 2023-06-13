@@ -1,21 +1,14 @@
-import time
-
-import openai
-from django.conf import settings
-from django.http import StreamingHttpResponse
-from drf_spectacular.utils import extend_schema, extend_schema_view, inline_serializer
+from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import permissions, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
-from rest_framework.serializers import CharField, IntegerField
 
-from ayushma.models import APIKey, Chat, ChatMessage, Project
+from ayushma.models import Chat, Project
 from ayushma.serializers import ChatDetailSerializer, ChatSerializer, ConverseSerializer
 from ayushma.utils.converse import converse_api
-from ayushma.utils.language_helpers import translate_text
-from ayushma.utils.openaiapi import converse
 from utils.views.base import BaseModelViewSet
 
 
@@ -67,8 +60,7 @@ class ChatViewSet(BaseModelViewSet):
             )
 
         project_id = self.kwargs["project_external_id"]
-        project = Project.objects.get(external_id=project_id)
-
+        project = get_object_or_404(Project, external_id=project_id)
         serializer.save(user=self.request.user, project=project)
         super().perform_create(serializer)
 

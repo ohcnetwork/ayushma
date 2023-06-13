@@ -1,7 +1,6 @@
 from uuid import uuid4
 
 from django.db import models
-from django.utils.translation import gettext_lazy as _
 
 
 class BaseManager(models.Manager):
@@ -28,14 +27,3 @@ class BaseModel(models.Model):
     def delete(self, *args):
         self.deleted = True
         self.save()
-
-
-class IPAddressHistoricalModel(models.Model):
-    """
-    Abstract model for history models tracking the IP address.
-    """
-
-    ip_address = models.GenericIPAddressField(_("IP address"))
-
-    class Meta:
-        abstract = True

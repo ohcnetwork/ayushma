@@ -3,23 +3,14 @@ import time
 import openai
 from django.conf import settings
 from django.http import StreamingHttpResponse
-from drf_spectacular.utils import extend_schema, extend_schema_view, inline_serializer
-from rest_framework import permissions, status
-from rest_framework.decorators import action
+from rest_framework import status
 from rest_framework.exceptions import ValidationError
-from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
-from rest_framework.serializers import CharField, IntegerField
 
-from ayushma.models import APIKey, Chat, ChatMessage, Project
-from ayushma.serializers import (
-    ChatDetailSerializer,
-    ChatMessageSerializer,
-    ChatSerializer,
-)
+from ayushma.models import APIKey, ChatMessage
+from ayushma.serializers import ChatMessageSerializer
 from ayushma.utils.language_helpers import translate_text
 from ayushma.utils.openaiapi import converse
-from utils.views.base import BaseModelViewSet
 
 
 def converse_api(
@@ -129,7 +120,7 @@ def converse_api(
         chat.title = translated_text[0:50]
         chat.save()
 
-    if stream == True:
+    if stream is True:
         response = StreamingHttpResponse(content_type="text/event-stream")
         response.streaming_content = converse(
             english_text=english_text,
@@ -161,7 +152,8 @@ def converse_api(
         response_message = list(response_message)[0]
 
         return Response(
-            ChatMessageSerializer(response_message).data, status=status.HTTP_200_OK
+            ChatMessageSerializer(response_message).data,
+            status=status.HTTP_200_OK,
         )
 
     return response
