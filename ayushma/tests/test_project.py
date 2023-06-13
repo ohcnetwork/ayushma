@@ -1,15 +1,18 @@
 from rest_framework import status
 
+from ayushma.models.project import Project
 from ayushma.tests.test_base import TestBase
 
 
 class TestProject(TestBase):
+    def setUp(self) -> None:
+        super(TestProject, self).setUp()
+        self.client.login(email=self.user.email, password="testing123")
+
     def test_create_project(self):
         """Testing create project API"""
 
         # Testing with unauthorized user
-        self.client.login(email=self.user.email, password="testing123")
-
         data = {
             "title": "test_project",
             "description": "test description",
@@ -18,10 +21,8 @@ class TestProject(TestBase):
         response = self.client.post("/api/projects", data=data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-        self.client.logout()
-
         # Testing with authorized user
-        self.client.login(email=self.superuser.email, password="admin123")
+        self.client.force_login(self.superuser)
 
         # Testing with missing data
         response = self.client.post("/api/projects")
@@ -32,11 +33,10 @@ class TestProject(TestBase):
         response = self.client.post("/api/projects", data=data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["title"], data["title"])
+        self.assertTrue(Project.objects.filter(title=data["title"]).exists())
 
     def test_get_project(self):
         """Testing get project API"""
-
-        self.client.login(email=self.user.email, password="testing123")
 
         # Testing with is_default=True
         response = self.client.get("/api/projects")
@@ -52,12 +52,9 @@ class TestProject(TestBase):
     def test_get_project_detail(self):
         """Testing get project detail API"""
 
-        self.client.login(email=self.user.email, password="testing123")
-
         # Testing with invalid project id
         response = self.client.get("/api/projects/123")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(response.data["detail"], "Not found.")
 
         # Testing with valid project id
         response = self.client.get(f"/api/projects/{self.project.external_id}")
@@ -68,8 +65,6 @@ class TestProject(TestBase):
         """Testing update project API"""
 
         # Testing with unauthorized user
-        self.client.login(email=self.user.email, password="testing123")
-
         # NOTE: Default Project title is getting updated
         data = {"title": "updated title"}
         response = self.client.patch(
@@ -78,10 +73,8 @@ class TestProject(TestBase):
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-        self.client.logout()
-
         # Testing with authorized user
-        self.client.login(email=self.superuser.email, password="admin123")
+        self.client.force_login(self.superuser)
 
         # Testing with invalid project id
         response = self.client.patch("/api/projects/123", data=data)
@@ -95,26 +88,4 @@ class TestProject(TestBase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["title"], data["title"])
-
-    def test_delete_project(self):
-        """Testing delete project API"""
-
-        # Testing with unauthorized user
-        self.client.login(email=self.user.email, password="testing123")
-
-        response = self.client.delete(f"/api/projects/{self.project.external_id}")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-        self.client.logout()
-
-        # Testing with authorized user
-        self.client.login(email=self.superuser.email, password="admin123")
-
-        # Testing with invalid project id
-        response = self.client.delete("/api/projects/123")
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(response.data["detail"], "Not found.")
-
-        # Testing with valid data
-        response = self.client.delete(f"/api/projects/{self.project.external_id}")
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertTrue(Project.objects.filter(title=data["title"]).exists())

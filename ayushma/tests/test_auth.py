@@ -313,4 +313,3 @@ class TestAuth(TestBase):
             },
         )
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
-        self.client.logout()
