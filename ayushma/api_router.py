@@ -7,6 +7,12 @@ from ayushma.views.chat import ChatViewSet
 from ayushma.views.document import DocumentViewSet
 from ayushma.views.orphan import OrphanChatViewSet
 from ayushma.views.project import ProjectViewSet
+from ayushma.views.testsuite import (
+    FeedbackViewSet,
+    TestQuestionViewSet,
+    TestRunViewSet,
+    TestSuiteViewSet,
+)
 from ayushma.views.token import ResetPasswordViewset
 from ayushma.views.users import UserViewSet
 
@@ -29,7 +35,16 @@ projects_router = NestedRouter(router, r"projects", lookup="project")
 projects_router.register(r"documents", DocumentViewSet)
 projects_router.register(r"chats", ChatViewSet)
 
+router.register(r"tests/suites", TestSuiteViewSet)
+tests_router = NestedRouter(router, r"tests/suites", lookup="test_suite")
+tests_router.register(r"questions", TestQuestionViewSet)
+tests_router.register(r"runs", TestRunViewSet)
+runs_router = NestedRouter(tests_router, r"runs", lookup="run")
+runs_router.register(r"feedback", FeedbackViewSet)
+
 urlpatterns = [
     path(r"", include(router.urls)),
     path(r"", include(projects_router.urls)),
+    path(r"", include(tests_router.urls)),
+    path(r"", include(runs_router.urls)),
 ]

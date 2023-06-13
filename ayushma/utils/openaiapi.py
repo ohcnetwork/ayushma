@@ -10,6 +10,7 @@ import tiktoken
 from anyio.from_thread import start_blocking_portal
 from django.conf import settings
 from langchain.schema import AIMessage, HumanMessage
+from openai.datalib.numpy_helper import numpy as np
 from pinecone import QueryResponse
 
 from ayushma.models import ChatMessage
@@ -18,6 +19,14 @@ from ayushma.models.enums import ChatMessageType
 from ayushma.utils.langchain import LangChainHelper
 from ayushma.utils.language_helpers import text_to_speech, translate_text
 from ayushma.utils.upload_file import upload_file
+
+
+# https://github.com/openai/openai-python/blob/main/openai/embeddings_utils.py#L65
+def cosine_similarity(a, b):
+    a = np.array(a).reshape(-1)
+    b = np.array(b).reshape(-1)
+
+    return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
 
 
 def get_embedding(
@@ -202,7 +211,7 @@ def handle_post_response(
     stats["response_translation_end_time"] = time.time()
 
     ayushma_voice = None
-    if generate_audio == True:
+    if generate_audio:
         stats["tts_start_time"] = time.time()
         ayushma_voice = text_to_speech(translated_chat_response, user_language)
         stats["tts_end_time"] = time.time()
@@ -294,7 +303,7 @@ def converse(
         elif message.messageType == ChatMessageType.AYUSHMA:
             chat_history.append(AIMessage(content=f"Ayushma: {message.message}"))
 
-    if stream == False:
+    if not stream:
         lang_chain_helper = LangChainHelper(
             stream=False,
             openai_api_key=openai_key,

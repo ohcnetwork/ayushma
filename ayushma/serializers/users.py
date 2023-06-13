@@ -46,6 +46,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
             instance.set_password(password)
         return super().update(instance, validated_data)
 
+
 class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
