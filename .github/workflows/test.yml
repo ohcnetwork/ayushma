@@ -36,8 +36,11 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install -r requirements/local.txt
+      - name: Generate Secret Key
+        run: |
+          echo "OPENAI_API_KEY=sk-$(openssl rand -base64 48 | tr -dc 'A-Za-z0-9' | head -c 48)" >> $GITHUB_ENV
       - name: Run Tests with coverage
-        run: coverage run manage.py test
+        run: coverage run --parallel-mode manage.py test
       - name: Generate coverage report
         run: |
           coverage combine
