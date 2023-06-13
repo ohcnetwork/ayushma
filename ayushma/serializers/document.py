@@ -7,7 +7,6 @@ from rest_framework import serializers
 from rest_framework.response import Response
 
 from ayushma.models import Document, DocumentType
-from ayushma.utils.upload_file import upload_file
 
 
 class DocumentSerializer(serializers.ModelSerializer):

@@ -13,9 +13,11 @@ from ayushma.utils.openaiapi import get_embedding
 
 
 def read_document(url):
+    print(url)
     if url.endswith(".pdf"):  # Handle pdf files
         print("PDF file detected")
         response = requests.get(url)
+        print(response)
         pdf_reader = PdfReader(BytesIO(response.content))
         text = ""
         for i in range(len(pdf_reader.pages)):
@@ -80,6 +82,7 @@ def upsert(
 
     if len(document_lines) == 0:
         raise Exception("No text found in document")
+    print(document_lines)
 
     batch_size = (
         100  # process everything in batches of 100 (creates 100 vectors per upset)

@@ -46,10 +46,9 @@ class DocumentViewSet(BaseModelViewSet):
 
         try:
             if document.document_type == DocumentType.FILE:
-                print(document.file)
                 upsert(
                     external_id=external_id,
-                    s3_url=str(document.file),
+                    s3_url=self.request.build_absolute_uri(document.file.url),
                     document_id=document.external_id,
                 )
             elif document.document_type == DocumentType.URL:
