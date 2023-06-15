@@ -10,3 +10,6 @@ sentry-sdk==1.23.1  # https://github.com/getsentry/sentry-python
 # Django
 # ------------------------------------------------------------------------------
 django-anymail[mailgun]==9.1  # https://github.com/anymail/django-anymail
+
+# For vercel deployment
+urllib3==1.26.16 
