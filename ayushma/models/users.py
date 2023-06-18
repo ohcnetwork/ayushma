@@ -26,6 +26,8 @@ class User(AbstractUser):
 
     allow_key = models.BooleanField(default=False)
 
+    is_reviewer = models.BooleanField(default=False)
+
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"]
 

@@ -172,3 +172,4 @@ cython_debug/
 upsert/
 
 gc_credential.json
+dump.rdb
