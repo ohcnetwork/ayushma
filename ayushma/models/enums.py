@@ -12,7 +12,14 @@ class DocumentType(IntegerChoices):
     URL = 2
     TEXT = 3
 
-
 class STTEngine(IntegerChoices):
     WHISPER = 1
     GOOGLE = 2
+ 
+class FeedBackRating(IntegerChoices):
+    HALLUCINATING = 1
+    WRONG = 2
+    UNSATISFACTORY = 3
+    SATISFACTORY = 4
+    GOOD = 5
+    EXCELLENT = 6

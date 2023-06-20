@@ -9,6 +9,7 @@ import tiktoken
 from anyio.from_thread import start_blocking_portal
 from django.conf import settings
 from langchain.schema import AIMessage, HumanMessage
+from openai.datalib.numpy_helper import numpy as np
 from pinecone import QueryResponse
 
 from ayushma.models import ChatMessage
@@ -16,6 +17,14 @@ from ayushma.models.document import Document
 from ayushma.models.enums import ChatMessageType
 from ayushma.utils.langchain import LangChainHelper
 from ayushma.utils.language_helpers import text_to_speech, translate_text
+
+
+# https://github.com/openai/openai-python/blob/main/openai/embeddings_utils.py#L65
+def cosine_similarity(a, b):
+    a = np.array(a).reshape(-1)
+    b = np.array(b).reshape(-1)
+
+    return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
 
 
 def get_embedding(
