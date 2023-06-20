@@ -3,6 +3,8 @@ import os
 import openai
 from google.cloud import speech
 
+from ayushma.models.enums import STTEngine
+
 
 class WhisperEngine:
     def __init__(self, api_key, language_code):
@@ -55,12 +57,13 @@ engines = {
 }
 
 
-def speech_to_text(engine_name, audio, language_code):
+def speech_to_text(engine_id, audio, language_code):
     api_key = os.environ.get("STT_API_KEY", "")
-
+    engine_name = STTEngine(engine_id).name.lower()
     engine_class = engines.get(engine_name)
+
     if not engine_class:
-        raise ValueError(f"Invalid STT engine: {engine_name}")
+        raise ValueError(f"Invalid STT engine ID: {engine_id}")
 
     try:
         engine = engine_class(api_key, language_code)
