@@ -7,14 +7,13 @@ import requests
 from bs4 import BeautifulSoup
 from django.conf import settings
 from PyPDF2 import PdfReader
-from tqdm.auto import tqdm
 
 from ayushma.utils.openaiapi import get_embedding
 
 
 def read_document(url):
-    print(url)
-    if url.endswith(".pdf"):  # Handle pdf files
+    filename = os.path.basename(url.split("?")[0])
+    if filename.endswith(".pdf"):  # Handle pdf files
         print("PDF file detected")
         response = requests.get(url)
         print(response)
