@@ -334,7 +334,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_HEADERS = list(default_headers) + ["sentry-trace", "OpenAI-Key"]
 
 # OpenAI
-OPENAI_API_TYPE = env("OPENAI_API_TYPE", default="openai")
+OPENAI_API_TYPE = env("OPENAI_API_TYPE", default="open_ai")
 OPENAI_API_KEY = env("OPENAI_API_KEY", default="")
 
 if OPENAI_API_TYPE == "azure":
@@ -344,6 +344,9 @@ if OPENAI_API_TYPE == "azure":
 AZURE_CHAT_DEPLOYMENT = env("AZURE_CHAT_DEPLOYMENT", default="")
 AZURE_CHAT_MODEL = env("AZURE_CHAT_MODEL", default="")
 AZURE_EMBEDDING_DEPLOYMENT = env("AZURE_EMBEDDING_DEPLOYMENT", default="")
+
+# Speech to text
+STT_API_KEY = env("STT_API_KEY", default="")  # Not required for google
 
 # Pinecone
 PINECONE_API_KEY = env("PINECONE_API_KEY", default="")
