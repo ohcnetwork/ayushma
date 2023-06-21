@@ -1,25 +1,16 @@
 import time
 
-import openai
 from django.conf import settings
 from django.http import StreamingHttpResponse
-from drf_spectacular.utils import extend_schema, extend_schema_view, inline_serializer
-from rest_framework import permissions, status
-from rest_framework.decorators import action
+from rest_framework import status
 from rest_framework.exceptions import ValidationError
-from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
-from rest_framework.serializers import CharField, IntegerField
 
-from ayushma.models import APIKey, Chat, ChatMessage, Project
-from ayushma.serializers import (
-    ChatDetailSerializer,
-    ChatMessageSerializer,
-    ChatSerializer,
-)
+from ayushma.models import APIKey, ChatMessage
+from ayushma.serializers import ChatMessageSerializer
 from ayushma.utils.language_helpers import translate_text
 from ayushma.utils.openaiapi import converse
-from utils.views.base import BaseModelViewSet
+from ayushma.utils.speech_to_text import speech_to_text
 
 
 def converse_api(
@@ -50,6 +41,7 @@ def converse_api(
             {"error": "OpenAI-Key header is required to create a chat"}
         )
 
+    project = chat.project
     top_k = request.data.get("top_k") or 100
     temperature = request.data.get("temperature") or 0.1
     stream = request.data.get("stream")
@@ -105,31 +97,25 @@ def converse_api(
 
     if converse_type == "audio":
         stats["transcript_start_time"] = time.time()
-        transcript = openai.Audio.translate(
-            "whisper-1", file=audio, api_key=open_ai_key
-        )
+        transcript = speech_to_text(project.stt_engine, audio, language + "-IN")
         stats["transcript_end_time"] = time.time()
-
-        english_text = transcript.text
+        translated_text = transcript
 
     elif converse_type == "text":
-        english_text = text
-        if language != "en":
-            stats["request_translation_start_time"] = time.time()
-            english_text = translate_text("en-IN", text)
-            stats["request_translation_end_time"] = time.time()
+        translated_text = text
 
-    translated_text = english_text
     if language != "en":
         stats["request_translation_start_time"] = time.time()
-        translated_text = translate_text(language + "-IN", english_text)
+        english_text = translate_text("en-IN", translated_text)
         stats["request_translation_end_time"] = time.time()
+    else:
+        english_text = translated_text
 
     if not ChatMessage.objects.filter(chat=chat).exists():
         chat.title = translated_text[0:50]
         chat.save()
 
-    if stream == True:
+    if stream:
         response = StreamingHttpResponse(content_type="text/event-stream")
         response.streaming_content = converse(
             english_text=english_text,

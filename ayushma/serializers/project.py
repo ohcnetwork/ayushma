@@ -12,6 +12,7 @@ class ProjectSerializer(serializers.ModelSerializer):
             "created_at",
             "modified_at",
             "description",
+            "stt_engine",
             "is_default",
         )
         read_only_fields = ("external_id", "created_at", "modified_at")
@@ -21,7 +22,7 @@ class ProjectUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = ProjectSerializer.Meta.fields + ("prompt",)
-    
+
     def update(self, instance, validated_data):
         if validated_data.get("is_default", True):
             Project.objects.all().update(is_default=False)
