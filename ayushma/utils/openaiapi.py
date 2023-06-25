@@ -260,6 +260,7 @@ def converse(
     stream=True,
     references=None,
     generate_audio=True,
+    noonce=None,
 ):
     if not openai_key:
         raise Exception("OpenAI-Key header is required to create a chat or converse")
@@ -276,6 +277,7 @@ def converse(
             "translate_start": stats.get("request_translation_start_time"),
             "translate_end": stats.get("request_translation_end_time"),
         },
+        noonce=noonce,
     )
 
     stats["reference_start_time"] = time.time()

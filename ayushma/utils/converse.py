@@ -138,6 +138,7 @@ def converse_api(
             temperature=temperature,
             user_language=language + "-IN",
             generate_audio=generate_audio,
+            noonce=noonce,
         )
     else:
         response_message = converse(
@@ -151,6 +152,7 @@ def converse_api(
             user_language=language + "-IN",
             stream=False,
             generate_audio=generate_audio,
+            noonce=noonce,
         )
 
         # convert yielded response to list
