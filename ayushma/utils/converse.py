@@ -35,6 +35,17 @@ def converse_api(
     open_ai_key = request.headers.get("OpenAI-Key") or (
         user.allow_key and settings.OPENAI_API_KEY
     )
+    noonce = request.data.get("noonce")
+
+    if noonce:
+        try:
+            ChatMessage.objects.get(noonce=noonce)
+            return Response(
+                {"error": "This noonce has already been used"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except ChatMessage.DoesNotExist:
+            pass
 
     if not open_ai_key:
         raise ValidationError(
@@ -127,6 +138,7 @@ def converse_api(
             temperature=temperature,
             user_language=language + "-IN",
             generate_audio=generate_audio,
+            noonce=noonce,
         )
     else:
         response_message = converse(
@@ -140,6 +152,7 @@ def converse_api(
             user_language=language + "-IN",
             stream=False,
             generate_audio=generate_audio,
+            noonce=noonce,
         )
 
         # convert yielded response to list
