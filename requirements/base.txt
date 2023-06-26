@@ -3,7 +3,7 @@ Pillow==9.5.0  # https://github.com/python-pillow/Pillow
 argon2-cffi==21.3.0  # https://github.com/hynek/argon2_cffi
 whitenoise==6.4.0  # https://github.com/evansd/whitenoise
 redis==4.5.5  # https://github.com/redis/redis-py
-celery==5.2.7  # pyup: < 6.0  # https://github.com/celery/celery
+celery==5.3.0  # pyup: < 6.0  # https://github.com/celery/celery
 # django-celery-beat==2.2.1  # https://github.com/celery/django-celery-beat
 
 # Django
@@ -20,7 +20,7 @@ djangorestframework==3.14.0  # https://github.com/encode/django-rest-framework
 django-cors-headers==4.0.0 # https://github.com/adamchainz/django-cors-headers
 drf-nested-routers==0.93.4 # https://github.com/alanjds/drf-nested-routers
 # DRF-spectacular for api documentation
-drf-spectacular==0.26.1 # https://github.com/tfranzel/drf-spectacular
+drf-spectacular==0.26.2 # https://github.com/tfranzel/drf-spectacular
 #mysqlclient
 requests
 django-storages==1.13.2 #
@@ -49,4 +49,7 @@ googleapis-common-protos==1.59.0
 
 # s3
 boto3==1.26.133
-botocore==1.29.133
+botocore==1.29.154
+
+# For testing framework
+nltk==3.8.1
