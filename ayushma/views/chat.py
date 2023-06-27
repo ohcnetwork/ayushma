@@ -11,8 +11,13 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework.serializers import CharField, IntegerField
 
-from ayushma.models import APIKey, Chat, ChatMessage, Project
-from ayushma.serializers import ChatDetailSerializer, ChatSerializer, ConverseSerializer
+from ayushma.models import APIKey, Chat, ChatFeedback, ChatMessage, Project
+from ayushma.serializers import (
+    ChatDetailSerializer,
+    ChatFeedbackSerializer,
+    ChatSerializer,
+    ConverseSerializer,
+)
 from ayushma.utils.converse import converse_api
 from ayushma.utils.language_helpers import translate_text
 from ayushma.utils.openaiapi import converse
@@ -95,3 +100,10 @@ class ChatViewSet(BaseModelViewSet):
             return response
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+class ChatFeedbackViewSet(BaseModelViewSet):
+    queryset=ChatFeedback.objects.all()
+    serializer_class = ChatFeedbackSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+    
+

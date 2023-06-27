@@ -76,7 +76,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
 
     def get_feedback(self, obj):
         feedback = ChatFeedback.objects.filter(chat_message=obj).first()
-        return ChatFeedbackSerializer(feedback).data
+        return ChatFeedbackSerializer(feedback).data if feedback else None
 
 
 
