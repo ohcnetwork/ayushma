@@ -4,10 +4,12 @@ import openai
 from django.conf import settings
 from django.http import StreamingHttpResponse
 from drf_spectacular.utils import extend_schema, extend_schema_view, inline_serializer
-from rest_framework import permissions, status
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.parsers import MultiPartParser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.serializers import CharField, IntegerField
 
@@ -40,7 +42,7 @@ class ChatViewSet(BaseModelViewSet):
         "list_all": ChatDetailSerializer,
         "converse": ConverseSerializer,
     }
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (IsAuthenticated,)
     lookup_field = "external_id"
 
     def initialize_request(self, request, *args, **kwargs):
@@ -103,7 +105,10 @@ class ChatViewSet(BaseModelViewSet):
         
 class ChatFeedbackViewSet(BaseModelViewSet):
     queryset=ChatFeedback.objects.all()
+    permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = ChatFeedbackSerializer
-    permission_classes = (permissions.IsAuthenticated,)
+
+    lookup_field = "external_id"
+    filterset_fields = ['liked', 'chat_message', 'chat_message__chat', 'chat_message__chat__project']
     
 
