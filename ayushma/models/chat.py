@@ -37,3 +37,9 @@ class ChatMessage(BaseModel):
 
     def __str__(self) -> str:
         return f"{self.message} : {self.chat}"
+
+
+class ChatFeedback(BaseModel):
+    chat_message = models.ForeignKey(ChatMessage, on_delete=models.PROTECT)
+    liked = models.BooleanField()
+    message = models.TextField(blank=True, null=True)
