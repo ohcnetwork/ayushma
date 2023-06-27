@@ -1,7 +1,6 @@
 import io
 import json
 import time
-import uuid
 from queue import Queue
 from typing import Dict, List
 
@@ -174,7 +173,7 @@ def add_reference_documents(chat_message):
 
     try:
         doc_ids = chat_text[ref_start_idx + len(ref_text) :].split(",")
-        doc_ids = [doc_id.strip(" .,[]*'\"") for doc_id in doc_ids]
+        doc_ids = [doc_id.strip(" .,[]*'\"“”") for doc_id in doc_ids]
         doc_ids = set([str(doc_id) for doc_id in doc_ids if doc_id != ""])
         for doc_id in doc_ids:
             try:
@@ -261,6 +260,7 @@ def converse(
     stream=True,
     references=None,
     generate_audio=True,
+    noonce=None,
 ):
     if not openai_key:
         raise Exception("OpenAI-Key header is required to create a chat or converse")
@@ -277,6 +277,7 @@ def converse(
             "translate_start": stats.get("request_translation_start_time"),
             "translate_end": stats.get("request_translation_end_time"),
         },
+        noonce=noonce,
     )
 
     stats["reference_start_time"] = time.time()

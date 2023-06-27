@@ -34,6 +34,7 @@ class ChatMessage(BaseModel):
     meta = models.JSONField(blank=True, null=True)
     temperature = models.FloatField(blank=True, null=True)
     top_k = models.IntegerField(blank=True, null=True)
+    noonce = models.CharField(unique=True, null=True, blank=True, max_length=100)
 
     def __str__(self) -> str:
         return f"{self.message} : {self.chat}"

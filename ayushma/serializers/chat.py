@@ -88,6 +88,7 @@ class ConverseSerializer(serializers.Serializer):
     temperature = serializers.FloatField(default=0.1)
     stream = serializers.BooleanField(default=True)
     generate_audio = serializers.BooleanField(default=True)
+    noonce = serializers.CharField(required=False)
 
 
 class ChatDetailSerializer(serializers.ModelSerializer):

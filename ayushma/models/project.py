@@ -1,5 +1,6 @@
 from django.db import models
 
+from ayushma.models.enums import STTEngine
 from ayushma.models.users import User
 from utils.models.base import BaseModel
 
@@ -9,6 +10,9 @@ class Project(BaseModel):
     description = models.TextField(null=True, blank=True)
     creator = models.ForeignKey(User, on_delete=models.PROTECT)
     prompt = models.TextField(default="")
+    stt_engine = models.IntegerField(
+        choices=STTEngine.choices, default=STTEngine.WHISPER
+    )
     is_default = models.BooleanField(default=False)
 
     def __str__(self) -> str:
