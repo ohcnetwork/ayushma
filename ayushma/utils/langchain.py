@@ -28,7 +28,7 @@ class LangChainHelper:
         llm_args = {
             "temperature": temperature,  # 0 means more deterministic output, 1 means more random output
             "openai_api_key": openai_api_key,
-            "model_name": "gpt-3.5-turbo-16k",
+            "model_name": "gpt-4",
         }
         if stream:
             llm_args["streaming"] = True
