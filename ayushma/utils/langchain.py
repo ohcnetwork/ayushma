@@ -12,13 +12,34 @@ from langchain.prompts import (
 )
 from langchain.schema import HumanMessage
 
+from ayushma.models.enums import ModelType
 from ayushma.utils.stream_callback import StreamingQueueCallbackHandler
+
+
+def get_model_name(model_type: ModelType):
+    if model_type == ModelType.GPT_3_5:
+        if settings.OPENAI_API_TYPE == "azure":
+            return "gpt-35-turbo"
+        return "gpt-3.5-turbo"
+    elif model_type == ModelType.GPT_3_5_16K:
+        if settings.OPENAI_API_TYPE == "azure":
+            return "gpt-35-turbo-16k"
+        return "gpt-3.5-16k"
+    elif model_type == ModelType.GPT_4:
+        return "gpt-4"
+    elif model_type == ModelType.GPT_4_32K:
+        return "gpt-4-32k"
+    else:
+        if settings.OPENAI_API_TYPE == "azure":
+            return settings.AZURE_CHAT_MODEL
+        return "gpt-3.5-turbo"
 
 
 class LangChainHelper:
     def __init__(
         self,
         openai_api_key=settings.OPENAI_API_KEY,
+        model=ModelType.GPT_3_5,
         prompt_template=None,
         temperature=0.1,
         stream=True,
@@ -28,7 +49,7 @@ class LangChainHelper:
         llm_args = {
             "temperature": temperature,  # 0 means more deterministic output, 1 means more random output
             "openai_api_key": openai_api_key,
-            "model_name": "gpt-4",
+            "model_name": get_model_name(model),
         }
         if stream:
             llm_args["streaming"] = True
@@ -39,7 +60,6 @@ class LangChainHelper:
         if settings.OPENAI_API_TYPE == "azure":
             llm_args["deployment_name"] = settings.AZURE_CHAT_DEPLOYMENT
             llm_args["openai_api_version"] = openai.api_version
-            llm_args["model_name"] = settings.AZURE_CHAT_MODEL
             llm = AzureOpenAI(**llm_args)
         else:
             llm = ChatOpenAI(**llm_args)

@@ -1,6 +1,6 @@
 from django.db import models
 
-from ayushma.models.enums import STTEngine
+from ayushma.models.enums import ModelType, STTEngine
 from ayushma.models.users import User
 from utils.models.base import BaseModel
 
@@ -13,6 +13,7 @@ class Project(BaseModel):
     stt_engine = models.IntegerField(
         choices=STTEngine.choices, default=STTEngine.WHISPER
     )
+    model = models.IntegerField(choices=ModelType.choices, default=ModelType.GPT_3_5)
     is_default = models.BooleanField(default=False)
 
     def __str__(self) -> str:
