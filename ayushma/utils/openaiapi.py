@@ -173,7 +173,7 @@ def add_reference_documents(chat_message):
 
     try:
         doc_ids = chat_text[ref_start_idx + len(ref_text) :].split(",")
-        doc_ids = [doc_id.strip(" .,[]*'\"“”") for doc_id in doc_ids]
+        doc_ids = [doc_id.strip(" .,[]*'\"“”“\n-") for doc_id in doc_ids]
         doc_ids = set([str(doc_id) for doc_id in doc_ids if doc_id != ""])
         for doc_id in doc_ids:
             try:
