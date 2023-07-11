@@ -315,6 +315,7 @@ def converse(
             stream=False,
             openai_api_key=openai_key,
             prompt_template=prompt,
+            model=chat.project.model,
             temperature=temperature,
         )
         response = lang_chain_helper.get_response(english_text, reference, chat_history)
@@ -343,6 +344,7 @@ def converse(
             end=RESPONSE_END,
             openai_api_key=openai_key,
             prompt_template=prompt,
+            model=chat.project.model,
             temperature=temperature,
         )
 
