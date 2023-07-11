@@ -92,6 +92,7 @@ def mark_test_run_as_completed(test_run_id):
 
         finally:
             test_result.save()
-
+            test_result.references.set(ai_response.reference_documents.all())
+            test_result.save()
     test_run.complete = True
     test_run.save()

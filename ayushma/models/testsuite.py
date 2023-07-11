@@ -10,6 +10,7 @@ from django.db.models import (
 )
 
 from ayushma.models import Project
+from ayushma.models.document import Document
 from ayushma.models.enums import FeedBackRating
 from ayushma.models.users import User
 from utils.models.base import BaseModel
@@ -42,6 +43,7 @@ class TestResult(BaseModel):
     answer = TextField()
     cosine_sim = FloatField()
     bleu_score = FloatField()
+    references = models.ManyToManyField(Document, blank=True)
 
 
 class Feedback(BaseModel):
