@@ -42,6 +42,13 @@ class DocumentViewSet(BaseModelViewSet):
     def perform_create(self, serializer):
         external_id = self.kwargs["project_external_id"]
         project = Project.objects.get(external_id=external_id)
+
+        if project.archived:
+            return Response(
+                {"non_field_errors": "Project is archived. Cannot add documents."},
+                status=400,
+            )
+            
         document = serializer.save(project=project)
 
         try:

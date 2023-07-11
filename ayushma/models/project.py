@@ -15,6 +15,7 @@ class Project(BaseModel):
     )
     model = models.IntegerField(choices=ModelType.choices, default=ModelType.GPT_3_5)
     is_default = models.BooleanField(default=False)
+    archived = models.BooleanField(default=False)
 
     def __str__(self) -> str:
         return f"{self.title} by {self.creator.username}{' (default)' if self.is_default else ''}"
