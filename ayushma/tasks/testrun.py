@@ -32,6 +32,7 @@ def mark_test_run_as_completed(test_run_id):
     chat.save()
 
     for test_question in test_questions:
+        sleep(15)  # Wait for 15 seconds to give previous test question time to complete
         test_result = TestResult()
         test_result.test_run = test_run
         test_result.test_question = test_question

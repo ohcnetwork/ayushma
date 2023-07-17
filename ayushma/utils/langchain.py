@@ -50,6 +50,7 @@ class LangChainHelper:
             "temperature": temperature,  # 0 means more deterministic output, 1 means more random output
             "openai_api_key": openai_api_key,
             "model_name": get_model_name(model),
+            "max_retries": 30,
         }
         if stream:
             llm_args["streaming"] = True
