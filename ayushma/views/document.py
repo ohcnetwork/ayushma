@@ -2,6 +2,7 @@ import json
 
 from django.conf import settings
 from drf_spectacular.utils import extend_schema, extend_schema_view
+from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
@@ -42,6 +43,10 @@ class DocumentViewSet(BaseModelViewSet):
     def perform_create(self, serializer):
         external_id = self.kwargs["project_external_id"]
         project = Project.objects.get(external_id=external_id)
+
+        if project.archived:
+            raise ValidationError({"non_field_errors": "Project is archived. Cannot add documents."})
+
         document = serializer.save(project=project)
 
         try:
@@ -66,7 +71,7 @@ class DocumentViewSet(BaseModelViewSet):
             else:
                 raise Exception("Invalid document type.")
         except Exception as e:
-            return Response({"non_field_errors": str(e)}, status=400)
+           raise ValidationError({"non_field_errors": str(e)})
 
     def perform_destroy(self, instance):
         # delete namespace from vectorDB

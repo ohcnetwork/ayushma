@@ -69,6 +69,9 @@ class ChatViewSet(BaseModelViewSet):
         project_id = self.kwargs["project_external_id"]
         project = Project.objects.get(external_id=project_id)
 
+        if project.archived:
+            raise ValidationError({"non_field_errors": "Project is archived. Cannot create chat."})
+
         serializer.save(user=self.request.user, project=project)
         super().perform_create(serializer)
 
