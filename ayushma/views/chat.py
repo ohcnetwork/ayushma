@@ -105,7 +105,7 @@ class ChatViewSet(BaseModelViewSet):
         
 class ChatFeedbackViewSet(BaseModelViewSet):
     queryset=ChatFeedback.objects.all()
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAdminUser]
     serializer_class = ChatFeedbackSerializer
 
     lookup_field = "external_id"
