@@ -8,8 +8,13 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
+            "external_id",
             "username",
             "full_name",
+            "email",
+            "allow_key",
+            "is_staff",
+            "is_reviewer",
         )
 
 
@@ -43,6 +48,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "email",
             "allow_key",
             "is_staff",
+            "is_reviewer",
             "password",
         )
         read_only_fields = ("external_id", "email", "username", "allow_key", "is_staff")
