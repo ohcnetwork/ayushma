@@ -51,7 +51,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "is_reviewer",
             "password",
         )
-        read_only_fields = ("external_id", "email", "username", "allow_key", "is_staff")
+        read_only_fields = ("external_id", "email", "username", "allow_key", "is_staff", "is_reviewer")
 
     def update(self, instance, validated_data):
         if password := validated_data.pop("password", None):
