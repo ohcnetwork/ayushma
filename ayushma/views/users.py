@@ -1,6 +1,7 @@
 from drf_spectacular.utils import extend_schema
 from rest_framework import permissions
 from rest_framework.decorators import action
+from rest_framework.filters import SearchFilter
 
 from ayushma.models import User
 from ayushma.serializers.users import (
@@ -27,6 +28,10 @@ class UserViewSet(BaseModelViewSet):
         "partial_update_me": (permissions.IsAuthenticated(),),
     }
     lookup_field = "username"
+    filter_backends = [
+        SearchFilter,
+    ]
+    search_fields = ["full_name"]
 
     def get_object(self):
         return (
