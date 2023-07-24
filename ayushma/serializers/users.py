@@ -51,7 +51,14 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "is_reviewer",
             "password",
         )
-        read_only_fields = ("external_id", "email", "username", "allow_key", "is_staff", "is_reviewer")
+        read_only_fields = (
+            "external_id",
+            "email",
+            "username",
+            "allow_key",
+            "is_staff",
+            "is_reviewer",
+        )
 
     def update(self, instance, validated_data):
         if password := validated_data.pop("password", None):
@@ -63,7 +70,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            "username",
+            "email",
             "full_name",
             "allow_key",
             "is_staff",
