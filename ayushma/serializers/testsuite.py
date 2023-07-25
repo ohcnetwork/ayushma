@@ -59,6 +59,7 @@ class FeedbackSerializer(serializers.ModelSerializer):
 class TestResultSerializer(serializers.ModelSerializer):
     feedback = FeedbackSerializer(source="feedback_set", many=True, read_only=True)
     references = DocumentSerializer(many=True, read_only=True)
+
     class Meta:
         model = TestResult
         fields = "__all__"
@@ -87,7 +88,7 @@ class TestRunSerializer(serializers.ModelSerializer):
             "project_object",
             "created_at",
             "modified_at",
-            "complete",
+            "status",
             "test_results",
         )
         read_only_fields = (
@@ -95,6 +96,5 @@ class TestRunSerializer(serializers.ModelSerializer):
             "created_at",
             "modified_at",
             "project",
-            "complete",
             "test_results",
         )

@@ -1,7 +1,6 @@
 from django.db import models
 from django.db.models import (
     CASCADE,
-    BooleanField,
     CharField,
     FloatField,
     ForeignKey,
@@ -30,9 +29,15 @@ class TestQuestion(BaseModel):
 
 
 class TestRun(BaseModel):
+    STATUS_CHOICES = [
+        ("running", "running"),
+        ("completed", "completed"),
+        ("canceled", "canceled"),
+        ("failed", "failed"),
+    ]
     test_suite = ForeignKey(TestSuite, on_delete=CASCADE)
     project = ForeignKey(Project, on_delete=CASCADE)
-    complete = BooleanField(default=False)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="running")
 
 
 class TestResult(BaseModel):
