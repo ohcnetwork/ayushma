@@ -7,13 +7,14 @@ from django.conf import settings
 from nltk.translate.bleu_score import SmoothingFunction, sentence_bleu
 
 from ayushma.models.chat import Chat
+from ayushma.models.enums import StatusChoices
 from ayushma.models.testsuite import TestResult, TestRun
 from ayushma.utils.language_helpers import translate_text
 from ayushma.utils.openaiapi import converse, cosine_similarity, get_embedding
 
 
 @shared_task(bind=True, soft_time_limit=21600)  # 6 hours in seconds
-def mark_test_run_as_completed(test_run_id):
+def mark_test_run_as_completed(self, test_run_id):
     try:
         sleep(5)
 
@@ -38,7 +39,7 @@ def mark_test_run_as_completed(test_run_id):
                 30
             )  # Wait for 30 seconds to give previous test question time to complete
 
-            if TestRun.objects.get(id=test_run_id).status == "canceled":
+            if TestRun.objects.get(id=test_run_id).status == StatusChoices.CANCELED:
                 print("Test run canceled")
                 return
 
@@ -93,6 +94,10 @@ def mark_test_run_as_completed(test_run_id):
                 test_result.answer = ai_response.message
                 test_result.cosine_sim = cosine_sim
                 test_result.bleu_score = round(bleu_score, 4)
+                try:
+                    test_result.references.set(ai_response.reference_documents.all())
+                except Exception:
+                    pass
 
             except Exception as e:
                 print("Error while running test question: ", e)
@@ -102,14 +107,12 @@ def mark_test_run_as_completed(test_run_id):
 
             finally:
                 test_result.save()
-                test_result.references.set(ai_response.reference_documents.all())
-                test_result.save()
 
-            test_run.status = "completed"
-            test_run.save()
+        test_run.status = StatusChoices.COMPLETED
+        test_run.save()
 
     except SoftTimeLimitExceeded:
         print("SoftTimeLimitExceeded")
-        test_run.status = "failed"
+        test_run.status = StatusChoices.FAILED
         test_run.save()
         return
