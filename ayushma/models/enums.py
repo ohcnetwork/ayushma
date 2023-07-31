@@ -32,3 +32,10 @@ class ModelType(IntegerChoices):
     GPT_3_5_16K = 2
     GPT_4 = 3
     GPT_4_32K = 4
+
+
+class StatusChoices(IntegerChoices):
+    RUNNING = 1
+    COMPLETED = 2
+    CANCELED = 3
+    FAILED = 4

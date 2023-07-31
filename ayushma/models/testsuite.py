@@ -10,7 +10,7 @@ from django.db.models import (
 
 from ayushma.models import Project
 from ayushma.models.document import Document
-from ayushma.models.enums import FeedBackRating
+from ayushma.models.enums import FeedBackRating, StatusChoices
 from ayushma.models.users import User
 from utils.models.base import BaseModel
 
@@ -29,15 +29,9 @@ class TestQuestion(BaseModel):
 
 
 class TestRun(BaseModel):
-    STATUS_CHOICES = [
-        ("running", "running"),
-        ("completed", "completed"),
-        ("canceled", "canceled"),
-        ("failed", "failed"),
-    ]
     test_suite = ForeignKey(TestSuite, on_delete=CASCADE)
     project = ForeignKey(Project, on_delete=CASCADE)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="running")
+    status = IntegerField(choices=StatusChoices.choices, default=StatusChoices.RUNNING)
 
 
 class TestResult(BaseModel):
