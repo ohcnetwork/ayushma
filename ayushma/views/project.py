@@ -1,5 +1,6 @@
 from django.conf import settings
 from drf_spectacular.utils import extend_schema, extend_schema_view
+from rest_framework import filters
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
@@ -18,6 +19,8 @@ from utils.views.base import BaseModelViewSet
 )
 class ProjectViewSet(BaseModelViewSet):
     queryset = Project.objects.all()
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ("title",)
     serializer_class = ProjectSerializer
     permission_classes = (IsAdminUser,)
     permission_action_classes = {

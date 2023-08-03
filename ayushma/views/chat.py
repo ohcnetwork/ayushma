@@ -4,7 +4,7 @@ import openai
 from django.conf import settings
 from django.http import StreamingHttpResponse
 from drf_spectacular.utils import extend_schema, extend_schema_view, inline_serializer
-from rest_framework import permissions, status
+from rest_framework import filters, permissions, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import MultiPartParser
@@ -30,6 +30,8 @@ from utils.views.base import BaseModelViewSet
 class ChatViewSet(BaseModelViewSet):
     queryset = Chat.objects.all()
     serializer_class = ChatSerializer
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ("title",)
     serializer_action_classes = {
         "retrieve": ChatDetailSerializer,
         "list_all": ChatDetailSerializer,
@@ -70,7 +72,9 @@ class ChatViewSet(BaseModelViewSet):
         project = Project.objects.get(external_id=project_id)
 
         if project.archived:
-            raise ValidationError({"non_field_errors": "Project is archived. Cannot create chat."})
+            raise ValidationError(
+                {"non_field_errors": "Project is archived. Cannot create chat."}
+            )
 
         serializer.save(user=self.request.user, project=project)
         super().perform_create(serializer)
