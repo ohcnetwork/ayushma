@@ -7,6 +7,12 @@ from drf_spectacular.utils import extend_schema, extend_schema_view, inline_seri
 from rest_framework import permissions, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
+from rest_framework.mixins import (
+    CreateModelMixin,
+    DestroyModelMixin,
+    ListModelMixin,
+    RetrieveModelMixin,
+)
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework.serializers import CharField, IntegerField
@@ -17,17 +23,20 @@ from ayushma.utils.converse import converse_api
 from ayushma.utils.language_helpers import translate_text
 from ayushma.utils.openaiapi import converse
 from utils.views.base import BaseModelViewSet
-
-
-@extend_schema_view(
-    destroy=extend_schema(exclude=True),
-    partial_update=extend_schema(exclude=False),
-    create=extend_schema(exclude=False),
-    retrieve=extend_schema(
-        description="Get Chats",
-    ),
+from utils.views.mixins import (
+    GetPermissionClassesMixin,
+    GetSerializerClassMixin,
+    PartialUpdateModelMixin,
 )
-class ChatViewSet(BaseModelViewSet):
+
+
+class ChatViewSet(
+    BaseModelViewSet,
+    CreateModelMixin,
+    PartialUpdateModelMixin,
+    RetrieveModelMixin,
+    ListModelMixin,
+):
     queryset = Chat.objects.all()
     serializer_class = ChatSerializer
     serializer_action_classes = {
@@ -70,7 +79,9 @@ class ChatViewSet(BaseModelViewSet):
         project = Project.objects.get(external_id=project_id)
 
         if project.archived:
-            raise ValidationError({"non_field_errors": "Project is archived. Cannot create chat."})
+            raise ValidationError(
+                {"non_field_errors": "Project is archived. Cannot create chat."}
+            )
 
         serializer.save(user=self.request.user, project=project)
         super().perform_create(serializer)

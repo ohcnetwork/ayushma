@@ -1,22 +1,22 @@
 from django.conf import settings
 from drf_spectacular.utils import extend_schema, extend_schema_view
+from rest_framework.mixins import CreateModelMixin, ListModelMixin, RetrieveModelMixin
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
 from ayushma.models import Project
 from ayushma.serializers.project import ProjectSerializer, ProjectUpdateSerializer
 from utils.views.base import BaseModelViewSet
+from utils.views.mixins import PartialUpdateModelMixin
 
 
-@extend_schema_view(
-    destroy=extend_schema(exclude=True),
-    partial_update=extend_schema(exclude=False),
-    create=extend_schema(exclude=False),
-    retrieve=extend_schema(
-        description="Get Projects",
-    ),
-)
-class ProjectViewSet(BaseModelViewSet):
+class ProjectViewSet(
+    BaseModelViewSet,
+    PartialUpdateModelMixin,
+    ListModelMixin,
+    RetrieveModelMixin,
+    CreateModelMixin,
+):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
     permission_classes = (IsAdminUser,)
