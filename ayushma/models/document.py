@@ -15,6 +15,7 @@ class Document(BaseModel):
     file = models.FileField(null=True, blank=True)
     text_content = models.TextField(null=True, blank=True)
     project = models.ForeignKey(Project, on_delete=models.PROTECT)
+    uploading = models.BooleanField(default=False)
 
     def __str__(self) -> str:
         return f"{self.title} in {self.project.title}"
