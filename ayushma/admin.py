@@ -3,6 +3,8 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from djangoql.admin import DjangoQLSearchMixin
 from simple_history.admin import SimpleHistoryAdmin
 
+from ayushma.models.services import Service, TempToken
+
 from .models import APIKey, Chat, ChatMessage, Document, Project, User
 
 
@@ -89,4 +91,14 @@ class DocumentAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
 
 @admin.register(APIKey)
 class APIKeyAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
+    pass
+
+
+@admin.register(TempToken)
+class TempTokenAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
+    pass
+
+
+@admin.register(Service)
+class ServiceAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
     pass
