@@ -1,9 +1,9 @@
 from django.db import models
 
-from ayushma.models.apikeys import APIKey
 from ayushma.models.document import Document
 from ayushma.models.enums import ChatMessageType, ModelType
 from ayushma.models.project import Project
+from ayushma.models.services import APIKey
 from ayushma.models.users import User
 from utils.models.base import BaseModel
 

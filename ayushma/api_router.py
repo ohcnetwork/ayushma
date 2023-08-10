@@ -7,6 +7,7 @@ from ayushma.views.chat import ChatViewSet
 from ayushma.views.document import DocumentViewSet
 from ayushma.views.orphan import OrphanChatViewSet
 from ayushma.views.project import ProjectViewSet
+from ayushma.views.service import TempTokenViewSet
 from ayushma.views.testsuite import (
     FeedbackViewSet,
     TestQuestionViewSet,
@@ -29,6 +30,7 @@ router.register(r"users", UserViewSet)
 router.register(r"auth", ResetPasswordViewset, basename="token")
 router.register(r"auth", AuthViewSet, basename="auth")
 router.register(r"chats", OrphanChatViewSet, basename="orphan_chat")
+router.register(r"temptokens", TempTokenViewSet, basename="temptoken")
 
 router.register(r"projects", ProjectViewSet)
 projects_router = NestedRouter(router, r"projects", lookup="project")

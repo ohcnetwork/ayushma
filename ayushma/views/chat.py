@@ -18,6 +18,7 @@ from rest_framework.response import Response
 from rest_framework.serializers import CharField, IntegerField
 
 from ayushma.models import APIKey, Chat, ChatMessage, Project
+from ayushma.permissions import IsTempTokenOrAuthenticated
 from ayushma.serializers import ChatDetailSerializer, ChatSerializer, ConverseSerializer
 from ayushma.utils.converse import converse_api
 from ayushma.utils.language_helpers import translate_text
@@ -44,7 +45,7 @@ class ChatViewSet(
         "list_all": ChatDetailSerializer,
         "converse": ConverseSerializer,
     }
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (IsTempTokenOrAuthenticated,)
     lookup_field = "external_id"
 
     def initialize_request(self, request, *args, **kwargs):
