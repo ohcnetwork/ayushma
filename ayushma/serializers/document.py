@@ -21,8 +21,9 @@ class DocumentSerializer(serializers.ModelSerializer):
             "document_type",
             "file",
             "text_content",
+            "uploading",
         )
-        read_only_fields = ("external_id", "created_at", "modified_at")
+        read_only_fields = ("external_id", "created_at", "modified_at", "uploading")
         write_only_fields = ("file",)
 
     def validate(self, data):

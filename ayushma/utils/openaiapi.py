@@ -14,7 +14,7 @@ from pinecone import QueryResponse
 
 from ayushma.models import ChatMessage
 from ayushma.models.document import Document
-from ayushma.models.enums import ChatMessageType
+from ayushma.models.enums import ChatMessageType, ModelType
 from ayushma.utils.langchain import LangChainHelper
 from ayushma.utils.language_helpers import text_to_speech, translate_text
 
@@ -315,7 +315,9 @@ def converse(
             stream=False,
             openai_api_key=openai_key,
             prompt_template=prompt,
-            model=chat.project.model,
+            model=chat.model
+            or (chat.project and chat.project.model)
+            or ModelType.GPT_3_5,
             temperature=temperature,
         )
         response = lang_chain_helper.get_response(english_text, reference, chat_history)
@@ -344,7 +346,9 @@ def converse(
             end=RESPONSE_END,
             openai_api_key=openai_key,
             prompt_template=prompt,
-            model=chat.project.model,
+            model=chat.model
+            or (chat.project and chat.project.model)
+            or ModelType.GPT_3_5,
             temperature=temperature,
         )
 

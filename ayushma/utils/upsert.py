@@ -111,7 +111,7 @@ def upsert(
         ]  # prep metadata and upsert batch
         to_upsert = zip(ids_batch, embeds, meta)  # zip together
         pinecone_index.upsert(
-            vectors=list(to_upsert), namespace=external_id
+            vectors=list(to_upsert), namespace=str(external_id)
         )  # upsert to Pinecone
 
     print("Finished upserting to Pinecone index")
