@@ -26,6 +26,7 @@ class IsTempTokenOrAuthenticated(permissions.IsAuthenticated):
         auth_token: str = request.headers.get("Authorization")
         auth_token = auth_token.split(" ")[1]
         if auth_token.startswith("tt"):
+            print("temp token")
             temptoken: TempToken = TempToken.objects.get(token=auth_token)
             ip_address = get_client_ip(request)
             if ip_address == temptoken.ip and temptoken.expires_at > timezone.now():
