@@ -39,7 +39,7 @@ def upsert_doc(self, document_id: str, document_url: str = None):
         else:
             raise Exception("Invalid document type.")
 
-        document.uploading = True
+        document.uploading = False
         document.save()
 
     except SoftTimeLimitExceeded:
