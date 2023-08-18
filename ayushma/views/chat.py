@@ -7,27 +7,37 @@ from drf_spectacular.utils import extend_schema, extend_schema_view, inline_seri
 from rest_framework import filters, permissions, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
+from rest_framework.mixins import (
+    CreateModelMixin,
+    DestroyModelMixin,
+    ListModelMixin,
+    RetrieveModelMixin,
+)
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework.serializers import CharField, IntegerField
 
 from ayushma.models import APIKey, Chat, ChatMessage, Project
+from ayushma.permissions import IsTempTokenOrAuthenticated
 from ayushma.serializers import ChatDetailSerializer, ChatSerializer, ConverseSerializer
 from ayushma.utils.converse import converse_api
 from ayushma.utils.language_helpers import translate_text
 from ayushma.utils.openaiapi import converse
 from utils.views.base import BaseModelViewSet
-
-
-@extend_schema_view(
-    destroy=extend_schema(exclude=True),
-    partial_update=extend_schema(exclude=False),
-    create=extend_schema(exclude=False),
-    retrieve=extend_schema(
-        description="Get Chats",
-    ),
+from utils.views.mixins import (
+    GetPermissionClassesMixin,
+    GetSerializerClassMixin,
+    PartialUpdateModelMixin,
 )
-class ChatViewSet(BaseModelViewSet):
+
+
+class ChatViewSet(
+    BaseModelViewSet,
+    CreateModelMixin,
+    PartialUpdateModelMixin,
+    RetrieveModelMixin,
+    ListModelMixin,
+):
     queryset = Chat.objects.all()
     serializer_class = ChatSerializer
     filter_backends = (filters.SearchFilter,)
@@ -37,7 +47,7 @@ class ChatViewSet(BaseModelViewSet):
         "list_all": ChatDetailSerializer,
         "converse": ConverseSerializer,
     }
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (IsTempTokenOrAuthenticated,)
     lookup_field = "external_id"
 
     def initialize_request(self, request, *args, **kwargs):

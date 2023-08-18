@@ -1,9 +1,9 @@
 from django.db import models
 
-from ayushma.models.apikeys import APIKey
 from ayushma.models.document import Document
-from ayushma.models.enums import ChatMessageType
+from ayushma.models.enums import ChatMessageType, ModelType
 from ayushma.models.project import Project
+from ayushma.models.services import APIKey
 from ayushma.models.users import User
 from utils.models.base import BaseModel
 
@@ -16,6 +16,7 @@ class Chat(BaseModel):
     )
     prompt = models.TextField(blank=True, null=True)
     api_key = models.ForeignKey(APIKey, on_delete=models.PROTECT, blank=True, null=True)
+    model = models.IntegerField(choices=ModelType.choices, blank=True, null=True)
 
     def __str__(self) -> str:
         return f"{self.title} from {self.user.username if self.user else self.api_key.creator.username}"

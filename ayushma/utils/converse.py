@@ -7,6 +7,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from ayushma.models import APIKey, ChatMessage
+from ayushma.models.services import Service
 from ayushma.serializers import ChatMessageSerializer
 from ayushma.utils.language_helpers import translate_text
 from ayushma.utils.openaiapi import converse
@@ -32,9 +33,20 @@ def converse_api(
     audio = request.data.get("audio")
     text = request.data.get("text")
     language = request.data.get("language") or "en"
-    open_ai_key = request.headers.get("OpenAI-Key") or (
-        user.allow_key and settings.OPENAI_API_KEY
-    )
+    try:
+        service: Service = request.service
+    except AttributeError:
+        service = None
+    open_ai_key = None
+    if service and service.allow_key:
+        open_ai_key = settings.OPENAI_API_KEY
+    else:
+        open_ai_key = request.headers.get("OpenAI-Key")
+
+    if not open_ai_key:
+        open_ai_key = request.headers.get("OpenAI-Key") or (
+            user.allow_key and settings.OPENAI_API_KEY
+        )
     noonce = request.data.get("noonce")
 
     if noonce:

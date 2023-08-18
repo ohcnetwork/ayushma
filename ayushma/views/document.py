@@ -1,27 +1,35 @@
 import json
+from ast import Delete
 
 from django.conf import settings
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework.exceptions import ValidationError
+from rest_framework.mixins import (
+    CreateModelMixin,
+    DestroyModelMixin,
+    ListModelMixin,
+    RetrieveModelMixin,
+)
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 
 from ayushma.models import Document, DocumentType, Project
 from ayushma.serializers.document import DocumentSerializer, DocumentUpdateSerializer
+from ayushma.tasks.upsertdoc import upsert_doc
 from ayushma.utils.upsert import upsert
 from utils.views.base import BaseModelViewSet
+from utils.views.mixins import PartialUpdateModelMixin
 
 
-@extend_schema_view(
-    destroy=extend_schema(exclude=True),
-    partial_update=extend_schema(exclude=False),
-    create=extend_schema(exclude=False),
-    retrieve=extend_schema(
-        description="Get Documents",
-    ),
-)
-class DocumentViewSet(BaseModelViewSet):
+class DocumentViewSet(
+    BaseModelViewSet,
+    PartialUpdateModelMixin,
+    CreateModelMixin,
+    RetrieveModelMixin,
+    DestroyModelMixin,
+    ListModelMixin,
+):
     queryset = Document.objects.all()
     serializer_action_classes = {
         "list": DocumentSerializer,
@@ -45,33 +53,19 @@ class DocumentViewSet(BaseModelViewSet):
         project = Project.objects.get(external_id=external_id)
 
         if project.archived:
-            raise ValidationError({"non_field_errors": "Project is archived. Cannot add documents."})
+            raise ValidationError(
+                {"non_field_errors": "Project is archived. Cannot add documents."}
+            )
 
         document = serializer.save(project=project)
 
+        doc_url = None
         try:
-            if document.document_type == DocumentType.FILE:
-                upsert(
-                    external_id=external_id,
-                    s3_url=self.request.build_absolute_uri(document.file.url),
-                    document_id=document.external_id,
-                )
-            elif document.document_type == DocumentType.URL:
-                upsert(
-                    external_id=external_id,
-                    url=document.text_content,
-                    document_id=document.external_id,
-                )
-            elif document.document_type == DocumentType.TEXT:
-                upsert(
-                    external_id=external_id,
-                    text=document.text_content,
-                    document_id=document.external_id,
-                )
-            else:
-                raise Exception("Invalid document type.")
+            doc_url = self.request.build_absolute_uri(document.file.url)
         except Exception as e:
-           raise ValidationError({"non_field_errors": str(e)})
+            pass
+
+        upsert_doc.delay(document.external_id, doc_url)
 
     def perform_destroy(self, instance):
         # delete namespace from vectorDB
