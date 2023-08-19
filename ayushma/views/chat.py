@@ -4,7 +4,7 @@ import openai
 from django.conf import settings
 from django.http import StreamingHttpResponse
 from drf_spectacular.utils import extend_schema, extend_schema_view, inline_serializer
-from rest_framework import permissions, status
+from rest_framework import filters, permissions, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.mixins import (
@@ -40,6 +40,8 @@ class ChatViewSet(
 ):
     queryset = Chat.objects.all()
     serializer_class = ChatSerializer
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ("title",)
     serializer_action_classes = {
         "retrieve": ChatDetailSerializer,
         "list_all": ChatDetailSerializer,
