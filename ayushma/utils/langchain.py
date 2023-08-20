@@ -14,6 +14,7 @@ from langchain.schema import HumanMessage
 
 from ayushma.models.enums import ModelType
 from ayushma.utils.stream_callback import StreamingQueueCallbackHandler
+from core.settings.base import AI_NAME
 
 
 def get_model_name(model_type: ModelType):
@@ -64,20 +65,20 @@ class LangChainHelper:
         else:
             llm = ChatOpenAI(**llm_args)
 
-        template = """You are a female medical assistant called Ayushma who understands all languages and repsonds only in english and you must follow the given algorithm strictly to assist emergency nurses in ICUs. Remember you must give accurate answers otherwise it can risk the patient's life, so stick strictly to the references as explained in algorithm. Your output must be in markdown format find important terms and add bold to it (example **word**) find numbers and add italic to it(example *word*) add bullet points to a list(example -word1\n-word2):
+        template = f"""You are a female assistant called {AI_NAME} who understands all languages and repsonds only in english and you must follow the given algorithm strictly to assist users. Remember you must give accurate answers, so stick strictly to the references as explained in algorithm. Your output must be in markdown format find important terms and add bold to it (example **word**) find numbers and add italic to it(example *word*) add bullet points to a list(example -word1\n-word2):
 Algorithm:
-references = {reference}
+references = {{reference}}
 /*
 The references a dictionary with the key, value pairs in the following format:
 <reference_id>: <text>
-'text' is the content of the reference from what you can extract the information to solve the nurse's query.
+'text' is the content of the reference from what you can extract the information to solve the user's query.
 */
 
-can_query_be_solved_by_given_references = <analyze the given "references" and current nurse's query and return true if "references" strictly contains the information to solve the current query else return false>
+can_query_be_solved_by_given_references = <analyze the given "references" and current user's query and return true if "references" strictly contains the information to solve the current query else return false>
 if "can_query_be_solved_by_given_references":
 (
-use_your_knowledge = <analyze "chat history with nurse" and "query" and generate an approriate result for the "query">
-result = <analyze "references", chat history with nurse and nurse's current query to give the most descriptive and most accurate answer to solve the nurse's query related to medical emergencies.>
+use_your_knowledge = <analyze "chat history with user" and "query" and generate an approriate result for the "query">
+result = <analyze "references", chat history with user and user's current query to give the most descriptive and most accurate answer to solve the user's query related to medical emergencies.>
 )
 else:
 (
@@ -85,7 +86,7 @@ result = <"Sorry I am not able to find anything related to your query in my data
 
 Output Format (follow the below format strictly and you must provide the references ids array in all your responses after the result. Do not mention about the references anywhere else):
 '''
-Ayushma: <enter_result_here>
+{AI_NAME}: <enter_result_here>
 References: <array of reference_ids (in the format: [1,2,3]) "include all the reference ids in this array that are relevant and from which you formed the result">
 '''"""
         if prompt_template:
@@ -125,7 +126,7 @@ References: <array of reference_ids (in the format: [1,2,3]) "include all the re
         )
         try:
             async_response = await self.chain.apredict(
-                user_msg=f"Nurse: {user_msg}",
+                user_msg=f"user: {user_msg}",
                 reference=reference,
                 chat_history=chat_history,
             )
@@ -142,7 +143,7 @@ References: <array of reference_ids (in the format: [1,2,3]) "include all the re
             )
         )
         return self.chain.predict(
-            user_msg=f"Nurse: {user_msg}",
+            user_msg=f"user: {user_msg}",
             reference=reference,
             chat_history=chat_history,
         )

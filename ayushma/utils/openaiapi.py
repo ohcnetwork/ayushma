@@ -17,6 +17,7 @@ from ayushma.models.document import Document
 from ayushma.models.enums import ChatMessageType, ModelType
 from ayushma.utils.langchain import LangChainHelper
 from ayushma.utils.language_helpers import text_to_speech, translate_text
+from core.settings.base import AI_NAME
 
 
 # https://github.com/openai/openai-python/blob/main/openai/embeddings_utils.py#L65
@@ -362,7 +363,7 @@ def converse(
                 chat_history,
             )
             chat_response = ""
-            skip_token = len("Ayushma: ")
+            skip_token = len(f"{AI_NAME}: ")
             try:
                 while True:
                     if token_queue.empty():
