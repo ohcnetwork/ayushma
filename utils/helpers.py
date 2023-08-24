@@ -27,6 +27,9 @@ def get_client_ip(request):
 
 
 def validatecaptcha(recaptcha_response):
+    if not settings.get("GOOGLE_RECAPTCHA_SECRET_KEY", None):
+        return True
+
     if not recaptcha_response:
         return False
     values = {
