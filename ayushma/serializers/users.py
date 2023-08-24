@@ -2,6 +2,7 @@ from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 
 from ayushma.models import User
+from utils.helpers import validatecaptcha
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -21,15 +22,20 @@ class UserSerializer(serializers.ModelSerializer):
 class UserCreateSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(required=True)
     password = serializers.CharField(write_only=True, required=True)
+    recaptcha = serializers.CharField(write_only=True, required=True)
 
     class Meta:
         model = User
-        fields = (
-            "username",
-            "full_name",
-            "password",
-            "email",
-        )
+        fields = ("username", "full_name", "password", "email", "recaptcha")
+
+    def validate_recaptcha(self, value):
+        if not validatecaptcha(value):
+            raise serializers.ValidationError("Invalid captcha")
+        return value
+
+    def validate(self, validated_data):
+        validated_data.pop("recaptcha", None)
+        return validated_data
 
     def create(self, validated_data):
         validated_data["password"] = make_password(validated_data["password"])
