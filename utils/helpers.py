@@ -38,6 +38,4 @@ def validatecaptcha(recaptcha_response):
     )
     result = captcha_response.json()
 
-    if result["success"] is True:
-        return True
-    return False
+    return result.get("success", False)
