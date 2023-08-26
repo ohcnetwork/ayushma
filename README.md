@@ -34,8 +34,8 @@ You can add these at the end of your `activate` file in `[virtualenvfolder] -> b
 | Variable | Description
 | --- | ---
 | AI_NAME | Name of the AI (default: Ayushma)
-| OPENAI_API_KEY | OpenAI API Key 
-| PINECONE_API_KEY | Pinecone API Key 
+| OPENAI_API_KEY | OpenAI API Key
+| PINECONE_API_KEY | Pinecone API Key
 | PINECONE_ENVIRONMENT | Pinecone Environment
 | PINECONE_INDEX | Pinecone Index
 | CURRENT_DOMAIN | Current Domain where the frontend is hosted. ex. `https://ayushma.ohc.network`
@@ -47,3 +47,4 @@ You can add these at the end of your `activate` file in `[virtualenvfolder] -> b
 | S3_KEY_ID | AWS S3 Key ID (Optional)
 | S3_BUCKET_NAME | AWS S3 Bucket Name (Optional)
 | S3_REGION | AWS S3 Region (Optional)
+| GOOGLE_RECAPTCHA_SECRET_KEY | Google Recaptcha Secret Key (Optional)

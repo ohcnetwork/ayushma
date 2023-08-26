@@ -367,3 +367,4 @@ if AWS_STORAGE_BUCKET_NAME and AWS_SECRET_ACCESS_KEY and AWS_ACCESS_KEY_ID:
     DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
 
 AI_NAME = env("AI_NAME", default="Ayushma")
+GOOGLE_RECAPTCHA_SECRET_KEY = env("GOOGLE_RECAPTCHA_SECRET_KEY", default=None)
