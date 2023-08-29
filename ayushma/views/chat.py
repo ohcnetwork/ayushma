@@ -67,7 +67,7 @@ class ChatViewSet(
         if user.is_superuser and self.action == "list_all":
             return queryset
 
-        return queryset.filter(user=user)
+        return queryset.filter(user=user).order_by("-created_at")
 
     def perform_create(self, serializer):
         if (
