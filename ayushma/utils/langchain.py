@@ -46,16 +46,18 @@ class LangChainHelper:
         stream=True,
         token_queue=None,
         end=None,
+        error=None,
     ):
         llm_args = {
             "temperature": temperature,  # 0 means more deterministic output, 1 means more random output
             "openai_api_key": openai_api_key,
             "model_name": get_model_name(model),
+            "request_timeout": 180,
         }
         if stream:
             llm_args["streaming"] = True
             llm_args["callback_manager"] = AsyncCallbackManager(
-                [StreamingQueueCallbackHandler(token_queue, end)]
+                [StreamingQueueCallbackHandler(token_queue, end, error)]
             )
 
         if settings.OPENAI_API_TYPE == "azure":
@@ -117,7 +119,7 @@ References: <array of reference_ids (in the format: [1,2,3]) "include all the re
         self.chain = LLMChain(llm=llm, prompt=chat_prompt, verbose=True)
 
     async def get_aresponse(
-        self, job_done, token_queue, user_msg, reference, chat_history
+        self, job_done, error, token_queue, user_msg, reference, chat_history
     ):
         chat_history.append(
             HumanMessage(
@@ -130,11 +132,11 @@ References: <array of reference_ids (in the format: [1,2,3]) "include all the re
                 reference=reference,
                 chat_history=chat_history,
             )
-            token_queue.put(job_done)
+            token_queue.put((job_done,))
             return async_response
         except Exception as e:
             print(e)
-            token_queue.put(job_done)
+            token_queue.put((error, e))
 
     def get_response(self, user_msg, reference, chat_history):
         chat_history.append(
