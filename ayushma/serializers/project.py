@@ -23,7 +23,7 @@ class ProjectSerializer(serializers.ModelSerializer):
 class ProjectUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
-        fields = ProjectSerializer.Meta.fields + ("prompt",)
+        fields = ProjectSerializer.Meta.fields + ("prompt", "open_ai_key")
 
     def update(self, instance, validated_data):
         if validated_data.get("is_default", True):
