@@ -10,7 +10,7 @@ from langchain.prompts import (
     MessagesPlaceholder,
     SystemMessagePromptTemplate,
 )
-from langchain.schema import HumanMessage
+from langchain.schema import SystemMessage
 
 from ayushma.models.enums import ModelType
 from ayushma.utils.stream_callback import StreamingQueueCallbackHandler
@@ -94,6 +94,11 @@ References: <array of reference_ids (in the format: [1,2,3]) "include all the re
         if prompt_template:
             template = prompt_template
 
+        if "{reference}" not in template:
+            raise Exception(
+                "Validation Error: Prompt template must contain {reference} variable"
+            )
+
         system_prompt = PromptTemplate(template=template, input_variables=["reference"])
         system_message_prompt = SystemMessagePromptTemplate(
             prompt=system_prompt,
@@ -122,8 +127,8 @@ References: <array of reference_ids (in the format: [1,2,3]) "include all the re
         self, job_done, error, token_queue, user_msg, reference, chat_history
     ):
         chat_history.append(
-            HumanMessage(
-                content="@system remeber only answer the question if it can be answered with the given references"
+            SystemMessage(
+                content="remeber only answer the question if it can be answered with the given references"
             )
         )
         try:
@@ -140,8 +145,8 @@ References: <array of reference_ids (in the format: [1,2,3]) "include all the re
 
     def get_response(self, user_msg, reference, chat_history):
         chat_history.append(
-            HumanMessage(
-                content="@system remeber only answer the question if it can be answered with the given references"
+            SystemMessage(
+                content="remeber only answer the question if it can be answered with the given references"
             )
         )
         return self.chain.predict(

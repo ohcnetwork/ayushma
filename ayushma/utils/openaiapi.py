@@ -432,7 +432,7 @@ def converse(
                 message=translated_error_text,
                 original_message=error_text,
                 chat=chat,
-                messageType=ChatMessageType.AYUSHMA,
+                messageType=ChatMessageType.SYSTEM,
                 language=language,
                 meta={
                     "translate_start": stats.get("response_translation_start_time"),
