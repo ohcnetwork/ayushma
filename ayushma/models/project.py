@@ -1,3 +1,4 @@
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
 from ayushma.models.enums import ModelType, STTEngine
@@ -15,6 +16,7 @@ class Project(BaseModel):
         choices=STTEngine.choices, default=STTEngine.WHISPER
     )
     model = models.IntegerField(choices=ModelType.choices, default=ModelType.GPT_3_5)
+    preset_questions = ArrayField(models.TextField(), null=True, blank=True, size=100)
     is_default = models.BooleanField(default=False)
     archived = models.BooleanField(default=False)
 
