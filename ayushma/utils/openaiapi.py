@@ -119,13 +119,16 @@ def split_text(text):
     return parts
 
 
-def create_json_response(input_text, chat_id, delta, message, stop, ayushma_voice):
+def create_json_response(
+    input_text, chat_id, delta, message, stop, error, ayushma_voice
+):
     json_data = {
         "chat": str(chat_id),
         "input": input_text,
         "delta": delta,
         "message": message,
         "stop": stop,
+        "error": error,
         "ayushma_voice": ayushma_voice,
     }
 
@@ -286,9 +289,13 @@ def converse(
     if references:
         reference = references
     elif chat.project and chat.project.external_id:
-        reference = get_reference(
-            english_text, openai_key, str(chat.project.external_id), match_number
-        )
+        try:
+            reference = get_reference(
+                english_text, openai_key, str(chat.project.external_id), match_number
+            )
+        except Exception as e:
+            print(e)
+            reference = ""
     else:
         reference = ""
 
@@ -340,39 +347,41 @@ def converse(
     else:
         token_queue = Queue()
         RESPONSE_END = object()
+        RESPONSE_ERROR = object()
 
-        lang_chain_helper = LangChainHelper(
-            stream=stream,
-            token_queue=token_queue,
-            end=RESPONSE_END,
-            openai_api_key=openai_key,
-            prompt_template=prompt,
-            model=chat.model
-            or (chat.project and chat.project.model)
-            or ModelType.GPT_3_5,
-            temperature=temperature,
-        )
-
-        with start_blocking_portal() as portal:
-            portal.start_task_soon(
-                lang_chain_helper.get_aresponse,
-                RESPONSE_END,
-                token_queue,
-                english_text,
-                reference,
-                chat_history,
+        try:
+            lang_chain_helper = LangChainHelper(
+                stream=stream,
+                token_queue=token_queue,
+                end=RESPONSE_END,
+                error=RESPONSE_ERROR,
+                openai_api_key=openai_key,
+                prompt_template=prompt,
+                model=chat.model
+                or (chat.project and chat.project.model)
+                or ModelType.GPT_3_5,
+                temperature=temperature,
             )
-            chat_response = ""
-            skip_token = len(f"{AI_NAME}: ")
-            try:
+            with start_blocking_portal() as portal:
+                portal.start_task_soon(
+                    lang_chain_helper.get_aresponse,
+                    RESPONSE_END,
+                    RESPONSE_ERROR,
+                    token_queue,
+                    english_text,
+                    reference,
+                    chat_history,
+                )
+                chat_response = ""
+                skip_token = len(f"{AI_NAME}: ")
+
                 while True:
                     if token_queue.empty():
                         continue
                     next_token = token_queue.get(True, timeout=10)
-                    if skip_token > 0:
-                        skip_token -= 1
-                        continue
-                    if next_token is RESPONSE_END:
+                    if next_token[0] == RESPONSE_ERROR:
+                        raise next_token[1]
+                    if next_token[0] is RESPONSE_END:
                         stats["response_end_time"] = time.time()
                         (
                             translated_chat_response,
@@ -395,44 +404,49 @@ def converse(
                             "",
                             translated_chat_response,
                             True,
+                            False,
                             ayushma_voice=url,
                         )
                         break
-                    chat_response += next_token
+                    if skip_token > 0:
+                        skip_token -= 1
+                        continue
+                    chat_response += next_token[0]
                     yield create_json_response(
                         local_translated_text,
                         chat.external_id,
-                        next_token,
+                        next_token[0],
                         chat_response,
+                        False,
                         False,
                         None,
                     )
-            except Exception as e:
-                print(e)
-                error_text = str(e)
-                translated_error_text = error_text
-                if user_language != "en-IN":
-                    translated_error_text = translate_text(user_language, error_text)
+        except Exception as e:
+            print(e)
+            error_text = str(e)
+            translated_error_text = error_text
+            if user_language != "en-IN":
+                translated_error_text = translate_text(user_language, error_text)
 
-                ChatMessage.objects.create(
-                    message=translated_error_text,
-                    original_message=error_text,
-                    chat=chat,
-                    messageType=ChatMessageType.AYUSHMA,
-                    language=language,
-                    meta={
-                        "translate_start": stats.get("response_translation_start_time"),
-                        "translate_end": stats.get("response_translation_end_time"),
-                        "reference_start": stats.get("reference_start_time"),
-                        "reference_end": stats.get("reference_end_time"),
-                        "response_start": stats.get("response_start_time"),
-                        "response_end": stats.get("response_end_time"),
-                        "tts_start": stats.get("tts_start_time"),
-                        "tts_end": stats.get("tts_end_time"),
-                        "upload_start": stats.get("upload_start_time"),
-                        "upload_end": stats.get("upload_end_time"),
-                    },
-                )
-                yield create_json_response(
-                    local_translated_text, chat.external_id, "", str(e), True, None
-                )
+            ChatMessage.objects.create(
+                message=translated_error_text,
+                original_message=error_text,
+                chat=chat,
+                messageType=ChatMessageType.SYSTEM,
+                language=language,
+                meta={
+                    "translate_start": stats.get("response_translation_start_time"),
+                    "translate_end": stats.get("response_translation_end_time"),
+                    "reference_start": stats.get("reference_start_time"),
+                    "reference_end": stats.get("reference_end_time"),
+                    "response_start": stats.get("response_start_time"),
+                    "response_end": stats.get("response_end_time"),
+                    "tts_start": stats.get("tts_start_time"),
+                    "tts_end": stats.get("tts_end_time"),
+                    "upload_start": stats.get("upload_start_time"),
+                    "upload_end": stats.get("upload_end_time"),
+                },
+            )
+            yield create_json_response(
+                local_translated_text, chat.external_id, "", str(e), True, True, None
+            )
