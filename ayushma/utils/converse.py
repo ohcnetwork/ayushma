@@ -37,27 +37,24 @@ def converse_api(
         service: Service = request.service
     except AttributeError:
         service = None
+
     open_ai_key = None
     if service and service.allow_key:
         open_ai_key = settings.OPENAI_API_KEY
-    else:
-        open_ai_key = request.headers.get("OpenAI-Key")
 
     if not open_ai_key:
-        open_ai_key = request.headers.get("OpenAI-Key") or (
-            user.allow_key and settings.OPENAI_API_KEY
+        open_ai_key = (
+            request.headers.get("OpenAI-Key")
+            or (chat.project.open_ai_key)
+            or (user.allow_key and settings.OPENAI_API_KEY)
         )
     noonce = request.data.get("noonce")
 
-    if noonce:
-        try:
-            ChatMessage.objects.get(noonce=noonce)
-            return Response(
-                {"error": "This noonce has already been used"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        except ChatMessage.DoesNotExist:
-            pass
+    if noonce and ChatMessage.objects.filter(noonce=noonce).exists():
+        return Response(
+            {"error": "This noonce has already been used"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     if not open_ai_key:
         raise ValidationError(

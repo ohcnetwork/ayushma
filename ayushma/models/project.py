@@ -10,6 +10,7 @@ class Project(BaseModel):
     description = models.TextField(null=True, blank=True)
     creator = models.ForeignKey(User, on_delete=models.PROTECT)
     prompt = models.TextField(default="")
+    open_ai_key = models.CharField(max_length=100, null=True, blank=True)
     stt_engine = models.IntegerField(
         choices=STTEngine.choices, default=STTEngine.WHISPER
     )

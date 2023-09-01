@@ -1,34 +1,18 @@
-import time
-
-import openai
 from django.conf import settings
-from django.http import StreamingHttpResponse
-from drf_spectacular.utils import extend_schema, extend_schema_view, inline_serializer
-from rest_framework import filters, permissions, status
+from drf_spectacular.utils import extend_schema
+from rest_framework import filters, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
-from rest_framework.mixins import (
-    CreateModelMixin,
-    DestroyModelMixin,
-    ListModelMixin,
-    RetrieveModelMixin,
-)
+from rest_framework.mixins import CreateModelMixin, ListModelMixin, RetrieveModelMixin
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
-from rest_framework.serializers import CharField, IntegerField
 
-from ayushma.models import APIKey, Chat, ChatMessage, Project
+from ayushma.models import Chat, Project
 from ayushma.permissions import IsTempTokenOrAuthenticated
 from ayushma.serializers import ChatDetailSerializer, ChatSerializer, ConverseSerializer
 from ayushma.utils.converse import converse_api
-from ayushma.utils.language_helpers import translate_text
-from ayushma.utils.openaiapi import converse
 from utils.views.base import BaseModelViewSet
-from utils.views.mixins import (
-    GetPermissionClassesMixin,
-    GetSerializerClassMixin,
-    PartialUpdateModelMixin,
-)
+from utils.views.mixins import PartialUpdateModelMixin
 
 
 class ChatViewSet(
@@ -70,16 +54,17 @@ class ChatViewSet(
         return queryset.filter(user=user)
 
     def perform_create(self, serializer):
+        project_id = self.kwargs["project_external_id"]
+        project = Project.objects.get(external_id=project_id)
+
         if (
             not self.request.headers.get("OpenAI-Key")
-            and not self.request.user.allow_key
+            and not project.open_ai_key
+            and not (self.request.user.allow_key and settings.OPENAI_API_KEY)
         ):
             raise ValidationError(
                 {"error": "OpenAI-Key header is required to create a chat"}
             )
-
-        project_id = self.kwargs["project_external_id"]
-        project = Project.objects.get(external_id=project_id)
 
         if project.archived:
             raise ValidationError(
