@@ -9,7 +9,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     display_preset_questions = serializers.SerializerMethodField()
 
     def get_display_preset_questions(self, project_object):
-        if len(project_object.preset_questions) > 4:
+        if project_object.preset_questions and len(project_object.preset_questions) > 4:
             return sample(project_object.preset_questions, 4)
         else:
             return project_object.preset_questions
@@ -41,7 +41,7 @@ class ProjectUpdateSerializer(serializers.ModelSerializer):
     key_set = serializers.SerializerMethodField()
 
     def get_display_preset_questions(self, project_object):
-        if len(project_object.preset_questions) > 4:
+        if project_object.preset_questions and len(project_object.preset_questions) > 4:
             return sample(project_object.preset_questions, 4)
         else:
             return project_object.preset_questions
