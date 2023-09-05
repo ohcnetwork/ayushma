@@ -38,7 +38,7 @@ ENV BUILD_ENV ${BUILD_ENVIRONMENT}
 WORKDIR ${APP_HOME}
 
 RUN addgroup --system django \
-    && adduser --system --ingroup django django
+  && adduser --system --ingroup django django
 
 
 # Install required system dependencies
@@ -79,11 +79,11 @@ RUN chmod +x /start-celerybeat
 
 
 # copy application code to WORKDIR
-COPY --chown=django:django . ${APP_HOME}
+# COPY --chown=django:django . ${APP_HOME}
+COPY  . ${APP_HOME}
+# # make django owner of the WORKDIR directory as well.
+# RUN chown django:django ${APP_HOME}
 
-# make django owner of the WORKDIR directory as well.
-RUN chown django:django ${APP_HOME}
-
-USER django
+# USER django
 
 ENTRYPOINT ["/entrypoint"]

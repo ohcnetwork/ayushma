@@ -1,19 +1,15 @@
-import time
-
-import openai
 from django.conf import settings
-from django.http import StreamingHttpResponse
-from drf_spectacular.utils import extend_schema, extend_schema_view, inline_serializer
-from rest_framework import status
+from drf_spectacular.utils import extend_schema
+from rest_framework import filters, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
-from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.mixins import CreateModelMixin, ListModelMixin, RetrieveModelMixin
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.serializers import CharField, IntegerField
 
-from ayushma.models import APIKey, Chat, ChatFeedback, ChatMessage, Project
+from ayushma.models import Chat, ChatFeedback, ChatMessage, Project
+from ayushma.permissions import IsTempTokenOrAuthenticated
 from ayushma.serializers import (
     ChatDetailSerializer,
     ChatFeedbackSerializer,
@@ -21,28 +17,27 @@ from ayushma.serializers import (
     ConverseSerializer,
 )
 from ayushma.utils.converse import converse_api
-from ayushma.utils.language_helpers import translate_text
-from ayushma.utils.openaiapi import converse
 from utils.views.base import BaseModelViewSet
+from utils.views.mixins import PartialUpdateModelMixin
 
 
-@extend_schema_view(
-    destroy=extend_schema(exclude=True),
-    partial_update=extend_schema(exclude=False),
-    create=extend_schema(exclude=False),
-    retrieve=extend_schema(
-        description="Get Chats",
-    ),
-)
-class ChatViewSet(BaseModelViewSet):
+class ChatViewSet(
+    BaseModelViewSet,
+    CreateModelMixin,
+    PartialUpdateModelMixin,
+    RetrieveModelMixin,
+    ListModelMixin,
+):
     queryset = Chat.objects.all()
     serializer_class = ChatSerializer
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ("title",)
     serializer_action_classes = {
         "retrieve": ChatDetailSerializer,
         "list_all": ChatDetailSerializer,
         "converse": ConverseSerializer,
     }
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsTempTokenOrAuthenticated,)
     lookup_field = "external_id"
 
     def initialize_request(self, request, *args, **kwargs):
@@ -62,19 +57,25 @@ class ChatViewSet(BaseModelViewSet):
         if user.is_superuser and self.action == "list_all":
             return queryset
 
-        return queryset.filter(user=user)
+        return queryset.filter(user=user).order_by("-created_at")
 
     def perform_create(self, serializer):
+        project_id = self.kwargs["project_external_id"]
+        project = Project.objects.get(external_id=project_id)
+
         if (
             not self.request.headers.get("OpenAI-Key")
-            and not self.request.user.allow_key
+            and not project.open_ai_key
+            and not (self.request.user.allow_key and settings.OPENAI_API_KEY)
         ):
             raise ValidationError(
                 {"error": "OpenAI-Key header is required to create a chat"}
             )
 
-        project_id = self.kwargs["project_external_id"]
-        project = Project.objects.get(external_id=project_id)
+        if project.archived:
+            raise ValidationError(
+                {"non_field_errors": "Project is archived. Cannot create chat."}
+            )
 
         serializer.save(user=self.request.user, project=project)
         super().perform_create(serializer)
@@ -102,13 +103,17 @@ class ChatViewSet(BaseModelViewSet):
             return response
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        
+
+
 class ChatFeedbackViewSet(BaseModelViewSet):
-    queryset=ChatFeedback.objects.all()
+    queryset = ChatFeedback.objects.all()
     permission_classes = [IsAdminUser]
     serializer_class = ChatFeedbackSerializer
 
     lookup_field = "external_id"
-    filterset_fields = ['liked', 'chat_message', 'chat_message__chat', 'chat_message__chat__project']
-    
-
+    filterset_fields = [
+        "liked",
+        "chat_message",
+        "chat_message__chat",
+        "chat_message__chat__project",
+    ]

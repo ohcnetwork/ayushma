@@ -2,29 +2,40 @@ from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 
 from ayushma.models import User
+from utils.helpers import validatecaptcha
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
+            "external_id",
             "username",
             "full_name",
+            "email",
+            "allow_key",
+            "is_staff",
+            "is_reviewer",
         )
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(required=True)
     password = serializers.CharField(write_only=True, required=True)
+    recaptcha = serializers.CharField(write_only=True, required=True)
 
     class Meta:
         model = User
-        fields = (
-            "username",
-            "full_name",
-            "password",
-            "email",
-        )
+        fields = ("username", "full_name", "password", "email", "recaptcha")
+
+    def validate_recaptcha(self, value):
+        if not validatecaptcha(value):
+            raise serializers.ValidationError("Invalid captcha")
+        return value
+
+    def validate(self, validated_data):
+        validated_data.pop("recaptcha", None)
+        return validated_data
 
     def create(self, validated_data):
         validated_data["password"] = make_password(validated_data["password"])
@@ -43,9 +54,17 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "email",
             "allow_key",
             "is_staff",
+            "is_reviewer",
             "password",
         )
-        read_only_fields = ("external_id", "email", "username", "allow_key", "is_staff")
+        read_only_fields = (
+            "external_id",
+            "email",
+            "username",
+            "allow_key",
+            "is_staff",
+            "is_reviewer",
+        )
 
     def update(self, instance, validated_data):
         if password := validated_data.pop("password", None):
@@ -56,9 +75,4 @@ class UserDetailSerializer(serializers.ModelSerializer):
 class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = (
-            "username",
-            "full_name",
-            "allow_key",
-            "is_staff",
-        )
+        fields = ("email", "full_name", "allow_key", "is_staff", "is_reviewer")

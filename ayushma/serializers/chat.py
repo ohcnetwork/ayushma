@@ -107,6 +107,7 @@ class ChatDetailSerializer(serializers.ModelSerializer):
             "chats",
             "prompt",
             "message",
+            "model",
         )
         read_only_fields = ("external_id", "created_at", "modified_at", "chats")
 

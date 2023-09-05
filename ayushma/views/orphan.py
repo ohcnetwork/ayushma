@@ -8,6 +8,7 @@ from drf_spectacular.utils import extend_schema, extend_schema_view, inline_seri
 from rest_framework import permissions, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
+from rest_framework.mixins import CreateModelMixin, ListModelMixin, RetrieveModelMixin
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework.serializers import CharField, IntegerField
@@ -18,6 +19,7 @@ from ayushma.utils.converse import converse_api
 from ayushma.utils.language_helpers import translate_text
 from ayushma.utils.openaiapi import converse
 from utils.views.base import BaseModelViewSet
+from utils.views.mixins import PartialUpdateModelMixin
 
 from .chat import ChatViewSet
 
@@ -38,16 +40,13 @@ class APIKeyAuth(permissions.BasePermission):
                 return False
 
 
-@extend_schema_view(
-    tags=("orphan_chats",),
-    destroy=extend_schema(exclude=True),
-    partial_update=extend_schema(exclude=False),
-    create=extend_schema(exclude=False),
-    retrieve=extend_schema(
-        description="Advanced Chats",
-    ),
-)
-class OrphanChatViewSet(BaseModelViewSet):
+class OrphanChatViewSet(
+    BaseModelViewSet,
+    PartialUpdateModelMixin,
+    CreateModelMixin,
+    RetrieveModelMixin,
+    ListModelMixin,
+):
     queryset = Chat.objects.all()
     serializer_class = ChatDetailSerializer
     permission_classes = (APIKeyAuth,)

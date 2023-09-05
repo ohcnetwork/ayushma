@@ -1,7 +1,6 @@
 from django.db import models
 from django.db.models import (
     CASCADE,
-    BooleanField,
     CharField,
     FloatField,
     ForeignKey,
@@ -10,7 +9,8 @@ from django.db.models import (
 )
 
 from ayushma.models import Project
-from ayushma.models.enums import FeedBackRating
+from ayushma.models.document import Document
+from ayushma.models.enums import FeedBackRating, StatusChoices
 from ayushma.models.users import User
 from utils.models.base import BaseModel
 
@@ -31,7 +31,7 @@ class TestQuestion(BaseModel):
 class TestRun(BaseModel):
     test_suite = ForeignKey(TestSuite, on_delete=CASCADE)
     project = ForeignKey(Project, on_delete=CASCADE)
-    complete = BooleanField(default=False)
+    status = IntegerField(choices=StatusChoices.choices, default=StatusChoices.RUNNING)
 
 
 class TestResult(BaseModel):
@@ -42,6 +42,7 @@ class TestResult(BaseModel):
     answer = TextField()
     cosine_sim = FloatField()
     bleu_score = FloatField()
+    references = models.ManyToManyField(Document, blank=True)
 
 
 class Feedback(BaseModel):

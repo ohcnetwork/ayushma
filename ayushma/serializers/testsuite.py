@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from ayushma.models import Feedback, TestQuestion, TestResult, TestRun, TestSuite
+from ayushma.serializers.document import DocumentSerializer
 from ayushma.serializers.project import ProjectSerializer
 from ayushma.serializers.users import UserSerializer
 
@@ -57,6 +58,7 @@ class FeedbackSerializer(serializers.ModelSerializer):
 
 class TestResultSerializer(serializers.ModelSerializer):
     feedback = FeedbackSerializer(source="feedback_set", many=True, read_only=True)
+    references = DocumentSerializer(many=True, read_only=True)
 
     class Meta:
         model = TestResult
@@ -67,6 +69,7 @@ class TestResultSerializer(serializers.ModelSerializer):
             "modified_at",
             "test_run",
             "test_question",
+            "references",
         )
 
 
@@ -85,7 +88,7 @@ class TestRunSerializer(serializers.ModelSerializer):
             "project_object",
             "created_at",
             "modified_at",
-            "complete",
+            "status",
             "test_results",
         )
         read_only_fields = (
@@ -93,6 +96,5 @@ class TestRunSerializer(serializers.ModelSerializer):
             "created_at",
             "modified_at",
             "project",
-            "complete",
             "test_results",
         )

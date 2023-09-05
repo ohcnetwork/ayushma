@@ -4,6 +4,9 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
+if [[ -n "${GOOGLE_APPLICATION_CREDENTIALS_B64:-}" ]]; then
+    echo "${GOOGLE_APPLICATION_CREDENTIALS_B64}" | base64 -d > gc_credential.json
+fi
 
 python /app/manage.py collectstatic --noinput
 python /app/manage.py migrate

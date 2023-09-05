@@ -17,7 +17,7 @@ from ayushma.serializers.testsuite import (
     TestSuiteSerializer,
 )
 from ayushma.tasks.testrun import mark_test_run_as_completed
-from utils.views.base import BaseModelViewSet
+from utils.views.base import FullBaseModelViewSet
 
 
 class IsStaffOrReviewer(IsAdminUser):
@@ -25,7 +25,7 @@ class IsStaffOrReviewer(IsAdminUser):
         return request.user.is_staff or request.user.is_reviewer
 
 
-class TestSuiteViewSet(BaseModelViewSet):
+class TestSuiteViewSet(FullBaseModelViewSet):
     queryset = TestSuite.objects.all()
     permission_classes = [IsAuthenticated, IsStaffOrReviewer]
     serializer_class = TestSuiteSerializer
@@ -35,7 +35,7 @@ class TestSuiteViewSet(BaseModelViewSet):
     filter_backends = [filters.OrderingFilter]
 
 
-class TestQuestionViewSet(BaseModelViewSet):
+class TestQuestionViewSet(FullBaseModelViewSet):
     queryset = TestQuestion.objects.all()
     permission_classes = [IsAuthenticated, IsStaffOrReviewer]
     serializer_class = TestQuestionSerializer
@@ -56,7 +56,7 @@ class TestQuestionViewSet(BaseModelViewSet):
         return serializer.save(test_suite=test_suite)
 
 
-class TestRunViewSet(BaseModelViewSet):
+class TestRunViewSet(FullBaseModelViewSet):
     queryset = TestRun.objects.all()
     permission_classes = [IsAuthenticated, IsStaffOrReviewer]
     serializer_class = TestRunSerializer
@@ -85,13 +85,13 @@ class TestRunViewSet(BaseModelViewSet):
         return test_run
 
 
-class TestResultViewSet(BaseModelViewSet):
+class TestResultViewSet(FullBaseModelViewSet):
     queryset = TestResult.objects.all()
     permission_classes = [IsAuthenticated, IsStaffOrReviewer]
     serializer_class = TestResultSerializer
 
 
-class FeedbackViewSet(BaseModelViewSet):
+class FeedbackViewSet(FullBaseModelViewSet):
     queryset = Feedback.objects.all()
     permission_classes = [IsAuthenticated, IsStaffOrReviewer]
     serializer_class = FeedbackSerializer

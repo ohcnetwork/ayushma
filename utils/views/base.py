@@ -16,6 +16,14 @@ from .mixins import (
 class BaseModelViewSet(
     GetPermissionClassesMixin,
     GetSerializerClassMixin,
+    GenericViewSet,
+):
+    pass
+
+
+class FullBaseModelViewSet(
+    GetPermissionClassesMixin,
+    GetSerializerClassMixin,
     CreateModelMixin,
     DestroyModelMixin,
     ListModelMixin,
