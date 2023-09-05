@@ -5,10 +5,10 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.mixins import CreateModelMixin, ListModelMixin, RetrieveModelMixin
 from rest_framework.parsers import MultiPartParser
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ayushma.models import Chat, ChatFeedback, ChatMessage, Project
+from ayushma.models import Chat, ChatFeedback, Project
 from ayushma.permissions import IsTempTokenOrAuthenticated
 from ayushma.serializers import (
     ChatDetailSerializer,
@@ -107,8 +107,17 @@ class ChatViewSet(
 
 class ChatFeedbackViewSet(BaseModelViewSet):
     queryset = ChatFeedback.objects.all()
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAuthenticated]
     serializer_class = ChatFeedbackSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = self.queryset
+
+        if user.is_superuser or user.is_staff or user.is_reviewer:
+            return queryset
+
+        return queryset.filter(chat_message__chat__user=user)
 
     lookup_field = "external_id"
     filterset_fields = [
