@@ -33,6 +33,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChatMessage
         fields = (
+            "id",
             "external_id",
             "chat",
             "messageType",
@@ -49,6 +50,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             "feedback",
         )
         read_only_fields = (
+            "id",
             "external_id",
             "created_at",
             "modified_at",
