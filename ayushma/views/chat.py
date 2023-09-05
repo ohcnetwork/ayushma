@@ -105,7 +105,7 @@ class ChatViewSet(
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ChatFeedbackViewSet(BaseModelViewSet):
+class ChatFeedbackViewSet(BaseModelViewSet, CreateModelMixin):
     queryset = ChatFeedback.objects.all()
     permission_classes = [IsAuthenticated]
     serializer_class = ChatFeedbackSerializer
