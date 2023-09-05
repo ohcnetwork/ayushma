@@ -3,7 +3,7 @@ from django.urls import include, path
 from rest_framework_nested import routers
 
 from ayushma.views.auth import AuthViewSet
-from ayushma.views.chat import ChatViewSet
+from ayushma.views.chat import ChatFeedbackViewSet, ChatViewSet
 from ayushma.views.document import DocumentViewSet
 from ayushma.views.orphan import OrphanChatViewSet
 from ayushma.views.project import ProjectViewSet
@@ -30,6 +30,7 @@ router.register(r"users", UserViewSet)
 router.register(r"auth", ResetPasswordViewset, basename="token")
 router.register(r"auth", AuthViewSet, basename="auth")
 router.register(r"chats", OrphanChatViewSet, basename="orphan_chat")
+router.register(r"feedback", ChatFeedbackViewSet, basename="feedback")
 router.register(r"temptokens", TempTokenViewSet, basename="temptoken")
 
 router.register(r"projects", ProjectViewSet)

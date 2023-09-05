@@ -5,11 +5,17 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.mixins import CreateModelMixin, ListModelMixin, RetrieveModelMixin
 from rest_framework.parsers import MultiPartParser
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ayushma.models import Chat, Project
+from ayushma.models import Chat, ChatFeedback, Project
 from ayushma.permissions import IsTempTokenOrAuthenticated
-from ayushma.serializers import ChatDetailSerializer, ChatSerializer, ConverseSerializer
+from ayushma.serializers import (
+    ChatDetailSerializer,
+    ChatFeedbackSerializer,
+    ChatSerializer,
+    ConverseSerializer,
+)
 from ayushma.utils.converse import converse_api
 from utils.views.base import BaseModelViewSet
 from utils.views.mixins import PartialUpdateModelMixin
@@ -97,3 +103,26 @@ class ChatViewSet(
             return response
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ChatFeedbackViewSet(BaseModelViewSet, CreateModelMixin):
+    queryset = ChatFeedback.objects.all()
+    permission_classes = [IsAuthenticated]
+    serializer_class = ChatFeedbackSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = self.queryset
+
+        if user.is_superuser or user.is_staff or user.is_reviewer:
+            return queryset
+
+        return queryset.filter(chat_message__chat__user=user)
+
+    lookup_field = "external_id"
+    filterset_fields = [
+        "liked",
+        "chat_message",
+        "chat_message__chat",
+        "chat_message__chat__project",
+    ]

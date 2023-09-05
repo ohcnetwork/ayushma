@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from ayushma.models import Chat, ChatMessage
+from ayushma.models import Chat, ChatFeedback, ChatMessage
 from ayushma.serializers.document import DocumentSerializer
 from ayushma.serializers.project import ProjectSerializer
 
@@ -25,12 +25,31 @@ class ChatSerializer(serializers.ModelSerializer):
         )
 
 
+class ChatFeedbackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChatFeedback
+        fields = (
+            "external_id",
+            "chat_message",
+            "liked",
+            "message",
+            "created_at",
+            "modified_at",
+        )
+        read_only_fields = (
+            "external_id",
+            "created_at",
+            "modified_at",
+        )
+
+ 
 class ChatMessageSerializer(serializers.ModelSerializer):
     reference_documents = DocumentSerializer(many=True, read_only=True)
-
+    feedback = serializers.SerializerMethodField()
     class Meta:
         model = ChatMessage
         fields = (
+            "id",
             "external_id",
             "chat",
             "messageType",
@@ -44,8 +63,10 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             "meta",
             "temperature",
             "top_k",
+            "feedback",
         )
         read_only_fields = (
+            "id",
             "external_id",
             "created_at",
             "modified_at",
@@ -54,6 +75,11 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             "audio",
             "original_message",
         )
+
+    def get_feedback(self, obj):
+        feedback = ChatFeedback.objects.filter(chat_message=obj).first()
+        return ChatFeedbackSerializer(feedback).data if feedback else None
+
 
 
 class ConverseSerializer(serializers.Serializer):
