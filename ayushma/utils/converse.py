@@ -3,7 +3,6 @@ import time
 from django.conf import settings
 from django.http import StreamingHttpResponse
 from rest_framework import status
-from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from ayushma.models import APIKey, ChatMessage
@@ -57,8 +56,9 @@ def converse_api(
         )
 
     if not open_ai_key:
-        raise ValidationError(
-            {"error": "OpenAI-Key header is required to create a chat"}
+        return Response(
+            {"error": "OpenAI-Key header is required to create a chat"},
+            status=status.HTTP_400_BAD_REQUEST,
         )
 
     project = chat.project
