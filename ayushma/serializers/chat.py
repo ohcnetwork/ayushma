@@ -25,31 +25,14 @@ class ChatSerializer(serializers.ModelSerializer):
         )
 
 
-class ChatFeedbackSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ChatFeedback
-        fields = (
-            "external_id",
-            "chat_message",
-            "liked",
-            "message",
-            "created_at",
-            "modified_at",
-        )
-        read_only_fields = (
-            "external_id",
-            "created_at",
-            "modified_at",
-        )
-
- 
 class ChatMessageSerializer(serializers.ModelSerializer):
     reference_documents = DocumentSerializer(many=True, read_only=True)
     feedback = serializers.SerializerMethodField()
+    chat = serializers.CharField(source="chat.external_id")
+
     class Meta:
         model = ChatMessage
         fields = (
-            "id",
             "external_id",
             "chat",
             "messageType",
@@ -66,7 +49,6 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             "feedback",
         )
         read_only_fields = (
-            "id",
             "external_id",
             "created_at",
             "modified_at",
@@ -80,6 +62,37 @@ class ChatMessageSerializer(serializers.ModelSerializer):
         feedback = ChatFeedback.objects.filter(chat_message=obj).first()
         return ChatFeedbackSerializer(feedback).data if feedback else None
 
+
+class ChatFeedbackSerializer(serializers.ModelSerializer):
+    chat_message = serializers.CharField(source="chat_message.external_id")
+
+    class Meta:
+        model = ChatFeedback
+        fields = (
+            "external_id",
+            "chat_message",
+            "liked",
+            "message",
+            "created_at",
+            "modified_at",
+        )
+        read_only_fields = (
+            "external_id",
+            "created_at",
+            "modified_at",
+        )
+
+    def create(self, validated_data):
+        chat_message_external_id = validated_data.pop("chat_message")["external_id"]
+        if not chat_message_external_id:
+            raise serializers.ValidationError(
+                {"chat_message": "Chat message external id is required"}
+            )
+        chat_message = ChatMessage.objects.get(external_id=chat_message_external_id)
+        feedback = ChatFeedback.objects.create(
+            chat_message=chat_message, **validated_data
+        )
+        return feedback
 
 
 class ConverseSerializer(serializers.Serializer):
