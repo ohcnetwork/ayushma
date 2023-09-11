@@ -1,4 +1,5 @@
 from django.conf import settings
+from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import filters
 from rest_framework.mixins import CreateModelMixin, ListModelMixin, RetrieveModelMixin
@@ -19,8 +20,9 @@ class ProjectViewSet(
     CreateModelMixin,
 ):
     queryset = Project.objects.all()
-    filter_backends = (filters.SearchFilter,)
+    filter_backends = (filters.SearchFilter, DjangoFilterBackend)
     search_fields = ("title",)
+    filterset_fields = ("archived",)
     serializer_class = ProjectSerializer
     permission_classes = (IsAdminUser,)
     permission_action_classes = {
