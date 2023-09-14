@@ -3,7 +3,12 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import filters, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
-from rest_framework.mixins import CreateModelMixin, ListModelMixin, RetrieveModelMixin
+from rest_framework.mixins import (
+    CreateModelMixin,
+    DestroyModelMixin,
+    ListModelMixin,
+    RetrieveModelMixin,
+)
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -27,6 +32,7 @@ class ChatViewSet(
     PartialUpdateModelMixin,
     RetrieveModelMixin,
     ListModelMixin,
+    DestroyModelMixin,
 ):
     queryset = Chat.objects.all()
     serializer_class = ChatSerializer
