@@ -7,7 +7,7 @@ from google.cloud import speech
 
 from ayushma.models.enums import STTEngine
 
-SELF_HOSTED_ENDPOINT = "http://0.0.0.0:8001/api/care-whisper/transcribe"
+SELF_HOSTED_ENDPOINT = "https://whisper.ohc.network/api/care-whisper/transcribe"
 
 class WhisperEngine:
     def __init__(self, api_key, language_code):
