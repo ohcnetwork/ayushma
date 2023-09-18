@@ -3,11 +3,11 @@ import os
 
 import openai
 import requests
+from django.conf import settings
 from google.cloud import speech
 
 from ayushma.models.enums import STTEngine
 
-SELF_HOSTED_ENDPOINT = "https://whisper.ohc.network/api/care-whisper/transcribe"
 
 class WhisperEngine:
     def __init__(self, api_key, language_code):
@@ -59,7 +59,7 @@ class SelfHostedEngine:
     def recognize(self, audio):
 
         response = requests.post(
-            SELF_HOSTED_ENDPOINT,
+            settings.SELF_HOSTED_ENDPOINT,
             files={"audio": audio},
             data={
                 # change this model to get faster results see: https://github.com/coronasafe/care-whisper
