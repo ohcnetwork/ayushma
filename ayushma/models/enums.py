@@ -16,6 +16,7 @@ class DocumentType(IntegerChoices):
 class STTEngine(IntegerChoices):
     WHISPER = 1
     GOOGLE = 2
+    SELF_HOSTED = 3
 
 
 class FeedBackRating(IntegerChoices):

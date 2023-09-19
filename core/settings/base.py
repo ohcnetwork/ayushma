@@ -368,3 +368,6 @@ if AWS_STORAGE_BUCKET_NAME and AWS_SECRET_ACCESS_KEY and AWS_ACCESS_KEY_ID:
 
 AI_NAME = env("AI_NAME", default="Ayushma")
 GOOGLE_RECAPTCHA_SECRET_KEY = env("GOOGLE_RECAPTCHA_SECRET_KEY", default=None)
+
+# url for self hosted speech to text
+SELF_HOSTED_ENDPOINT = env("SELF_HOSTED_ENDPOINT", default=None)

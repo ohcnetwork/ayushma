@@ -1,6 +1,9 @@
+import json
 import os
 
 import openai
+import requests
+from django.conf import settings
 from google.cloud import speech
 
 from ayushma.models.enums import STTEngine
@@ -48,11 +51,34 @@ class GoogleEngine:
         if not response.results:
             return ""
         return response.results[0].alternatives[0].transcript
+    
+class SelfHostedEngine:
+    def __init__(self, api_key, language_code):
+        self.language_code = language_code
+
+    def recognize(self, audio):
+
+        response = requests.post(
+            settings.SELF_HOSTED_ENDPOINT,
+            files={"audio": audio},
+            data={
+                # change this model to get faster results see: https://github.com/coronasafe/care-whisper
+                "model": "small",
+                "language": self.language_code.replace("-IN", ""),
+            },
+        )
+
+        if not response.ok:
+            print("Failed to recognize speech with self hosted engine")
+            return ""
+        response = response.json()
+        return response["data"]["transcription"].strip()
 
 
 engines = {
     "whisper": WhisperEngine,
     "google": GoogleEngine,
+    "self_hosted": SelfHostedEngine,
     # Add new engines here
 }
 
