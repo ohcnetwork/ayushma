@@ -58,7 +58,7 @@ class ChatViewSet(
     def get_queryset(self):
         user = self.request.user
         project_id = self.kwargs["project_external_id"]
-        queryset = self.queryset.filter(project__external_id=project_id)
+        queryset = self.queryset.filter(project__external_id=project_id).order_by('-created_at')
 
         if user.is_superuser and self.action == "list_all":
             return queryset
