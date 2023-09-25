@@ -2,7 +2,7 @@ from django.conf import settings
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import filters
-from rest_framework.mixins import CreateModelMixin, ListModelMixin, RetrieveModelMixin
+from rest_framework.mixins import CreateModelMixin, ListModelMixin, RetrieveModelMixin, DestroyModelMixin
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
@@ -18,6 +18,7 @@ class ProjectViewSet(
     ListModelMixin,
     RetrieveModelMixin,
     CreateModelMixin,
+    DestroyModelMixin,
 ):
     queryset = Project.objects.all()
     filter_backends = (filters.SearchFilter, DjangoFilterBackend)
