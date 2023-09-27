@@ -2,7 +2,12 @@ from django.conf import settings
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import filters
-from rest_framework.mixins import CreateModelMixin, ListModelMixin, RetrieveModelMixin, DestroyModelMixin
+from rest_framework.mixins import (
+    CreateModelMixin,
+    DestroyModelMixin,
+    ListModelMixin,
+    RetrieveModelMixin,
+)
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
@@ -31,6 +36,14 @@ class ProjectViewSet(
         "retrieve": (IsAuthenticated(),),
     }
     lookup_field = "external_id"
+
+    def destroy(self, request, *args, **kwargs):
+        if self.request.user.is_staff:
+            return super().destroy(request, *args, **kwargs)
+        return Response(
+            {"non_field_errors": "You do not have permission to delete this project"},
+            status=400,
+        )
 
     def get_serializer_class(self):
         if self.request.user.is_staff:
