@@ -97,16 +97,6 @@ class ChatViewSet(
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-    # @extend_schema(tags=["chats"])
-    # @action(detail=False, methods=["get"])
-    # def me(self, *args, **kwarg):
-    #     """Get user of each chat"""
-    #     chat = Chat.objects.get(external_id=kwarg["external_id"])
-    #     return chat.user
-        # user = User.object.filter
-        # return self.requeset.user
-        # return super().retrieve(*args, **kwargs)
-
     @extend_schema(
         tags=("chats",),
     )
