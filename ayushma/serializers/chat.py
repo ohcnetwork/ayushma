@@ -109,12 +109,14 @@ class ConverseSerializer(serializers.Serializer):
 class ChatDetailSerializer(serializers.ModelSerializer):
     chats = serializers.SerializerMethodField()
     message = ConverseSerializer(required=False)
+    username = serializers.CharField(source='user.username', read_only=True)
 
     class Meta:
         model = Chat
         fields = (
             "external_id",
             "title",
+            "username",
             "created_at",
             "modified_at",
             "chats",
@@ -122,7 +124,7 @@ class ChatDetailSerializer(serializers.ModelSerializer):
             "message",
             "model",
         )
-        read_only_fields = ("external_id", "created_at", "modified_at", "chats")
+        read_only_fields = ("external_id", "created_at", "modified_at", "chats", "username")
 
     def get_chats(self, obj):
         chatmessages = ChatMessage.objects.filter(chat=obj).order_by("created_at")
