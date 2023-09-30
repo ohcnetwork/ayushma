@@ -7,6 +7,7 @@ from ayushma.serializers.project import ProjectSerializer
 
 class ChatSerializer(serializers.ModelSerializer):
     project = ProjectSerializer(read_only=True)
+    username = serializers.CharField(source='user.username', read_only=True)
 
     class Meta:
         model = Chat
@@ -15,12 +16,14 @@ class ChatSerializer(serializers.ModelSerializer):
             "title",
             "created_at",
             "modified_at",
+            "username",
             "project",
         )
         read_only_fields = (
             "external_id",
             "created_at",
             "modified_at",
+            "username",
             "project",
         )
 
