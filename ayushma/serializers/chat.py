@@ -7,6 +7,7 @@ from ayushma.serializers.project import ProjectSerializer
 
 class ChatSerializer(serializers.ModelSerializer):
     project = ProjectSerializer(read_only=True)
+    username = serializers.CharField(source='user.username', read_only=True)
 
     class Meta:
         model = Chat
@@ -15,12 +16,14 @@ class ChatSerializer(serializers.ModelSerializer):
             "title",
             "created_at",
             "modified_at",
+            "username",
             "project",
         )
         read_only_fields = (
             "external_id",
             "created_at",
             "modified_at",
+            "username",
             "project",
         )
 
@@ -109,12 +112,14 @@ class ConverseSerializer(serializers.Serializer):
 class ChatDetailSerializer(serializers.ModelSerializer):
     chats = serializers.SerializerMethodField()
     message = ConverseSerializer(required=False)
+    username = serializers.CharField(source='user.username', read_only=True)
 
     class Meta:
         model = Chat
         fields = (
             "external_id",
             "title",
+            "username",
             "created_at",
             "modified_at",
             "chats",
@@ -122,7 +127,7 @@ class ChatDetailSerializer(serializers.ModelSerializer):
             "message",
             "model",
         )
-        read_only_fields = ("external_id", "created_at", "modified_at", "chats")
+        read_only_fields = ("external_id", "created_at", "modified_at", "chats", "username")
 
     def get_chats(self, obj):
         chatmessages = ChatMessage.objects.filter(chat=obj).order_by("created_at")
