@@ -10,7 +10,7 @@ psycopg2==2.9.6  # https://github.com/psycopg/psycopg2
 flake8==6.1.0  # https://github.com/PyCQA/flake8
 flake8-isort==6.0.0  # https://github.com/gforcada/flake8-isort
 coverage==7.3.0 # https://github.com/nedbat/coveragepy
-black==23.7.0  # https://github.com/psf/black
+black==23.9.1  # https://github.com/psf/black
 pre-commit==3.4.0  # https://github.com/pre-commit/pre-commit
 
 # Django
