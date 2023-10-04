@@ -27,7 +27,7 @@ django-storages==1.14 #
 
 # OpenAI, Pinecone, PyPDF2 and Langchain
 openai==0.28.0
-pinecone-client==2.2.2
+pinecone-client==2.2.4
 PyPDF2==3.0.1
 tiktoken==0.4.0
 langchain==0.0.285
