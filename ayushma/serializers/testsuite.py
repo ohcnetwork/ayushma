@@ -90,6 +90,7 @@ class TestRunSerializer(serializers.ModelSerializer):
             "modified_at",
             "status",
             "test_results",
+            "references",
         )
         read_only_fields = (
             "external_id",

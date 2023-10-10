@@ -32,6 +32,7 @@ class TestRun(BaseModel):
     test_suite = ForeignKey(TestSuite, on_delete=CASCADE)
     project = ForeignKey(Project, on_delete=CASCADE)
     status = IntegerField(choices=StatusChoices.choices, default=StatusChoices.RUNNING)
+    references = models.BooleanField(default=True)
 
 
 class TestResult(BaseModel):

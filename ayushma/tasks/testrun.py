@@ -71,6 +71,7 @@ def mark_test_run_as_completed(self, test_run_id):
                         user_language=test_question.language + "-IN",
                         stream=False,
                         generate_audio=False,
+                        fetch_references=test_run.references,
                     )
                 )
 
