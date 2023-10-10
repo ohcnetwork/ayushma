@@ -67,7 +67,7 @@ class LangChainHelper:
         else:
             llm = ChatOpenAI(**llm_args)
 
-        template = f"""You are a female assistant called {AI_NAME} who understands all languages and repsonds only in english and you must follow the given algorithm strictly to assist users. Remember you must give accurate answers, so stick strictly to the references as explained in algorithm. Your output must be in markdown format find important terms and add bold to it (example **word**) find numbers and add italic to it(example *word*) add bullet points to a list(example -word1\n-word2):
+        template = f"""You are an assistant called {AI_NAME} who understands all languages and repsonds only in english and you must follow the given algorithm strictly to assist users. Remember you must give accurate answers, so stick strictly to the references as explained in algorithm. Your output must be in markdown format find important terms and add bold to it (example **word**) find numbers and add italic to it(example *word*) add bullet points to a list(example -word1\n-word2):
 Algorithm:
 references = {{reference}}
 /*
@@ -128,12 +128,12 @@ References: <array of reference_ids (in the format: [1,2,3]) "include all the re
     ):
         chat_history.append(
             SystemMessage(
-                content="remeber only answer the question if it can be answered with the given references"
+                content="Remember to only answer the question if it can be answered with the given references"
             )
         )
         try:
             async_response = await self.chain.apredict(
-                user_msg=f"user: {user_msg}",
+                user_msg=user_msg,
                 reference=reference,
                 chat_history=chat_history,
             )
@@ -146,11 +146,11 @@ References: <array of reference_ids (in the format: [1,2,3]) "include all the re
     def get_response(self, user_msg, reference, chat_history):
         chat_history.append(
             SystemMessage(
-                content="remeber only answer the question if it can be answered with the given references"
+                content="Remember to only answer the question if it can be answered with the given references"
             )
         )
         return self.chain.predict(
-            user_msg=f"user: {user_msg}",
+            user_msg=user_msg,
             reference=reference,
             chat_history=chat_history,
         )

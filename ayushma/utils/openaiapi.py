@@ -314,7 +314,7 @@ def converse(
     chat_history = []
     for message in previous_messages:
         if message.messageType == ChatMessageType.USER:
-            chat_history.append(HumanMessage(content=f"Nurse: {message.message}"))
+            chat_history.append(HumanMessage(content=f"{message.message}"))
         elif message.messageType == ChatMessageType.AYUSHMA:
             chat_history.append(AIMessage(content=f"Ayushma: {message.message}"))
 
