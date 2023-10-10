@@ -265,6 +265,7 @@ def converse(
     references=None,
     generate_audio=True,
     noonce=None,
+    fetch_references=True,
 ):
     if not openai_key:
         raise Exception("OpenAI-Key header is required to create a chat or converse")
@@ -288,7 +289,7 @@ def converse(
 
     if references:
         reference = references
-    elif chat.project and chat.project.external_id:
+    elif fetch_references and chat.project and chat.project.external_id:
         try:
             reference = get_reference(
                 english_text, openai_key, str(chat.project.external_id), match_number

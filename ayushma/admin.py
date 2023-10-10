@@ -4,6 +4,7 @@ from djangoql.admin import DjangoQLSearchMixin
 from simple_history.admin import SimpleHistoryAdmin
 
 from ayushma.models.services import Service, TempToken
+from ayushma.models.testsuite import Feedback, TestQuestion, TestRun, TestSuite
 
 from .models import APIKey, Chat, ChatMessage, Document, Project, User
 
@@ -102,3 +103,26 @@ class TempTokenAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
 @admin.register(Service)
 class ServiceAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
     pass
+
+
+@admin.register(Feedback)
+class FeedbackAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
+    pass
+
+
+@admin.register(TestSuite)
+class TestSuiteAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
+    pass
+
+
+@admin.register(TestQuestion)
+class TestQuestionAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
+    pass
+
+
+@admin.register(TestRun)
+class TestRunAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
+    pass
+
+
+admin.site.site_header = "Ayushma Admin"
