@@ -43,7 +43,7 @@ google-api-core==2.11.1
 google-auth==2.22.0
 google-cloud-core==2.3.3
 google-cloud-speech==2.21.0
-google-cloud-texttospeech==2.14.1
+google-cloud-texttospeech==2.14.2
 google-cloud-translate==3.12.0
 googleapis-common-protos==1.60.0
 
