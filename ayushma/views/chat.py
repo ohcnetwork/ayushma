@@ -62,7 +62,7 @@ class ChatViewSet(
             "-created_at"
         )
 
-        if user.is_superuser and self.action == "list_all":
+        if user.is_superuser and (self.request.query_params.get('fetch') == "all" or self.action == "list_all"):
             return queryset
 
         return queryset.filter(user=user).order_by("-created_at")
