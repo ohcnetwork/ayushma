@@ -1,3 +1,5 @@
+from typing import Any, Literal
+
 import openai
 from django.conf import settings
 from langchain import LLMChain, PromptTemplate
@@ -6,15 +8,17 @@ from langchain.chat_models import ChatOpenAI
 from langchain.llms import AzureOpenAI
 from langchain.prompts import (
     ChatPromptTemplate,
-    HumanMessagePromptTemplate,
     MessagesPlaceholder,
     SystemMessagePromptTemplate,
 )
+from langchain.prompts.chat import BaseStringMessagePromptTemplate
 from langchain.schema import SystemMessage
+from langchain.schema.messages import HumanMessage
 
 from ayushma.models.enums import ModelType
 from ayushma.utils.stream_callback import StreamingQueueCallbackHandler
 from core.settings.base import AI_NAME
+from utils.helpers import get_base64_document
 
 
 def get_model_name(model_type: ModelType):
@@ -30,10 +34,42 @@ def get_model_name(model_type: ModelType):
         return "gpt-4"
     elif model_type == ModelType.GPT_4_32K:
         return "gpt-4-32k"
+    elif model_type == ModelType.GPT_4_VISUAL:
+        return "gpt-4-visual"
     else:
         if settings.OPENAI_API_TYPE == "azure":
             return settings.AZURE_CHAT_MODEL
         return "gpt-3.5-turbo"
+
+
+class GenericHumanMessage(HumanMessage):
+    """A Generic Message from a human."""
+
+    content: Any
+    """The contents of the message."""
+
+    example: bool = False
+    """Whether this Message is being passed in to the model as part of an example conversation."""
+
+    type: Literal["human"] = "human"
+
+
+class GenericHumanMessagePromptTemplate(BaseStringMessagePromptTemplate):
+    """Generic Human message prompt template. This is a message sent from the user."""
+
+    def format(self, **kwargs: Any):
+        """Format the prompt template.
+
+        Args:
+            **kwargs: Keyword arguments to use for formatting.
+
+        Returns:
+            Formatted message.
+        """
+        text = kwargs[self.input_variables[0]]
+        return GenericHumanMessage(
+            content=text, additional_kwargs=self.additional_kwargs
+        )
 
 
 class LangChainHelper:
@@ -53,6 +89,7 @@ class LangChainHelper:
             "openai_api_key": openai_api_key,
             "model_name": get_model_name(model),
             "request_timeout": 180,
+            "max_tokens": "4096",
         }
         if stream:
             llm_args["streaming"] = True
@@ -107,8 +144,9 @@ References: <array of reference_ids (in the format: [1,2,3]) "include all the re
         human_prompt = PromptTemplate(
             template="{user_msg}", input_variables=["user_msg"]
         )
-        human_message_prompt = HumanMessagePromptTemplate(
+        human_message_prompt = GenericHumanMessagePromptTemplate(
             prompt=human_prompt,
+            template_format=None,
         )
 
         message_prompt = MessagesPlaceholder(variable_name="chat_history")
@@ -124,16 +162,24 @@ References: <array of reference_ids (in the format: [1,2,3]) "include all the re
         self.chain = LLMChain(llm=llm, prompt=chat_prompt, verbose=True)
 
     async def get_aresponse(
-        self, job_done, error, token_queue, user_msg, reference, chat_history
+        self, job_done, error, token_queue, user_msg, reference, chat_history, documents
     ):
-        chat_history.append(
-            SystemMessage(
-                content="Remember to only answer the question if it can be answered with the given references"
-            )
-        )
+        system_message = "Remember to only answer the question if it can be answered with the given references"
+        user_message = user_msg
+
+        if documents:
+            user_message = [user_msg]
+            system_message = f"Image Capabilities: Enabled\n${system_message}"
+            for document in documents:
+                encoded_document = get_base64_document(document)
+                if encoded_document:
+                    user_message.append({"image": encoded_document, "resize": None})
+
+        chat_history.append(SystemMessage(content=system_message))
+
         try:
             async_response = await self.chain.apredict(
-                user_msg=user_msg,
+                user_msg=user_message,
                 reference=reference,
                 chat_history=chat_history,
             )
@@ -143,14 +189,22 @@ References: <array of reference_ids (in the format: [1,2,3]) "include all the re
             print(e)
             token_queue.put((error, e))
 
-    def get_response(self, user_msg, reference, chat_history):
-        chat_history.append(
-            SystemMessage(
-                content="Remember to only answer the question if it can be answered with the given references"
-            )
-        )
+    def get_response(self, user_msg, reference, chat_history, documents):
+        system_message = "Remember to only answer the question if it can be answered with the given references"
+        user_message = user_msg
+
+        if documents:
+            user_message = [user_msg]
+            system_message = f"Image Capabilities: Enabled\n{system_message}"
+            for document in documents:
+                encoded_document = get_base64_document(document)
+                if encoded_document:
+                    user_message.append({"image": encoded_document, "resize": None})
+
+            chat_history.append(SystemMessage(content=system_message))
+
         return self.chain.predict(
-            user_msg=user_msg,
+            user_msg=user_message,
             reference=reference,
             chat_history=chat_history,
         )

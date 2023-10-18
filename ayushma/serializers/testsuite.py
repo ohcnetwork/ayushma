@@ -1,6 +1,13 @@
 from rest_framework import serializers
 
-from ayushma.models import Feedback, TestQuestion, TestResult, TestRun, TestSuite
+from ayushma.models import (
+    Document,
+    Feedback,
+    TestQuestion,
+    TestResult,
+    TestRun,
+    TestSuite,
+)
 from ayushma.serializers.document import DocumentSerializer
 from ayushma.serializers.project import ProjectSerializer
 from ayushma.serializers.users import UserSerializer
@@ -22,6 +29,12 @@ class TestSuiteSerializer(serializers.ModelSerializer):
 
 
 class TestQuestionSerializer(serializers.ModelSerializer):
+    documents = DocumentSerializer(many=True, read_only=True)
+
+    def get_documents(self, obj):
+        documents = Document.objects.filter(test_question__external_id=obj.external_id)
+        return DocumentSerializer(documents, many=True).data
+
     class Meta:
         model = TestQuestion
         fields = (
@@ -31,6 +44,7 @@ class TestQuestionSerializer(serializers.ModelSerializer):
             "modified_at",
             "human_answer",
             "external_id",
+            "documents",
         )
         read_only_fields = ("external_id", "created_at", "modified_at")
 
@@ -59,6 +73,7 @@ class FeedbackSerializer(serializers.ModelSerializer):
 class TestResultSerializer(serializers.ModelSerializer):
     feedback = FeedbackSerializer(source="feedback_set", many=True, read_only=True)
     references = DocumentSerializer(many=True, read_only=True)
+    test_question = TestQuestionSerializer(read_only=True)
 
     class Meta:
         model = TestResult

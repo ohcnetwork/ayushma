@@ -14,7 +14,10 @@ class Document(BaseModel):
     )
     file = models.FileField(null=True, blank=True)
     text_content = models.TextField(null=True, blank=True)
-    project = models.ForeignKey(Project, on_delete=models.PROTECT)
+    project = models.ForeignKey(Project, on_delete=models.PROTECT, null=True)
+    test_question = models.ForeignKey(
+        "TestQuestion", on_delete=models.PROTECT, null=True, blank=True
+    )
     uploading = models.BooleanField(default=True)
 
     def __str__(self) -> str:
