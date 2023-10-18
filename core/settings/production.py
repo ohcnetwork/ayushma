@@ -23,9 +23,7 @@ DATABASES["default"] = env.db(  # noqa F405
     "DATABASE_URL", default="sqlite:///db.sqlite3"
 )
 DATABASES["default"]["ATOMIC_REQUESTS"] = True  # noqa F405
-DATABASES["default"]["CONN_MAX_AGE"] = env.int(
-    "CONN_MAX_AGE", default=60
-)  # noqa F405
+DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=60)  # noqa F405
 
 # CACHES
 # ------------------------------------------------------------------------------
@@ -135,10 +133,10 @@ sentry_sdk.init(
     integrations=[
         LoggingIntegration(
             level=env.int("DJANGO_SENTRY_LOG_LEVEL", logging.INFO),
-            event_level=logging.ERROR,  # Send errors as events
+            event_level=logging.WARNING,
         ),
         DjangoIntegration(),
-        CeleryIntegration(),
+        CeleryIntegration(monitor_beat_tasks=True),
         RedisIntegration(),
     ],
     environment=env("SENTRY_ENVIRONMENT", default="production"),
