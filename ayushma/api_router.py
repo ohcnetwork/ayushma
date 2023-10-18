@@ -4,7 +4,7 @@ from rest_framework_nested import routers
 
 from ayushma.views.auth import AuthViewSet
 from ayushma.views.chat import ChatFeedbackViewSet, ChatViewSet
-from ayushma.views.document import DocumentViewSet
+from ayushma.views.document import ProjectDocumentViewSet, TestQuestionDocumentViewSet
 from ayushma.views.orphan import OrphanChatViewSet
 from ayushma.views.project import ProjectViewSet
 from ayushma.views.service import TempTokenViewSet
@@ -35,12 +35,14 @@ router.register(r"temptokens", TempTokenViewSet, basename="temptoken")
 
 router.register(r"projects", ProjectViewSet)
 projects_router = NestedRouter(router, r"projects", lookup="project")
-projects_router.register(r"documents", DocumentViewSet)
+projects_router.register(r"documents", ProjectDocumentViewSet)
 projects_router.register(r"chats", ChatViewSet)
 
 router.register(r"tests/suites", TestSuiteViewSet)
 tests_router = NestedRouter(router, r"tests/suites", lookup="test_suite")
 tests_router.register(r"questions", TestQuestionViewSet)
+test_question_router = NestedRouter(tests_router, r"questions", lookup="test_question")
+test_question_router.register(r"documents", TestQuestionDocumentViewSet)
 tests_router.register(r"runs", TestRunViewSet)
 runs_router = NestedRouter(tests_router, r"runs", lookup="run")
 runs_router.register(r"feedback", FeedbackViewSet)
@@ -49,5 +51,6 @@ urlpatterns = [
     path(r"", include(router.urls)),
     path(r"", include(projects_router.urls)),
     path(r"", include(tests_router.urls)),
+    path(r"", include(test_question_router.urls)),
     path(r"", include(runs_router.urls)),
 ]

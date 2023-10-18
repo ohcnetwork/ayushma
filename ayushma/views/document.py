@@ -1,8 +1,4 @@
-import json
-from ast import Delete
-
 from django.conf import settings
-from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework.exceptions import ValidationError
 from rest_framework.mixins import (
     CreateModelMixin,
@@ -14,15 +10,15 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 
-from ayushma.models import Document, DocumentType, Project
+from ayushma.models import Document, Project
+from ayushma.models.testsuite import TestQuestion
 from ayushma.serializers.document import DocumentSerializer, DocumentUpdateSerializer
 from ayushma.tasks.upsertdoc import upsert_doc
-from ayushma.utils.upsert import upsert
 from utils.views.base import BaseModelViewSet
 from utils.views.mixins import PartialUpdateModelMixin
 
 
-class DocumentViewSet(
+class ProjectDocumentViewSet(
     BaseModelViewSet,
     PartialUpdateModelMixin,
     CreateModelMixin,
@@ -63,6 +59,7 @@ class DocumentViewSet(
         try:
             doc_url = self.request.build_absolute_uri(document.file.url)
         except Exception as e:
+            print(e)
             pass
 
         upsert_doc.delay(document.external_id, doc_url)
@@ -81,3 +78,37 @@ class DocumentViewSet(
                 status=400,
             )
         return super().perform_destroy(instance)
+
+
+class TestQuestionDocumentViewSet(
+    BaseModelViewSet,
+    CreateModelMixin,
+    RetrieveModelMixin,
+    DestroyModelMixin,
+    ListModelMixin,
+):
+    queryset = Document.objects.all()
+    serializer_action_classes = {
+        "list": DocumentSerializer,
+        "retrieve": DocumentSerializer,
+        "create": DocumentSerializer,
+    }
+    permission_classes = (IsAdminUser,)
+    parser_classes = (MultiPartParser,)
+    lookup_field = "external_id"
+
+    def get_queryset(self):
+        queryset = self.queryset.filter(
+            test_question__external_id=self.kwargs["test_question_external_id"]
+        )
+        return queryset
+
+    def perform_create(self, serializer):
+        external_id = self.kwargs["test_question_external_id"]
+        test_question = TestQuestion.objects.get(external_id=external_id)
+
+        document = serializer.save(test_question=test_question, uploading=False)
+        test_question.documents.add(document)
+        test_question.save()
+
+        return document

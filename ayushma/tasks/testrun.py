@@ -72,6 +72,7 @@ def mark_test_run_as_completed(self, test_run_id):
                         stream=False,
                         generate_audio=False,
                         fetch_references=test_run.references,
+                        documents=test_question.documents.all(),
                     )
                 )
 

@@ -25,6 +25,7 @@ class TestQuestion(BaseModel):
     test_suite = ForeignKey(TestSuite, on_delete=CASCADE)
     question = TextField()
     human_answer = TextField()
+    documents = models.ManyToManyField(Document, blank=True)
     language = models.CharField(max_length=10, blank=False, default="en")
 
 

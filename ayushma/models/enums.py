@@ -33,6 +33,7 @@ class ModelType(IntegerChoices):
     GPT_3_5_16K = 2
     GPT_4 = 3
     GPT_4_32K = 4
+    GPT_4_VISUAL = 5
 
 
 class StatusChoices(IntegerChoices):

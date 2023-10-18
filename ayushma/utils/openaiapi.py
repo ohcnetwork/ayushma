@@ -266,6 +266,7 @@ def converse(
     generate_audio=True,
     noonce=None,
     fetch_references=True,
+    documents=None,
 ):
     if not openai_key:
         raise Exception("OpenAI-Key header is required to create a chat or converse")
@@ -306,6 +307,9 @@ def converse(
 
     prompt = chat.prompt or (chat.project and chat.project.prompt)
 
+    if documents or chat.project.model == ModelType.GPT_4_VISUAL:
+        prompt = "Image Capabilities: Enabled\n" + prompt
+
     # excluding the latest query since it is not a history
     previous_messages = (
         ChatMessage.objects.filter(chat=chat)
@@ -329,7 +333,9 @@ def converse(
             or ModelType.GPT_3_5,
             temperature=temperature,
         )
-        response = lang_chain_helper.get_response(english_text, reference, chat_history)
+        response = lang_chain_helper.get_response(
+            english_text, reference, chat_history, documents
+        )
         chat_response = response.replace("Ayushma: ", "")
         stats["response_end_time"] = time.time()
         translated_chat_response, url, chat_message = handle_post_response(
@@ -372,6 +378,7 @@ def converse(
                     english_text,
                     reference,
                     chat_history,
+                    documents,
                 )
                 chat_response = ""
                 skip_token = len(f"{AI_NAME}: ")
