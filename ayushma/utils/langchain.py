@@ -1,8 +1,6 @@
-import base64
 from typing import Any, Literal
 
 import openai
-import requests
 from django.conf import settings
 from langchain import LLMChain, PromptTemplate
 from langchain.callbacks.manager import AsyncCallbackManager
@@ -20,6 +18,7 @@ from langchain.schema.messages import HumanMessage
 from ayushma.models.enums import ModelType
 from ayushma.utils.stream_callback import StreamingQueueCallbackHandler
 from core.settings.base import AI_NAME
+from utils.helpers import get_base64_document
 
 
 def get_model_name(model_type: ModelType):
@@ -172,10 +171,10 @@ References: <array of reference_ids (in the format: [1,2,3]) "include all the re
             user_message = [user_msg]
             system_message = f"Image Capabilities: Enabled\n${system_message}"
             for document in documents:
-                response = requests.get(document.file.url)
-                image_data = response.content
-                base64_data = base64.b64encode(image_data).decode("utf-8")
-                user_message.append({"image": base64_data, "resize": None})
+                encoded_document = get_base64_document(document)
+                if encoded_document:
+                    user_message.append({"image": encoded_document, "resize": None})
+
         chat_history.append(SystemMessage(content=system_message))
 
         try:
@@ -198,10 +197,9 @@ References: <array of reference_ids (in the format: [1,2,3]) "include all the re
             user_message = [user_msg]
             system_message = f"Image Capabilities: Enabled\n{system_message}"
             for document in documents:
-                response = requests.get(document.file.url)
-                image_data = response.content
-                base64_data = base64.b64encode(image_data).decode("utf-8")
-                user_message.append({"image": base64_data, "resize": None})
+                encoded_document = get_base64_document(document)
+                if encoded_document:
+                    user_message.append({"image": encoded_document, "resize": None})
 
             chat_history.append(SystemMessage(content=system_message))
 
