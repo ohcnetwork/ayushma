@@ -9,7 +9,7 @@ from ayushma.models import (
     TestSuite,
 )
 from ayushma.serializers.document import DocumentSerializer
-from ayushma.serializers.project import ProjectSerializer
+from ayushma.serializers.project import ProjectSerializer, ProjectUpdateSerializer
 from ayushma.serializers.users import UserSerializer
 
 
@@ -90,7 +90,7 @@ class TestResultSerializer(serializers.ModelSerializer):
 
 class TestRunSerializer(serializers.ModelSerializer):
     project = serializers.UUIDField(source="project.external_id")
-    project_object = ProjectSerializer(source="project", read_only=True)
+    project_object = ProjectUpdateSerializer(source="project", read_only=True)
     test_results = TestResultSerializer(
         source="testresult_set", many=True, read_only=True
     )
