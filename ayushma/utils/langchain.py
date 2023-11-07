@@ -35,7 +35,7 @@ def get_model_name(model_type: ModelType):
     elif model_type == ModelType.GPT_4_32K:
         return "gpt-4-32k"
     elif model_type == ModelType.GPT_4_VISUAL:
-        return "gpt-4-visual"
+        return "gpt-4-vision-preview"
     else:
         if settings.OPENAI_API_TYPE == "azure":
             return settings.AZURE_CHAT_MODEL
@@ -169,11 +169,18 @@ References: <array of reference_ids (in the format: [1,2,3]) "include all the re
 
         if documents:
             user_message = [user_msg]
-            system_message = f"Image Capabilities: Enabled\n${system_message}"
             for document in documents:
                 encoded_document = get_base64_document(document)
                 if encoded_document:
-                    user_message.append({"image": encoded_document, "resize": None})
+                    user_message.append(
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{encoded_document}",
+                                "detail": "high",
+                            },
+                        },
+                    )
 
         chat_history.append(SystemMessage(content=system_message))
 
@@ -195,11 +202,18 @@ References: <array of reference_ids (in the format: [1,2,3]) "include all the re
 
         if documents:
             user_message = [user_msg]
-            system_message = f"Image Capabilities: Enabled\n{system_message}"
             for document in documents:
                 encoded_document = get_base64_document(document)
                 if encoded_document:
-                    user_message.append({"image": encoded_document, "resize": None})
+                    user_message.append(
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{encoded_document}",
+                                "detail": "high",
+                            },
+                        },
+                    )
 
             chat_history.append(SystemMessage(content=system_message))
 
