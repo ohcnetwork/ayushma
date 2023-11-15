@@ -9,20 +9,21 @@ from ayushma.models import APIKey, ChatMessage
 from ayushma.models.services import Service
 from ayushma.serializers import ChatMessageSerializer
 from ayushma.utils.language_helpers import translate_text
-from ayushma.utils.openaiapi import converse
+from ayushma.utils.openaiapi import converse, converse_thread
 from ayushma.utils.speech_to_text import speech_to_text
 
 
 def converse_api(
     request,
     chat,
+    is_thread,
 ):
     if request.headers.get("X-API-KEY"):
         api_key = request.headers.get("X-API-KEY")
         key: APIKey = APIKey.objects.get(key=api_key)
         user = key.creator
     else:
-        if not request.user.is_authenticated:
+        if not is_thread and not request.user.is_authenticated:
             return Response(
                 {"error": "Authentication credentials were not provided."},
                 status=status.HTTP_401_UNAUTHORIZED,
@@ -38,28 +39,29 @@ def converse_api(
         service = None
 
     open_ai_key = None
-    if service and service.allow_key:
+    if (service and service.allow_key) or is_thread:
         open_ai_key = settings.OPENAI_API_KEY
 
-    if not open_ai_key:
-        open_ai_key = (
-            request.headers.get("OpenAI-Key")
-            or (chat.project.open_ai_key)
-            or (user.allow_key and settings.OPENAI_API_KEY)
-        )
-    noonce = request.data.get("noonce")
+    if not is_thread:
+        if not open_ai_key:
+            open_ai_key = (
+                request.headers.get("OpenAI-Key")
+                or (chat.project.open_ai_key)
+                or (user.allow_key and settings.OPENAI_API_KEY)
+            )
+        noonce = request.data.get("noonce")
 
-    if noonce and ChatMessage.objects.filter(noonce=noonce).exists():
-        return Response(
-            {"error": "This noonce has already been used"},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+        if noonce and ChatMessage.objects.filter(noonce=noonce).exists():
+            return Response(
+                {"error": "This noonce has already been used"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-    if not open_ai_key:
-        return Response(
-            {"error": "OpenAI-Key header is required to create a chat"},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+        if not open_ai_key:
+            return Response(
+                {"error": "OpenAI-Key header is required to create a chat"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
     project = chat.project
     top_k = request.data.get("top_k") or 100
@@ -75,6 +77,9 @@ def converse_api(
             stream = False
         else:
             stream = True
+
+    if is_thread:
+        stream = False  # Threads do not support streaming
 
     if type(generate_audio) != bool:
         if generate_audio == "false":
@@ -105,6 +110,7 @@ def converse_api(
     temperature: {temperature}
     stream: {stream}
     generate_audio: {generate_audio}
+    is_thread: {is_thread}
     """
     )
 
@@ -131,9 +137,23 @@ def converse_api(
     else:
         english_text = translated_text
 
-    if not ChatMessage.objects.filter(chat=chat).exists():
-        chat.title = translated_text[0:50]
-        chat.save()
+    if not is_thread:
+        if not ChatMessage.objects.filter(chat=chat).exists():
+            chat.title = translated_text[0:50]
+            chat.save()
+    else:
+        response_message = converse_thread(
+            thread=chat,
+            english_text=english_text,
+            openai_key=open_ai_key,
+        )
+
+        return Response(
+            {
+                "message": response_message,
+            },
+            status=status.HTTP_200_OK,
+        )
 
     if stream:
         response = StreamingHttpResponse(content_type="text/event-stream")

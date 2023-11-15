@@ -62,7 +62,9 @@ class ChatViewSet(
             "-created_at"
         )
 
-        if user.is_superuser and (self.request.query_params.get('fetch') == "all" or self.action == "list_all"):
+        if user.is_superuser and (
+            self.request.query_params.get("fetch") == "all" or self.action == "list_all"
+        ):
             return queryset
 
         return queryset.filter(user=user).order_by("-created_at")
@@ -72,7 +74,8 @@ class ChatViewSet(
         project = Project.objects.get(external_id=project_id)
 
         if (
-            not self.request.headers.get("OpenAI-Key")
+            not project.assistant_id
+            and not self.request.headers.get("OpenAI-Key")
             and not project.open_ai_key
             and not (self.request.user.allow_key and settings.OPENAI_API_KEY)
         ):
@@ -107,6 +110,7 @@ class ChatViewSet(
             response = converse_api(
                 request=self.request,
                 chat=chat,
+                is_thread=bool(chat.project.assistant_id),
             )
             return response
         except Exception as e:

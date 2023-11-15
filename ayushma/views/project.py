@@ -1,7 +1,8 @@
 from django.conf import settings
 from django_filters.rest_framework import DjangoFilterBackend
-from drf_spectacular.utils import extend_schema, extend_schema_view
-from rest_framework import filters
+from openai import OpenAI
+from rest_framework import filters, status
+from rest_framework.decorators import action
 from rest_framework.mixins import (
     CreateModelMixin,
     DestroyModelMixin,
@@ -76,3 +77,54 @@ class ProjectViewSet(
                 status=400,
             )
         return super().perform_destroy(instance)
+
+    @action(detail=True, methods=["post"])
+    def create_assistant(self, request, *args, **kwarg):
+        name = request.data.get("name")
+        project: Project = Project.objects.get(external_id=kwarg["external_id"])
+
+        # Since all the threads are attached to the api key, we use the env variable to avoid user confusion due to accidental key change
+        client = OpenAI(api_key=settings.OPENAI_API_KEY)
+
+        if project.assistant_id:
+            return Response(
+                {"non_field_errors": "Assistant already exists for this project"},
+                status=400,
+            )
+
+        instructions = request.data.get("instructions")
+        model = request.data.get("model")
+
+        try:
+            response = client.beta.assistants.create(
+                name=name,
+                instructions=instructions,
+                model=model,
+                tools=[{"type": "retrieval"}],
+            )
+            project.assistant_id = response.id
+            project.save()
+            return Response({"assistant_id": response.id})
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=["get"])
+    def list_assistants(self, *args, **kwarg):
+        client = OpenAI(api_key=settings.OPENAI_API_KEY)
+
+        assistants = client.beta.assistants.list(
+            order="desc",
+            limit="100",
+        ).data
+
+        return Response(
+            [
+                {
+                    "id": assistant.id,
+                    "name": assistant.name,
+                    "instructions": assistant.instructions,
+                    "model": assistant.model,
+                }
+                for assistant in assistants
+            ]
+        )

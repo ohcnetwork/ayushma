@@ -27,6 +27,7 @@ class ProjectSerializer(serializers.ModelSerializer):
             "is_default",
             "display_preset_questions",
             "archived",
+            "assistant_id",
         )
         read_only_fields = (
             "external_id",

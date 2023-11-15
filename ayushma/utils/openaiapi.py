@@ -4,15 +4,16 @@ import time
 from queue import Queue
 from typing import Dict, List
 
-import openai
+import numpy as np
 import tiktoken
 from anyio.from_thread import start_blocking_portal
 from django.conf import settings
 from langchain.schema import AIMessage, HumanMessage
-from openai.datalib.numpy_helper import numpy as np
+from openai import OpenAI
 from pinecone import QueryResponse
 
 from ayushma.models import ChatMessage
+from ayushma.models.chat import Chat
 from ayushma.models.document import Document
 from ayushma.models.enums import ChatMessageType, ModelType
 from ayushma.utils.langchain import LangChainHelper
@@ -52,7 +53,7 @@ def get_embedding(
         [[-0.123, 0.456, 0.789, ...], [0.123, -0.456, 0.789, ...]]
 
     """
-    openai.api_key = openai_api_key
+    client = OpenAI(api_key=openai_api_key)
 
     embedding_args: Dict[str, str | List[str]] = {"input": text}
 
@@ -61,7 +62,7 @@ def get_embedding(
     else:
         embedding_args["model"] = model
 
-    res = openai.Embedding.create(**embedding_args)
+    res = client.embeddings.create(**embedding_args)
 
     return [record["embedding"] for record in res["data"]]
 
@@ -458,3 +459,46 @@ def converse(
             yield create_json_response(
                 local_translated_text, chat.external_id, "", str(e), True, True, None
             )
+
+
+def converse_thread(
+    english_text,
+    thread: Chat,
+    openai_key,
+):
+    client = OpenAI(api_key=openai_key)
+
+    if not thread.thread_id:
+        thread_id = client.beta.threads.create().id
+        thread.thread_id = thread_id
+        thread.save()
+
+    client.beta.threads.messages.create(
+        thread_id=thread.thread_id, content=english_text, role="user"
+    )
+
+    run_id = client.beta.threads.runs.create(
+        thread_id=thread.thread_id, assistant_id=thread.project.assistant_id
+    ).id
+
+    retires = 60
+
+    while retires > 0:
+        retires -= 1
+        time.sleep(1)
+        status = client.beta.threads.runs.retrieve(
+            run_id=run_id, thread_id=thread.thread_id
+        ).status
+        if status == "completed":
+            break
+    else:
+        raise Exception("Thread timed out")
+
+    response = (
+        client.beta.threads.messages.list(thread_id=thread.thread_id)
+        .data[0]
+        .content[0]
+        .text.value
+    )
+
+    return response
