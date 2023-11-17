@@ -1,5 +1,7 @@
 from random import sample
 
+from django.conf import settings
+from openai import OpenAI
 from rest_framework import serializers
 
 from ayushma.models import Project
@@ -40,6 +42,7 @@ class ProjectSerializer(serializers.ModelSerializer):
 class ProjectUpdateSerializer(serializers.ModelSerializer):
     display_preset_questions = serializers.SerializerMethodField()
     key_set = serializers.SerializerMethodField()
+    model = serializers.CharField(required=False)
 
     def get_display_preset_questions(self, project_object):
         if project_object.preset_questions and len(project_object.preset_questions) > 4:
@@ -63,6 +66,20 @@ class ProjectUpdateSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         if validated_data.get("is_default", True):
             Project.objects.all().update(is_default=False)
+
+        project_id = self.context["view"].kwargs["external_id"]
+        project = Project.objects.get(external_id=project_id)
+        assistant_id = validated_data.get("assistant_id") or project.assistant_id
+
+        if assistant_id:
+            client = OpenAI(api_key=settings.OPENAI_API_KEY)
+            assistant = client.beta.assistants.retrieve(assistant_id)
+            prompt = validated_data.pop("prompt", assistant.instructions)
+            model = validated_data.pop("model", assistant.model)
+            client.beta.assistants.update(
+                assistant_id, instructions=prompt, model=model
+            )
+
         return super().update(instance, validated_data)
 
     def get_key_set(self, obj):
