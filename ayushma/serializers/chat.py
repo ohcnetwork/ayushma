@@ -1,13 +1,16 @@
+from django.conf import settings
+from openai import OpenAI
 from rest_framework import serializers
 
 from ayushma.models import Chat, ChatFeedback, ChatMessage
+from ayushma.models.enums import ChatMessageType
 from ayushma.serializers.document import DocumentSerializer
 from ayushma.serializers.project import ProjectSerializer
 
 
 class ChatSerializer(serializers.ModelSerializer):
     project = ProjectSerializer(read_only=True)
-    username = serializers.CharField(source='user.username', read_only=True)
+    username = serializers.CharField(source="user.username", read_only=True)
 
     class Meta:
         model = Chat
@@ -112,7 +115,7 @@ class ConverseSerializer(serializers.Serializer):
 class ChatDetailSerializer(serializers.ModelSerializer):
     chats = serializers.SerializerMethodField()
     message = ConverseSerializer(required=False)
-    username = serializers.CharField(source='user.username', read_only=True)
+    username = serializers.CharField(source="user.username", read_only=True)
 
     class Meta:
         model = Chat
@@ -127,9 +130,32 @@ class ChatDetailSerializer(serializers.ModelSerializer):
             "message",
             "model",
         )
-        read_only_fields = ("external_id", "created_at", "modified_at", "chats", "username")
+        read_only_fields = (
+            "external_id",
+            "created_at",
+            "modified_at",
+            "chats",
+            "username",
+        )
 
     def get_chats(self, obj):
+        client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        if obj.thread_id:
+            thread_messages = client.beta.threads.messages.list(
+                obj.thread_id, limit=100, order="asc"
+            )
+            return [
+                {
+                    "messageType": ChatMessageType.USER
+                    if thread_message.role == "user"
+                    else ChatMessageType.AYUSHMA,
+                    "message": thread_message.content[0].text.value,
+                    "reference_documents": thread_message.content[0].text.annotations,
+                    "language": "en",
+                    "meta": {},
+                }
+                for thread_message in thread_messages.data
+            ]
         chatmessages = ChatMessage.objects.filter(chat=obj).order_by("created_at")
         context = {"request": self.context.get("request")}
         return ChatMessageSerializer(chatmessages, many=True, context=context).data

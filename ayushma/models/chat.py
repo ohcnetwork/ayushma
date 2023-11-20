@@ -17,6 +17,7 @@ class Chat(BaseModel):
     prompt = models.TextField(blank=True, null=True)
     api_key = models.ForeignKey(APIKey, on_delete=models.PROTECT, blank=True, null=True)
     model = models.IntegerField(choices=ModelType.choices, blank=True, null=True)
+    thread_id = models.CharField(max_length=100, unique=True, blank=True, null=True)
 
     def __str__(self) -> str:
         return f"{self.title} from {self.user.username if self.user else self.api_key.creator.username}"
