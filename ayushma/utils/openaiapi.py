@@ -64,7 +64,7 @@ def get_embedding(
 
     res = client.embeddings.create(**embedding_args)
 
-    return [record["embedding"] for record in res["data"]]
+    return [record.embedding for record in res.data]
 
 
 def get_sanitized_reference(pinecone_references: List[QueryResponse]) -> str:
