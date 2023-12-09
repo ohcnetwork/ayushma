@@ -36,6 +36,8 @@ def get_model_name(model_type: ModelType):
         return "gpt-4-32k"
     elif model_type == ModelType.GPT_4_VISUAL:
         return "gpt-4-vision-preview"
+    elif model_type == ModelType.GPT_4_TURBO:
+        return "gpt-4-1106-preview"
     else:
         if settings.OPENAI_API_TYPE == "azure":
             return settings.AZURE_CHAT_MODEL
