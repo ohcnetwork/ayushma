@@ -160,7 +160,10 @@ def get_reference(text, openai_key, namespace, top_k):
 
     for embedding in embeddings:
         similar: QueryResponse = settings.PINECONE_INDEX_INSTANCE.query(
-            
+            vecotr=embedding,
+            top_k=int(top_k),
+            namespace=namespace,
+            include_metadata=True,
         )
         pinecone_references.append(similar)
     return get_sanitized_reference(pinecone_references=pinecone_references)
