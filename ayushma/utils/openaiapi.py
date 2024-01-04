@@ -163,7 +163,7 @@ def get_reference(text, openai_key, namespace, top_k):
             vector=embedding,
             top_k=int(top_k),
             namespace=namespace,
-            include_metadata=True,
+            include_metadata=True
         )
         pinecone_references.append(similar)
     return get_sanitized_reference(pinecone_references=pinecone_references)
