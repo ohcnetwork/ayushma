@@ -1,4 +1,3 @@
-import json
 import os
 
 import openai
@@ -43,7 +42,6 @@ class GoogleEngine:
 
         config = speech.RecognitionConfig(
             encoding=speech.RecognitionConfig.AudioEncoding.ENCODING_UNSPECIFIED,
-            sample_rate_hertz=48000,
             language_code=self.language_code,
         )
 
@@ -51,13 +49,13 @@ class GoogleEngine:
         if not response.results:
             return ""
         return response.results[0].alternatives[0].transcript
-    
+
+
 class SelfHostedEngine:
     def __init__(self, api_key, language_code):
         self.language_code = language_code
 
     def recognize(self, audio):
-
         response = requests.post(
             settings.SELF_HOSTED_ENDPOINT,
             files={"audio": audio},
