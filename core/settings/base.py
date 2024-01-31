@@ -79,7 +79,6 @@ THIRD_PARTY_APPS = [
     "django_filters",
     "drf_spectacular",
     "djangoql",
-    "django_countries",
     "simple_history",
 ]
 
