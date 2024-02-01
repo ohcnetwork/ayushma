@@ -10,4 +10,4 @@ fi
 
 python /app/manage.py collectstatic --noinput
 python /app/manage.py migrate
-/usr/local/bin/gunicorn core.wsgi --bind 0.0.0.0:5000 --timeout 180 --chdir=/app
+gunicorn core.wsgi --bind 0.0.0.0:5000 --timeout 180 --chdir=/app
