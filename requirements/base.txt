@@ -33,7 +33,7 @@ tiktoken==0.5.2
 langchain==0.0.352
 langchain-experimental==0.0.40
 # For asynchronous event loop (Do not update: anyio<4.0 is REQUIRED by langchain)
-anyio==4.2.0
+anyio==3.7.1
 
 # Web scraping and parsing
 beautifulsoup4==4.12.2
