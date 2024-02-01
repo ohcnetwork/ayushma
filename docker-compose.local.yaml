@@ -11,7 +11,6 @@ services:
       dockerfile: ./compose/local/django/Dockerfile
     image: django
     container_name: ayushma_local_django
-    platform: linux/x86_64
     depends_on:
       - postgres
       - redis

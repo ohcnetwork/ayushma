@@ -30,11 +30,11 @@ logs:
 	docker compose -f $(docker_config_file) logs
 
 makemigrations: up
-	docker exec care bash -c "python manage.py makemigrations"
+	docker exec django bash -c "python manage.py makemigrations"
 
 test: up
-	docker exec care bash -c "python manage.py test --keepdb --parallel=$(nproc)"
+	docker exec django bash -c "python manage.py test --keepdb --parallel=$(nproc)"
 
 test_coverage: up
-	docker exec care bash -c "coverage run manage.py test --settings=config.settings.test --keepdb --parallel=$(nproc)"
-	docker exec care bash -c "coverage combine || true; coverage report"
+	docker exec django bash -c "coverage run manage.py test --settings=config.settings.test --keepdb --parallel=$(nproc)"
+	docker exec django bash -c "coverage combine || true; coverage report"

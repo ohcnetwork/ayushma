@@ -10,13 +10,14 @@ services:
       context: .
       dockerfile: ./compose/production/django/Dockerfile
     image: ayushma_production_django
-    platform: linux/x86_64
     depends_on:
       - postgres
       - redis
     env_file:
       - ./.envs/.production/.django
       - ./.envs/.production/.postgres
+    ports:
+      - "8000:8000"
     command: /start
 
   postgres:
@@ -36,9 +37,11 @@ services:
   celeryworker:
     <<: *django
     image: ayushma_production_celeryworker
+    ports: []
     command: /start-celeryworker
 
   celerybeat:
     <<: *django
     image: ayushma_production_celerybeat
+    ports: []
     command: /start-celerybeat
