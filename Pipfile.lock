@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "f7eaea9dba25a601c70a711e0b46fefbee0f7beb7b750012fbd55c55e9bf857f"
+            "sha256": "5777c0a5bab47e97d7757705ab3c353927152f9a15ac5ce5cc5d62d06780c546"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -675,12 +675,12 @@
         },
         "google-cloud-speech": {
             "hashes": [
-                "sha256:661c39bbb6f2b216ba56ace3b087260e9778dd19ade9efa3700adee9258009ad",
-                "sha256:88e51aa35d385d7b8325c461327c5f4a19ac8ab38d92ffb0d61c4e91494a0171"
+                "sha256:67bc78c5f09b7913e809b8a70ab4f0200a7d248bdf6af16f035738fdae546c74",
+                "sha256:ba1d9b82dd32922c94d47835b32f58ef05aad235fca578dee8cbeae235600298"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.7'",
-            "version": "==2.21.0"
+            "version": "==2.24.0"
         },
         "google-cloud-texttospeech": {
             "hashes": [
@@ -1856,7 +1856,7 @@
                 "sha256:c97dfde1f7bd43a71c8d2a58e369e9b2bf692d1334ea9f9cae55add7d0dd0f84",
                 "sha256:fdb6d215c776278489906c2f8916e6e7d4f5a9b602ccbcfdf7f016fc8da0596e"
             ],
-            "markers": "python_version >= '3.7'",
+            "markers": "python_version >= '3.6'",
             "version": "==2.0.7"
         },
         "vine": {
