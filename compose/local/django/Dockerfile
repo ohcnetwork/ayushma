@@ -8,6 +8,8 @@ FROM python as python-build-stage
 
 ARG BUILD_ENVIRONMENT=local
 
+ENV PATH /venv/bin:$PATH
+
 # Install apt packages
 RUN apt-get update && apt-get install --no-install-recommends -y \
   # dependencies for building Python packages
