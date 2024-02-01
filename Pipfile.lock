@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "f7eaea9dba25a601c70a711e0b46fefbee0f7beb7b750012fbd55c55e9bf857f"
+            "sha256": "4bad6278f85cd0a3315cc8abd3823dcd2b9b69dfb177cd8f5585faf63de1517a"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -1159,12 +1159,12 @@
         },
         "pinecone-client": {
             "hashes": [
-                "sha256:2c1cc1d6648b2be66e944db2ffa59166a37b9164d1135ad525d9cd8b1e298168",
-                "sha256:5bf496c01c2f82f4e5c2dc977cc5062ecd7168b8ed90743b09afcc8c7eb242ec"
+                "sha256:72696c883b47c0f65808bf623aebe940c07bc396f2126b627aad63d6e3cb6c43",
+                "sha256:f9a0830333eece107b4ef1119de23dad6a61bffab7f238e618416d51c46d29c8"
             ],
             "index": "pypi",
-            "markers": "python_version >= '3.8'",
-            "version": "==2.2.4"
+            "markers": "python_version < '3.13' and python_version >= '3.8'",
+            "version": "==3.0.2"
         },
         "ply": {
             "hashes": [
