@@ -91,7 +91,9 @@ def speech_to_text(engine_id, audio, language_code):
 
     try:
         engine = engine_class(api_key, language_code)
-        return engine.recognize(audio)
+        recognized_text = engine.recognize(audio)
+        if not recognized_text:
+            raise ValueError("Failed to detect any speech in provided audio")
     except Exception as e:
         print(f"Failed to recognize speech with {engine_name} engine: {e}")
         raise e
