@@ -33,7 +33,7 @@ makemigrations: up
 	docker exec django bash -c "python manage.py makemigrations"
 	
 checkmigration:
-	docker compose exec django bash -c "python manage.py makemigrations --check --dry-run"
+	docker compose -f $(docker_config_file) exec django bash -c "python manage.py makemigrations --check --dry-run"
 
 test: up
 	docker exec django bash -c "python manage.py test --keepdb --parallel=$(nproc)"
