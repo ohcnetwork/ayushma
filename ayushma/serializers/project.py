@@ -25,6 +25,7 @@ class ProjectSerializer(serializers.ModelSerializer):
             "modified_at",
             "description",
             "stt_engine",
+            "tts_engine",
             "model",
             "is_default",
             "display_preset_questions",

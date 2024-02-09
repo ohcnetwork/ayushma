@@ -15,7 +15,7 @@ from pinecone import QueryResponse
 from ayushma.models import ChatMessage
 from ayushma.models.chat import Chat
 from ayushma.models.document import Document
-from ayushma.models.enums import ChatMessageType, ModelType
+from ayushma.models.enums import ChatMessageType, ModelType, TTSEngine
 from ayushma.utils.langchain import LangChainHelper
 from ayushma.utils.language_helpers import text_to_speech, translate_text
 from core.settings.base import AI_NAME
@@ -203,6 +203,7 @@ def handle_post_response(
     temperature,
     stats,
     language,
+    tts_engine,
     generate_audio=True,
 ):
     chat_message: ChatMessage = ChatMessage.objects.create(
@@ -225,7 +226,9 @@ def handle_post_response(
     ayushma_voice = None
     if generate_audio:
         stats["tts_start_time"] = time.time()
-        ayushma_voice = text_to_speech(translated_chat_response, user_language)
+        ayushma_voice = text_to_speech(
+            translated_chat_response, user_language, tts_engine
+        )
         stats["tts_end_time"] = time.time()
 
     url = None
@@ -324,6 +327,8 @@ def converse(
         elif message.messageType == ChatMessageType.AYUSHMA:
             chat_history.append(AIMessage(content=f"Ayushma: {message.message}"))
 
+    tts_engine = TTSEngine(chat.project.tts_engine).name.lower()
+
     if not stream:
         lang_chain_helper = LangChainHelper(
             stream=False,
@@ -347,6 +352,7 @@ def converse(
             temperature,
             stats,
             language,
+            tts_engine,
             generate_audio,
         )
 
@@ -404,6 +410,7 @@ def converse(
                             temperature,
                             stats,
                             language,
+                            tts_engine,
                             generate_audio,
                         )
 

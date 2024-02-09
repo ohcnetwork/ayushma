@@ -1,7 +1,7 @@
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
-from ayushma.models.enums import ModelType, STTEngine
+from ayushma.models.enums import ModelType, STTEngine, TTSEngine
 from ayushma.models.users import User
 from utils.models.base import BaseModel
 
@@ -15,6 +15,9 @@ class Project(BaseModel):
     open_ai_key = models.CharField(max_length=100, null=True, blank=True)
     stt_engine = models.IntegerField(
         choices=STTEngine.choices, default=STTEngine.WHISPER
+    )
+    tts_engine = models.IntegerField(
+        choices=TTSEngine.choices, default=TTSEngine.GOOGLE
     )
     model = models.IntegerField(choices=ModelType.choices, default=ModelType.GPT_3_5)
     preset_questions = ArrayField(models.TextField(), null=True, blank=True)

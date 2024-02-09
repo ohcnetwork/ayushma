@@ -19,6 +19,11 @@ class STTEngine(IntegerChoices):
     SELF_HOSTED = 3
 
 
+class TTSEngine(IntegerChoices):
+    OPENAI = 1
+    GOOGLE = 2
+
+
 class FeedBackRating(IntegerChoices):
     HALLUCINATING = 1
     WRONG = 2
