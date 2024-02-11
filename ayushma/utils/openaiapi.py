@@ -15,7 +15,7 @@ from pinecone import QueryResponse
 from ayushma.models import ChatMessage
 from ayushma.models.chat import Chat
 from ayushma.models.document import Document
-from ayushma.models.enums import ChatMessageType, ModelType, TTSEngine
+from ayushma.models.enums import ChatMessageType, ModelType
 from ayushma.utils.langchain import LangChainHelper
 from ayushma.utils.language_helpers import text_to_speech, translate_text
 from core.settings.base import AI_NAME
@@ -327,7 +327,7 @@ def converse(
         elif message.messageType == ChatMessageType.AYUSHMA:
             chat_history.append(AIMessage(content=f"Ayushma: {message.message}"))
 
-    tts_engine = TTSEngine(chat.project.tts_engine).name.lower()
+    tts_engine = chat.project.tts_engine
 
     if not stream:
         lang_chain_helper = LangChainHelper(

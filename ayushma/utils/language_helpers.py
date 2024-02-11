@@ -6,6 +6,8 @@ from google.cloud import translate_v2 as translate
 from openai import OpenAI
 from rest_framework.exceptions import APIException
 
+from ayushma.models.enums import TTSEngine
+
 
 def translate_text(target, text):
     try:
