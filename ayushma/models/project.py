@@ -16,7 +16,7 @@ class Project(BaseModel):
     stt_engine = models.IntegerField(
         choices=STTEngine.choices, default=STTEngine.WHISPER
     )
-    tts_engine = models.IntegerField(
+    tts_engine = models.SmallIntegerField(
         choices=TTSEngine.choices, default=TTSEngine.GOOGLE
     )
     model = models.IntegerField(choices=ModelType.choices, default=ModelType.GPT_3_5)

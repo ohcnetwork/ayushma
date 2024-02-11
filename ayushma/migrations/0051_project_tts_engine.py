@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="project",
             name="tts_engine",
-            field=models.IntegerField(
+            field=models.SmallIntegerField(
                 choices=[(1, "Openai"), (2, "Google")], default=2
             ),
         ),
