@@ -1,9 +1,9 @@
 import os
 
-import openai
 import requests
 from django.conf import settings
 from google.cloud import speech
+from openai import OpenAI
 
 from ayushma.models.enums import STTEngine
 
@@ -14,19 +14,14 @@ class WhisperEngine:
         self.language_code = language_code
 
     def recognize(self, audio):
-        # workaround for setting api version ( https://github.com/openai/openai-python/pull/491 )
-        current_api_version = openai.api_version
-        openai.api_version = "2020-11-07"
-        transcription = openai.Audio.transcribe(
-            "whisper-1",
-            file=audio,
+        client = OpenAI(api_key=self.api_key)
+        transcription = client.audio.transcriptions.create(
+            model="whisper-1",
+            # https://github.com/openai/openai-python/tree/main#file-uploads
+            file=(audio.name, audio.read()),
             language=self.language_code.replace("-IN", ""),
-            api_key=self.api_key,
-            api_base="https://api.openai.com/v1",
-            api_type="open_ai",
-            api_version="2020-11-07",  # Bug in openai package, this parameter is ignored
+            # api_version="2020-11-07",
         )
-        openai.api_version = current_api_version
         return transcription.text
 
 
@@ -94,6 +89,7 @@ def speech_to_text(engine_id, audio, language_code):
         recognized_text = engine.recognize(audio)
         if not recognized_text:
             raise ValueError("Failed to detect any speech in provided audio")
+        return recognized_text
     except Exception as e:
         print(f"Failed to recognize speech with {engine_name} engine: {e}")
         raise e
