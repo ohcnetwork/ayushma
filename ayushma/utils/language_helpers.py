@@ -47,7 +47,7 @@ def text_to_speech(text, language_code, service):
 
         text = sanitize_text(text)
 
-        if service == "google":
+        if service == TTSEngine.GOOGLE:
             client = texttospeech.TextToSpeechClient()
 
             synthesis_input = texttospeech.SynthesisInput(text=text)
@@ -66,7 +66,7 @@ def text_to_speech(text, language_code, service):
             )
 
             return response.audio_content
-        elif service == "openai":
+        elif service == TTSEngine.OPENAI:
             client = OpenAI(api_key=settings.OPENAI_API_KEY)
             response = client.audio.speech.create(
                 model="tts-1-hd",

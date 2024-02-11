@@ -20,8 +20,8 @@ class STTEngine(IntegerChoices):
 
 
 class TTSEngine(IntegerChoices):
-    OPENAI = 1
-    GOOGLE = 2
+    OPENAI = (1, "openai")
+    GOOGLE = (2, "google")
 
 
 class FeedBackRating(IntegerChoices):
