@@ -13,5 +13,6 @@ class CustomLimitOffsetPagination(LimitOffsetPagination):
                 "has_previous": self.offset > 0,
                 "has_next": self.offset + self.limit < self.count,
                 "results": data,
+                "offset": self.offset,
             }
         )
