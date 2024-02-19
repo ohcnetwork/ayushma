@@ -110,6 +110,8 @@ class ConverseSerializer(serializers.Serializer):
     stream = serializers.BooleanField(default=True)
     generate_audio = serializers.BooleanField(default=True)
     noonce = serializers.CharField(required=False)
+    transcript_start_time = serializers.FloatField(required=False)
+    transcript_end_time = serializers.FloatField(required=False)
 
 
 class ChatDetailSerializer(serializers.ModelSerializer):
@@ -146,9 +148,11 @@ class ChatDetailSerializer(serializers.ModelSerializer):
             )
             return [
                 {
-                    "messageType": ChatMessageType.USER
-                    if thread_message.role == "user"
-                    else ChatMessageType.AYUSHMA,
+                    "messageType": (
+                        ChatMessageType.USER
+                        if thread_message.role == "user"
+                        else ChatMessageType.AYUSHMA
+                    ),
                     "message": thread_message.content[0].text.value,
                     "reference_documents": thread_message.content[0].text.annotations,
                     "language": "en",
@@ -159,3 +163,8 @@ class ChatDetailSerializer(serializers.ModelSerializer):
         chatmessages = ChatMessage.objects.filter(chat=obj).order_by("created_at")
         context = {"request": self.context.get("request")}
         return ChatMessageSerializer(chatmessages, many=True, context=context).data
+
+
+class SpeechToTextSerializer(serializers.Serializer):
+    audio = serializers.FileField(required=True)
+    language = serializers.CharField(default="en")

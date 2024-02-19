@@ -1,7 +1,9 @@
+import time
+
 from django.conf import settings
 from drf_spectacular.utils import extend_schema
 from rest_framework import filters, status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import ValidationError
 from rest_framework.mixins import (
     CreateModelMixin,
@@ -20,8 +22,10 @@ from ayushma.serializers import (
     ChatFeedbackSerializer,
     ChatSerializer,
     ConverseSerializer,
+    SpeechToTextSerializer,
 )
 from ayushma.utils.converse import converse_api
+from ayushma.utils.speech_to_text import speech_to_text
 from utils.views.base import BaseModelViewSet
 from utils.views.mixins import PartialUpdateModelMixin
 
@@ -42,6 +46,7 @@ class ChatViewSet(
         "retrieve": ChatDetailSerializer,
         "list_all": ChatDetailSerializer,
         "converse": ConverseSerializer,
+        "speech_to_text": SpeechToTextSerializer,
     }
     permission_classes = (IsTempTokenOrAuthenticated,)
     lookup_field = "external_id"
@@ -99,6 +104,43 @@ class ChatViewSet(
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+    @extend_schema(
+        tags=("chats",),
+    )
+    @action(detail=True, methods=["post"])
+    def speech_to_text(self, *args, **kwarg):
+        serializer = self.get_serializer(data=self.request.data)
+        serializer.is_valid()
+
+        project_id = kwarg["project_external_id"]
+        audio = serializer.validated_data["audio"]
+        language = serializer.validated_data.get("language", "en")
+
+        stats = {}
+        try:
+            stt_engine = Project.objects.get(external_id=project_id).stt_engine
+        except Project.DoesNotExist:
+            return Response(
+                {"error": "Project not found"}, status=status.HTTP_400_BAD_REQUEST
+            )
+        try:
+            stats["transcript_start_time"] = time.time()
+            transcript = speech_to_text(stt_engine, audio, language + "-IN")
+            stats["transcript_end_time"] = time.time()
+            translated_text = transcript
+        except Exception as e:
+            print(f"Failed to transcribe speech with {stt_engine} engine: {e}")
+            return Response(
+                {
+                    "error": "Something went wrong in getting transcription, please try again later"
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        return Response(
+            {"transcript": translated_text, "stats": stats}, status=status.HTTP_200_OK
+        )
 
     @extend_schema(
         tags=("chats",),
