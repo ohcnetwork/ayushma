@@ -4,4 +4,6 @@ set -o errexit
 set -o nounset
 
 
-watchgod celery.__main__.main --args -A core.celery_app worker -l INFO
+watchmedo \
+    auto-restart --directory=./ --pattern=*.py --recursive -- \
+    celery --workdir="/app" -A core.celery_app worker --loglevel=INFO

@@ -9,8 +9,7 @@ services:
     build:
       context: .
       dockerfile: ./compose/local/django/Dockerfile
-    image: django
-    container_name: ayushma_local_django
+    image: ayushma_local
     depends_on:
       - postgres
       - redis
@@ -27,8 +26,7 @@ services:
     build:
       context: .
       dockerfile: ./compose/production/postgres/Dockerfile
-    image: postgres
-    container_name: ayushma_local_postgres
+    image: ayushma_postgres
     volumes:
       - ayushma_local_postgres_data:/var/lib/postgresql/data:Z
       - ayushma_local_postgres_data_backups:/backups:z
@@ -37,24 +35,13 @@ services:
 
   redis:
     image: redis:6
-    container_name: ayushma_local_redis
 
   celeryworker:
     <<: *django
-    image: ayushma_local_celeryworker
-    container_name: ayushma_local_celeryworker
-    depends_on:
-      - redis
-      - postgres
     ports: []
     command: /start-celeryworker
 
   celerybeat:
     <<: *django
-    image: ayushma_local_celerybeat
-    container_name: ayushma_local_celerybeat
-    depends_on:
-      - redis
-      - postgres
     ports: []
     command: /start-celerybeat
