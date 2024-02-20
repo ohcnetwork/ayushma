@@ -5,4 +5,6 @@ set -o nounset
 
 
 rm -f './celerybeat.pid'
-celery -A core.celery_app beat -l INFO
+watchmedo \
+    auto-restart --directory=./ --pattern=*.py --recursive -- \
+    celery --workdir="/app" -A core.celery_app beat --loglevel=INFO
