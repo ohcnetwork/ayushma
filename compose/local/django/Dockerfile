@@ -22,7 +22,7 @@ RUN pip install pipenv
 
 # Requirements are installed here to ensure they will be cached.
 COPY Pipfile Pipfile.lock ./
-RUN pipenv sync --system --categories "packages"
+RUN pipenv sync --system --categories "packages dev-packages"
 
 # Python 'run' stage
 FROM python as python-run-stage
