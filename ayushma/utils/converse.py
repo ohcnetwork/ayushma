@@ -33,6 +33,7 @@ def converse_api(
     audio = request.data.get("audio")
     text = request.data.get("text")
     language = request.data.get("language") or "en"
+
     try:
         service: Service = request.service
     except AttributeError:
@@ -128,6 +129,11 @@ def converse_api(
         translated_text = transcript
 
     elif converse_type == "text":
+        if request.data.get("transcript_start_time") and request.data.get(
+            "transcript_end_time"
+        ):
+            stats["transcript_start_time"] = request.data["transcript_start_time"]
+            stats["transcript_end_time"] = request.data["transcript_end_time"]
         translated_text = text
 
     if language != "en":
