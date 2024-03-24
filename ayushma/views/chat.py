@@ -122,7 +122,8 @@ class ChatViewSet(
             stt_engine = Project.objects.get(external_id=project_id).stt_engine
         except Project.DoesNotExist:
             return Response(
-                {"error": "Project not found"}, status=status.HTTP_400_BAD_REQUEST
+                {"error": "Project not found"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
         try:
             stats["transcript_start_time"] = time.time()
@@ -133,13 +134,14 @@ class ChatViewSet(
             print(f"Failed to transcribe speech with {stt_engine} engine: {e}")
             return Response(
                 {
-                    "error": "Something went wrong in getting transcription, please try again later"
+                    "error": "[Transcribing] Something went wrong in getting transcription, please try again later"
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
         return Response(
-            {"transcript": translated_text, "stats": stats}, status=status.HTTP_200_OK
+            {"transcript": translated_text, "stats": stats},
+            status=status.HTTP_200_OK,
         )
 
     @extend_schema(

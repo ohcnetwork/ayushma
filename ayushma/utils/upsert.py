@@ -58,7 +58,8 @@ def upsert(
         None
     """
     pinecone.init(
-        api_key=settings.PINECONE_API_KEY, environment=settings.PINECONE_ENVIRONMENT
+        api_key=settings.PINECONE_API_KEY,
+        environment=settings.PINECONE_ENVIRONMENT,
     )
     print("Initialized Pinecone and OpenAI")
 
@@ -80,7 +81,9 @@ def upsert(
         raise Exception("Either filepath, url or text must be provided")
 
     if len(document_lines) == 0:
-        raise Exception("No text found in document")
+        raise Exception(
+            "[Upsert] No text found in the document. Please check the document."
+        )
     print(document_lines)
 
     batch_size = (

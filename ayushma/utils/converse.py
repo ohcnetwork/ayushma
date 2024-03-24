@@ -118,9 +118,9 @@ def converse_api(
     # store time to complete request
     stats["start_time"] = time.time()
     if converse_type == "audio" and not audio:
-        return Exception("Please provide audio to generate transcript")
+        return Exception("[Converse] Please provide audio to generate transcript")
     if converse_type == "text" and not text:
-        return Exception("Please provide text to generate transcript")
+        return Exception("[Converse] Please provide text to generate transcript")
 
     if converse_type == "audio":
         stats["transcript_start_time"] = time.time()
@@ -195,7 +195,8 @@ def converse_api(
         response_message = list(response_message)[0]
 
         return Response(
-            ChatMessageSerializer(response_message).data, status=status.HTTP_200_OK
+            ChatMessageSerializer(response_message).data,
+            status=status.HTTP_200_OK,
         )
 
     return response
