@@ -47,7 +47,7 @@ def converse_api(
         if not open_ai_key:
             open_ai_key = (
                 request.headers.get("OpenAI-Key")
-                or (chat.project.open_ai_key)
+                or (chat.project and chat.project.openai_key)
                 or (user.allow_key and settings.OPENAI_API_KEY)
             )
         noonce = request.data.get("noonce")

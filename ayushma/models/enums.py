@@ -18,6 +18,13 @@ class STTEngine(IntegerChoices):
     GOOGLE = 2
     SELF_HOSTED = 3
 
+    @classmethod
+    def get_id_from_name(cls, name):
+        for member in cls:
+            if member.name.lower() == name.lower():
+                return member.value
+        return None
+
 
 class TTSEngine(IntegerChoices):
     OPENAI = (1, "openai")
