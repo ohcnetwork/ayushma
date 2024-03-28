@@ -311,7 +311,7 @@ def converse(
 
     prompt = chat.prompt or (chat.project and chat.project.prompt)
 
-    if documents or chat.project.model == ModelType.GPT_4_VISUAL:
+    if documents or (chat.project and chat.project.model == ModelType.GPT_4_VISUAL):
         prompt = "Image Capabilities: Enabled\n" + prompt
 
     # excluding the latest query since it is not a history
@@ -327,7 +327,7 @@ def converse(
         elif message.messageType == ChatMessageType.AYUSHMA:
             chat_history.append(AIMessage(content=f"Ayushma: {message.message}"))
 
-    tts_engine = chat.project.tts_engine
+    tts_engine = chat.project and chat.project.tts_engine
 
     if not stream:
         lang_chain_helper = LangChainHelper(
