@@ -35,11 +35,7 @@ class APIKeyAuth(permissions.BasePermission):
     def has_permission(self, request, view):
         if request.headers.get("X-API-KEY"):
             api_key = request.headers.get("X-API-KEY")
-            try:
-                APIKey.objects.get(key=api_key)
-                return True
-            except APIKey.DoesNotExist:
-                return False
+            return APIKey.objects.filter(key=api_key).exists()
 
 
 class OrphanChatViewSet(

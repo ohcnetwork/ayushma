@@ -31,7 +31,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         upsert_dir = "upsert"
         pinecone.init(
-            api_key=settings.PINECONE_API_KEY, environment=settings.PINECONE_ENVIRONMENT
+            api_key=settings.PINECONE_API_KEY,
+            environment=settings.PINECONE_ENVIRONMENT,
         )
         print("Initialized Pinecone and OpenAI")
 
@@ -49,7 +50,7 @@ class Command(BaseCommand):
 
             batch_size = 100  # process everything in batches of 100 (creates 100 vectors per upset)
 
-            print(f"Fetching Pinecone index...")
+            print("Fetching Pinecone index...")
             if settings.PINECONE_INDEX not in pinecone.list_indexes():
                 pinecone.create_index(
                     settings.PINECONE_INDEX,

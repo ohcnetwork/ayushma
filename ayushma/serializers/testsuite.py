@@ -9,7 +9,7 @@ from ayushma.models import (
     TestSuite,
 )
 from ayushma.serializers.document import DocumentSerializer
-from ayushma.serializers.project import ProjectSerializer, ProjectUpdateSerializer
+from ayushma.serializers.project import ProjectUpdateSerializer
 from ayushma.serializers.users import UserSerializer
 
 
@@ -67,7 +67,12 @@ class FeedbackSerializer(serializers.ModelSerializer):
             "modified_at",
         )
 
-        read_only_fields = ("user_object", "external_id", "created_at", "modified_at")
+        read_only_fields = (
+            "user_object",
+            "external_id",
+            "created_at",
+            "modified_at",
+        )
 
 
 class TestResultSerializer(serializers.ModelSerializer):
