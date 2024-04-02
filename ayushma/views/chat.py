@@ -3,7 +3,7 @@ import time
 from django.conf import settings
 from drf_spectacular.utils import extend_schema
 from rest_framework import filters, status
-from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.mixins import (
     CreateModelMixin,
@@ -122,7 +122,8 @@ class ChatViewSet(
             stt_engine = Project.objects.get(external_id=project_id).stt_engine
         except Project.DoesNotExist:
             return Response(
-                {"error": "Project not found"}, status=status.HTTP_400_BAD_REQUEST
+                {"error": "Project not found"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
         try:
             stats["transcript_start_time"] = time.time()
@@ -139,7 +140,8 @@ class ChatViewSet(
             )
 
         return Response(
-            {"transcript": translated_text, "stats": stats}, status=status.HTTP_200_OK
+            {"transcript": translated_text, "stats": stats},
+            status=status.HTTP_200_OK,
         )
 
     @extend_schema(

@@ -6,5 +6,5 @@ class AyushmaConfig(AppConfig):
     name = "ayushma"
 
     def ready(self):
-        #from .signals import   # noqa: F401
+        # from .signals import   # noqa: F401
         pass

@@ -1,19 +1,14 @@
-from drf_spectacular.utils import (
-    extend_schema,
-    OpenApiResponse,
-)
+from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import status
-from rest_framework.viewsets import GenericViewSet
-from rest_framework.decorators import action
-from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
+from rest_framework.decorators import action
 from rest_framework.exceptions import ParseError
 from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework.viewsets import GenericViewSet
 
 from ayushma.serializers.auth import AuthSerializer
-from ayushma.serializers.users import (
-    UserCreateSerializer,
-)
+from ayushma.serializers.users import UserCreateSerializer
 
 
 class AuthViewSet(GenericViewSet):

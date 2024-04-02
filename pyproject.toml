@@ -1,0 +1,24 @@
+[tool.isort]
+profile = "black"
+known_third_party = [
+  "bs4",
+  "celery",
+  "corsheaders",
+  "django",
+  "django_filters",
+  "djangoql",
+  "drf_spectacular",
+  "environ",
+  "google",
+  "langchain",
+  "nltk",
+  "openai",
+  "pinecone",
+  "pypdf2",
+  "requests",
+  "rest_framework",
+  "rest_framework_simplejw",
+  "sentry_sdk",
+  "simple_history",
+  "tiktoken"
+]

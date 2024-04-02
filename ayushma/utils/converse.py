@@ -73,7 +73,7 @@ def converse_api(
     converse_type = "audio" if audio else "text"
 
     # convert stream to boolean
-    if type(stream) != bool:
+    if not isinstance(stream, bool):
         if stream == "false":
             stream = False
         else:
@@ -82,7 +82,7 @@ def converse_api(
     if is_thread:
         stream = False  # Threads do not support streaming
 
-    if type(generate_audio) != bool:
+    if not isinstance(generate_audio, bool):
         if generate_audio == "false":
             generate_audio = False
         else:
@@ -195,7 +195,8 @@ def converse_api(
         response_message = list(response_message)[0]
 
         return Response(
-            ChatMessageSerializer(response_message).data, status=status.HTTP_200_OK
+            ChatMessageSerializer(response_message).data,
+            status=status.HTTP_200_OK,
         )
 
     return response

@@ -1,5 +1,3 @@
-from ipaddress import ip_address
-
 from django.utils import timezone
 from rest_framework import permissions
 

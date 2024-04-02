@@ -148,7 +148,7 @@ class ResetPasswordViewset(GenericViewSet):
 
         # find the token
         try:
-            reset_password_token = ResetPasswordToken.objects.get(key=token)
+            ResetPasswordToken.objects.get(key=token)
         except ResetPasswordToken.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
