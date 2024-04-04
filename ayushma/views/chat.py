@@ -134,7 +134,7 @@ class ChatViewSet(
             print(f"Failed to transcribe speech with {stt_engine} engine: {e}")
             return Response(
                 {
-                    "error": "Something went wrong in getting transcription, please try again later"
+                    "error": "[Transcribing] Something went wrong in getting transcription, please try again later"
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
