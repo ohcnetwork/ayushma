@@ -1,8 +1,7 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema
-from rest_framework import permissions
+from rest_framework import filters, permissions
 from rest_framework.decorators import action
-from rest_framework.filters import SearchFilter
 
 from ayushma.models import User
 from ayushma.serializers.users import (
@@ -15,7 +14,12 @@ from utils.views.base import FullBaseModelViewSet
 
 
 class UserViewSet(FullBaseModelViewSet):
-    queryset = User.objects.all()
+    queryset = User.objects.all().order_by("-date_joined")
+    filter_backends = (
+        filters.SearchFilter,
+        DjangoFilterBackend,
+        filters.OrderingFilter,
+    )
     serializer_class = UserDetailSerializer
     permission_classes = (permissions.IsAdminUser,)
     serializer_action_classes = {
@@ -29,7 +33,6 @@ class UserViewSet(FullBaseModelViewSet):
         "partial_update_me": (permissions.IsAuthenticated(),),
     }
     lookup_field = "username"
-    filter_backends = [SearchFilter, DjangoFilterBackend]
     search_fields = ["full_name"]
     filterset_fields = ["is_staff", "is_reviewer", "allow_key"]
 

@@ -345,7 +345,7 @@ def converse(
         response = lang_chain_helper.get_response(
             english_text, reference, chat_history, documents
         )
-        chat_response = response.replace("Ayushma: ", "")
+        chat_response = response.replace("Ayushma:", "").lstrip()
         stats["response_end_time"] = time.time()
         translated_chat_response, url, chat_message = handle_post_response(
             chat_response,
@@ -391,8 +391,6 @@ def converse(
                     documents,
                 )
                 chat_response = ""
-                skip_token = len(f"{AI_NAME}: ")
-
                 while True:
                     if token_queue.empty():
                         continue
@@ -427,10 +425,9 @@ def converse(
                             ayushma_voice=url,
                         )
                         break
-                    if skip_token > 0:
-                        skip_token -= 1
-                        continue
+
                     chat_response += next_token[0]
+                    chat_response = chat_response.replace(f"{AI_NAME}: ", "")
                     yield create_json_response(
                         local_translated_text,
                         chat.external_id,

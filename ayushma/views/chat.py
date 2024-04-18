@@ -16,6 +16,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from ayushma.models import Chat, ChatFeedback, Project
+from ayushma.models.chat import ChatMessage
+from ayushma.models.enums import ChatMessageType
 from ayushma.permissions import IsTempTokenOrAuthenticated
 from ayushma.serializers import (
     ChatDetailSerializer,
@@ -131,11 +133,25 @@ class ChatViewSet(
             stats["transcript_end_time"] = time.time()
             translated_text = transcript
         except Exception as e:
-            print(f"Failed to transcribe speech with {stt_engine} engine: {e}")
+            print(f"Failed to transcribe speech with {stt_engine} engine:\n{e}")
+
+            error_msg = (
+                f"[Transcribing] Something went wrong in getting transcription.\n{e}"
+            )
+            chat = Chat.objects.get(external_id=kwarg["external_id"])
+            chat.title = "Transcription Error"
+            chat.save()
+            ChatMessage.objects.create(
+                message=error_msg,
+                original_message=error_msg,
+                chat=chat,
+                messageType=ChatMessageType.SYSTEM,
+                language=language,
+                meta={},
+            )
+
             return Response(
-                {
-                    "error": "[Transcribing] Something went wrong in getting transcription, please try again later"
-                },
+                {"error": error_msg},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 

@@ -79,7 +79,7 @@ class SelfHostedEngine:
                 return ""
             response = response.json()
             return response["data"]["transcription"].strip()
-        except Exception as e:
+        except Exception:
             raise ValueError(
                 "[Speech to Text] Failed to recognize speech with Self Hosted engine"
             )
@@ -99,16 +99,17 @@ def speech_to_text(engine_id, audio, language_code):
     engine_class = engines.get(engine_name)
 
     if not engine_class:
-        raise ValueError(f"[Speech to Text] Engine with ID {engine_id} not found")
+        print(f"Invalid Speech to Text engine: {engine_name}")
+        raise ValueError("The selected Speech to Text engine is not valid")
 
     try:
         engine = engine_class(api_key, language_code)
         recognized_text = engine.recognize(audio)
         if not recognized_text:
-            raise ValueError("[Speech to Text] No text recognized")
+            raise ValueError("No text recognized in the audio")
         return recognized_text
     except Exception as e:
         print(f"Failed to transcribe speech with {engine_name} engine: {e}")
         raise ValueError(
-            f"[Speech to Text] Failed to transcribe speech with {engine_name} engine"
+            f"[Speech to Text] Failed to transcribe speech with {engine_name} engine: {e}"
         )
