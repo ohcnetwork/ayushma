@@ -94,7 +94,7 @@ def get_sanitized_reference(pinecone_references: List[QueryResponse]) -> str:
                 else:
                     sanitized_reference[document_id] = text
             except Exception as e:
-                print(e)
+                print(f"Error extracting reference: {e}")
                 pass
 
     return json.dumps(sanitized_reference)
@@ -143,17 +143,17 @@ def get_reference(text, openai_key, namespace, top_k):
         try:
             embeddings.append(get_embedding(text=[text], openai_api_key=openai_key))
         except Exception as e:
-            return Exception(
-                e.__str__(),
-            )
+            print(f"Error generating embeddings: {e}")
+            return Exception("[Reference] Error generating embeddings")
     else:
         parts = split_text(text)
         for part in parts:
             try:
                 embeddings.append(get_embedding(text=[part], openai_api_key=openai_key))
             except Exception as e:
+                print(f"Error generating embeddings: {e}")
                 raise Exception(
-                    e.__str__(),
+                    "[Reference] Error generating embeddings for split text"
                 )
     # find similar embeddings from pinecone index for each embedding
     pinecone_references: List[QueryResponse] = []
@@ -187,7 +187,7 @@ def add_reference_documents(chat_message):
             except Document.DoesNotExist:
                 pass
     except Exception as e:
-        print("Error adding reference documents: ", e)
+        print(f"Error adding reference documents: {e}")
 
     chat_message.original_message = chat_text[
         :ref_start_idx
@@ -297,10 +297,13 @@ def converse(
     elif fetch_references and chat.project and chat.project.external_id:
         try:
             reference = get_reference(
-                english_text, openai_key, str(chat.project.external_id), match_number
+                english_text,
+                openai_key,
+                str(chat.project.external_id),
+                match_number,
             )
         except Exception as e:
-            print(e)
+            print(f"Error fetching references: {e}")
             reference = ""
     else:
         reference = ""
@@ -311,7 +314,7 @@ def converse(
 
     prompt = chat.prompt or (chat.project and chat.project.prompt)
 
-    if documents or chat.project.model == ModelType.GPT_4_VISUAL:
+    if documents or (chat.project and chat.project.model == ModelType.GPT_4_VISUAL):
         prompt = "Image Capabilities: Enabled\n" + prompt
 
     # excluding the latest query since it is not a history
@@ -327,7 +330,7 @@ def converse(
         elif message.messageType == ChatMessageType.AYUSHMA:
             chat_history.append(AIMessage(content=f"Ayushma: {message.message}"))
 
-    tts_engine = chat.project.tts_engine
+    tts_engine = chat.project and chat.project.tts_engine
 
     if not stream:
         lang_chain_helper = LangChainHelper(
@@ -342,7 +345,7 @@ def converse(
         response = lang_chain_helper.get_response(
             english_text, reference, chat_history, documents
         )
-        chat_response = response.replace("Ayushma: ", "")
+        chat_response = response.replace(f"{AI_NAME}:", "").lstrip()
         stats["response_end_time"] = time.time()
         translated_chat_response, url, chat_message = handle_post_response(
             chat_response,
@@ -388,8 +391,6 @@ def converse(
                     documents,
                 )
                 chat_response = ""
-                skip_token = len(f"{AI_NAME}: ")
-
                 while True:
                     if token_queue.empty():
                         continue
@@ -424,10 +425,9 @@ def converse(
                             ayushma_voice=url,
                         )
                         break
-                    if skip_token > 0:
-                        skip_token -= 1
-                        continue
+
                     chat_response += next_token[0]
+                    chat_response = chat_response.replace(f"{AI_NAME}:", "").lstrip()
                     yield create_json_response(
                         local_translated_text,
                         chat.external_id,
@@ -438,8 +438,10 @@ def converse(
                         None,
                     )
         except Exception as e:
-            print(e)
-            error_text = str(e)
+            print(f"Error in streaming response: {e}")
+            error_text = (
+                "[Streaming] Something went wrong in getting response, stream stopped"
+            )
             translated_error_text = error_text
             if user_language != "en-IN":
                 translated_error_text = translate_text(user_language, error_text)
@@ -464,7 +466,13 @@ def converse(
                 },
             )
             yield create_json_response(
-                local_translated_text, chat.external_id, "", str(e), True, True, None
+                local_translated_text,
+                chat.external_id,
+                "",
+                str(e),
+                True,
+                True,
+                None,
             )
 
 
@@ -499,7 +507,8 @@ def converse_thread(
         if status == "completed":
             break
     else:
-        raise Exception("Thread timed out")
+        print("[Thread] Run did not complete, timed out")
+        raise Exception("[Thread] Run did not complete, timed out")
 
     response = (
         client.beta.threads.messages.list(thread_id=thread.thread_id)

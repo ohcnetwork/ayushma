@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from djangoql.admin import DjangoQLSearchMixin
-from simple_history.admin import SimpleHistoryAdmin
 
 from ayushma.models.services import Service, TempToken
 from ayushma.models.testsuite import Feedback, TestQuestion, TestRun, TestSuite
@@ -32,7 +31,15 @@ class UserAdmin(DjangoQLSearchMixin, BaseUserAdmin):
     fieldsets = (
         (
             None,
-            {"fields": ("email", "username", "password", "external_id", "allow_key")},
+            {
+                "fields": (
+                    "email",
+                    "username",
+                    "password",
+                    "external_id",
+                    "allow_key",
+                )
+            },
         ),
         (
             "User info",

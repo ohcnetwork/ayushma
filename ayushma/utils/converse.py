@@ -47,7 +47,7 @@ def converse_api(
         if not open_ai_key:
             open_ai_key = (
                 request.headers.get("OpenAI-Key")
-                or (chat.project.open_ai_key)
+                or (chat.project and chat.project.open_ai_key)
                 or (user.allow_key and settings.OPENAI_API_KEY)
             )
         noonce = request.data.get("noonce")
@@ -73,7 +73,7 @@ def converse_api(
     converse_type = "audio" if audio else "text"
 
     # convert stream to boolean
-    if type(stream) != bool:
+    if not isinstance(stream, bool):
         if stream == "false":
             stream = False
         else:
@@ -82,7 +82,7 @@ def converse_api(
     if is_thread:
         stream = False  # Threads do not support streaming
 
-    if type(generate_audio) != bool:
+    if not isinstance(generate_audio, bool):
         if generate_audio == "false":
             generate_audio = False
         else:
@@ -118,9 +118,9 @@ def converse_api(
     # store time to complete request
     stats["start_time"] = time.time()
     if converse_type == "audio" and not audio:
-        return Exception("Please provide audio to generate transcript")
+        return Exception("[Converse] Please provide audio to generate transcript")
     if converse_type == "text" and not text:
-        return Exception("Please provide text to generate transcript")
+        return Exception("[Converse] Please provide text to generate transcript")
 
     if converse_type == "audio":
         stats["transcript_start_time"] = time.time()
@@ -195,7 +195,8 @@ def converse_api(
         response_message = list(response_message)[0]
 
         return Response(
-            ChatMessageSerializer(response_message).data, status=status.HTTP_200_OK
+            ChatMessageSerializer(response_message).data,
+            status=status.HTTP_200_OK,
         )
 
     return response

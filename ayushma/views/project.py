@@ -26,8 +26,12 @@ class ProjectViewSet(
     CreateModelMixin,
     DestroyModelMixin,
 ):
-    queryset = Project.objects.all()
-    filter_backends = (filters.SearchFilter, DjangoFilterBackend)
+    queryset = Project.objects.all().order_by("-is_default")
+    filter_backends = (
+        filters.SearchFilter,
+        DjangoFilterBackend,
+        filters.OrderingFilter,
+    )
     search_fields = ("title",)
     filterset_fields = ("archived",)
     serializer_class = ProjectSerializer
@@ -56,7 +60,7 @@ class ProjectViewSet(
         if self.action == "list":
             if not self.request.user.is_staff:
                 queryset = self.queryset.filter(is_default=True)
-        return queryset
+        return queryset.order_by("-is_default")
 
     def perform_create(self, serializer):
         serializer.save(creator=self.request.user)

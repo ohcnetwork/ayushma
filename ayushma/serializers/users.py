@@ -16,6 +16,7 @@ class UserSerializer(serializers.ModelSerializer):
             "allow_key",
             "is_staff",
             "is_reviewer",
+            "date_joined",
         )
 
 
@@ -56,6 +57,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "is_staff",
             "is_reviewer",
             "password",
+            "date_joined",
         )
         read_only_fields = (
             "external_id",
@@ -64,6 +66,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "allow_key",
             "is_staff",
             "is_reviewer",
+            "date_joined",
         )
 
     def update(self, instance, validated_data):

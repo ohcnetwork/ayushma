@@ -7,6 +7,4 @@ class RandomStringTokenGenerator:
         self.length = length
 
     def generate(self):
-        return "".join(
-            [random.choice(string.digits) for _ in range(self.length)]
-        )
+        return "".join([random.choice(string.digits) for _ in range(self.length)])

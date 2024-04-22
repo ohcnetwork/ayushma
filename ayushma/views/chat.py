@@ -3,7 +3,7 @@ import time
 from django.conf import settings
 from drf_spectacular.utils import extend_schema
 from rest_framework import filters, status
-from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.mixins import (
     CreateModelMixin,
@@ -16,6 +16,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from ayushma.models import Chat, ChatFeedback, Project
+from ayushma.models.chat import ChatMessage
+from ayushma.models.enums import ChatMessageType
 from ayushma.permissions import IsTempTokenOrAuthenticated
 from ayushma.serializers import (
     ChatDetailSerializer,
@@ -122,7 +124,8 @@ class ChatViewSet(
             stt_engine = Project.objects.get(external_id=project_id).stt_engine
         except Project.DoesNotExist:
             return Response(
-                {"error": "Project not found"}, status=status.HTTP_400_BAD_REQUEST
+                {"error": "Project not found"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
         try:
             stats["transcript_start_time"] = time.time()
@@ -130,16 +133,31 @@ class ChatViewSet(
             stats["transcript_end_time"] = time.time()
             translated_text = transcript
         except Exception as e:
-            print(f"Failed to transcribe speech with {stt_engine} engine: {e}")
+            print(f"Failed to transcribe speech with {stt_engine} engine:\n{e}")
+
+            error_msg = (
+                f"[Transcribing] Something went wrong in getting transcription.\n{e}"
+            )
+            chat = Chat.objects.get(external_id=kwarg["external_id"])
+            chat.title = "Transcription Error"
+            chat.save()
+            ChatMessage.objects.create(
+                message=error_msg,
+                original_message=error_msg,
+                chat=chat,
+                messageType=ChatMessageType.SYSTEM,
+                language=language,
+                meta={},
+            )
+
             return Response(
-                {
-                    "error": "Something went wrong in getting transcription, please try again later"
-                },
+                {"error": error_msg},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
         return Response(
-            {"transcript": translated_text, "stats": stats}, status=status.HTTP_200_OK
+            {"transcript": translated_text, "stats": stats},
+            status=status.HTTP_200_OK,
         )
 
     @extend_schema(

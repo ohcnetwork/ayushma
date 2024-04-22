@@ -1,12 +1,6 @@
-import os
-import uuid
-
-from django.conf import settings
-from django.core.files.storage import FileSystemStorage
 from rest_framework import serializers
-from rest_framework.response import Response
 
-from ayushma.models import Document, DocumentType
+from ayushma.models import Document
 
 
 class DocumentSerializer(serializers.ModelSerializer):
@@ -23,7 +17,12 @@ class DocumentSerializer(serializers.ModelSerializer):
             "text_content",
             "uploading",
         )
-        read_only_fields = ("external_id", "created_at", "modified_at", "uploading")
+        read_only_fields = (
+            "external_id",
+            "created_at",
+            "modified_at",
+            "uploading",
+        )
         write_only_fields = ("file",)
 
     def validate(self, data):

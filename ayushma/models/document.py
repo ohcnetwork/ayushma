@@ -19,6 +19,7 @@ class Document(BaseModel):
         "TestQuestion", on_delete=models.PROTECT, null=True, blank=True
     )
     uploading = models.BooleanField(default=True)
+    failed = models.BooleanField(default=False)
 
     def __str__(self) -> str:
         return f"{self.title} in {self.project.title}"

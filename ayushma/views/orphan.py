@@ -1,27 +1,29 @@
-import time
-from types import SimpleNamespace
-
 import openai
 from django.conf import settings
-from django.http import StreamingHttpResponse
-from drf_spectacular.utils import extend_schema, extend_schema_view, inline_serializer
+from drf_spectacular.utils import extend_schema
 from rest_framework import permissions, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.mixins import CreateModelMixin, ListModelMixin, RetrieveModelMixin
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
-from rest_framework.serializers import CharField, IntegerField
 
-from ayushma.models import APIKey, Chat, ChatMessage, Project
+from ayushma.models import APIKey, Chat
+from ayushma.models.enums import STTEngine
 from ayushma.serializers import ChatDetailSerializer, ConverseSerializer
 from ayushma.utils.converse import converse_api
-from ayushma.utils.language_helpers import translate_text
-from ayushma.utils.openaiapi import converse
+from ayushma.utils.speech_to_text import speech_to_text
 from utils.views.base import BaseModelViewSet
 from utils.views.mixins import PartialUpdateModelMixin
 
-from .chat import ChatViewSet
+PREDEFINED_CONFIGS = {
+    "ai_form_fill": {
+        "model": "gpt-4-turbo-preview",
+        "response_format": "json_object",
+        "max_tokens": 4096,
+        "temperature": 0,
+    },
+}
 
 
 class Struct:
@@ -33,11 +35,7 @@ class APIKeyAuth(permissions.BasePermission):
     def has_permission(self, request, view):
         if request.headers.get("X-API-KEY"):
             api_key = request.headers.get("X-API-KEY")
-            try:
-                key = APIKey.objects.get(key=api_key)
-                return True
-            except APIKey.DoesNotExist:
-                return False
+            return APIKey.objects.filter(key=api_key).exists()
 
 
 class OrphanChatViewSet(
@@ -82,6 +80,7 @@ class OrphanChatViewSet(
                 response = converse_api(
                     request=self.request,
                     chat=chat,
+                    is_thread=False,
                 )
                 return Response(
                     {
@@ -110,7 +109,57 @@ class OrphanChatViewSet(
             response = converse_api(
                 request=self.request,
                 chat=chat,
+                is_thread=False,
             )
             return response
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=["post"])
+    def transcribe(self, request, *args, **kwargs):
+        language = request.data.get("language") or "en"
+        audio = request.data.get("audio")
+        engine = request.data.get("engine")
+        if not audio or not engine:
+            raise ValidationError("audio and engine are required")
+        try:
+            engine_id = STTEngine.get_id_from_name(engine)
+            transcript = speech_to_text(engine_id, audio, language + "-IN")
+            return Response({"transcript": transcript})
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=["post"])
+    def completion(self, request, *args, **kwargs):
+        task = request.data.get("task")
+
+        if not task:
+            raise ValidationError("task is required")
+
+        config = PREDEFINED_CONFIGS.get(task)
+
+        if not config:
+            raise ValidationError("Invalid task")
+
+        model = config.get("model")
+        response_format = config.get("response_format")
+        max_tokens = config.get("max_tokens")
+        temperature = config.get("temperature")
+
+        messages = request.data.get("messages")
+        if not messages or len(messages) == 0:
+            raise ValidationError("audio and engine are required")
+        try:
+            client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
+            completion = client.chat.completions.create(
+                model=model,
+                temperature=temperature,
+                response_format={"type": response_format},
+                messages=messages,
+                max_tokens=max_tokens,
+            )
+
+            ai_response = completion.choices[0].message.content
+            return Response({"response": ai_response})
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
