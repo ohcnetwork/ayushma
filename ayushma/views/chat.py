@@ -47,6 +47,7 @@ class ChatViewSet(
         "list_all": ChatDetailSerializer,
         "converse": ConverseSerializer,
         "speech_to_text": SpeechToTextSerializer,
+        "feedbacks": ChatFeedbackSerializer,
     }
     permission_classes = (IsTempTokenOrAuthenticated,)
     lookup_field = "external_id"
@@ -95,6 +96,13 @@ class ChatViewSet(
 
         serializer.save(user=self.request.user, project=project)
         super().perform_create(serializer)
+
+    @extend_schema(
+        tags=("chats",),
+    )
+    @action(detail=True, methods=["get"])
+    def feedbacks(self, *args, **kwarg):
+        return ChatFeedback.objects.filter(chat_message__chat__external_id=kwarg["external_id"])
 
     @extend_schema(
         tags=("chats",),
