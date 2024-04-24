@@ -102,7 +102,12 @@ class ChatViewSet(
     )
     @action(detail=True, methods=["get"])
     def feedbacks(self, *args, **kwarg):
-        return ChatFeedback.objects.filter(chat_message__chat__external_id=kwarg["external_id"])
+        q = ChatFeedback.objects.filter(chat_message__chat__external_id=kwarg["external_id"])
+        serialized_data = ChatFeedbackSerializer(q, many=True).data
+        return Response(
+            {"data": serialized_data},
+            status=status.HTTP_200_OK,
+        )
 
     @extend_schema(
         tags=("chats",),
