@@ -88,11 +88,13 @@ def get_sanitized_reference(pinecone_references: List[QueryResponse]) -> str:
         for match in reference.matches:
             try:
                 document_id = str(match.metadata["document"])
+                author_name = str(match.metadata["author_name"])
+                url=str(match.metadata["url"])
                 text = str(match.metadata["text"]).replace("\n", " ") + ","
                 if document_id in sanitized_reference:
-                    sanitized_reference[document_id] += text
+                    sanitized_reference[document_id] += text + url
                 else:
-                    sanitized_reference[document_id] = text
+                    sanitized_reference[document_id] = text + url
             except Exception as e:
                 print(f"Error extracting reference: {e}")
                 pass

@@ -65,7 +65,7 @@ def converse_api(
             )
 
     project = chat.project
-    top_k = request.data.get("top_k") or 100
+    top_k = request.data.get("top_k") or 3
     temperature = request.data.get("temperature") or 0.1
     stream = request.data.get("stream")
     generate_audio = request.data.get("generate_audio")
