@@ -5,11 +5,11 @@ This is a Django Project
 ## Requirements
 
 - OpenAI Account with a valid API Key
-- Pinecone Account with a valid API Key
 - Docker
 
 ## Optional Requirements
 
+- Pinecone Account with a valid API Key
 - AWS SES Accout
 - AWS S3 Account
 - Google Cloud account with access to speech to text API
@@ -32,6 +32,7 @@ Add these environment variables to your `.env` file.
 | OPENAI_API_KEY                 | OpenAI API Key                                                                                                       |
 | PINECONE_API_KEY               | Pinecone API Key                                                                                                     |
 | PINECONE_INDEX                 | Pinecone Index                                                                                                       |
+| VECTOR_DB                      | The Vector DB you would like to choose. "milvus" (default) or "pinecone"                                             |
 | CURRENT_DOMAIN                 | Current Domain where the frontend is hosted. ex. `https://ayushma.ohc.network`                                       |
 | EMAIL_HOST                     | SES Email Host (Optional)                                                                                            |
 | EMAIL_USER                     | SES Email User (Optional)                                                                                            |
