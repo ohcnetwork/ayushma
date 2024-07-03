@@ -3,6 +3,7 @@ version: '3'
 volumes:
   production_postgres_data: {}
   production_postgres_data_backups: {}
+  production_milvus_data: {}
 
 services:
   django: &django
@@ -19,6 +20,8 @@ services:
     ports:
       - "8000:8000"
     command: /start
+    networks:
+      - default
 
   postgres:
     build:
@@ -30,9 +33,13 @@ services:
       - production_postgres_data_backups:/backups:z
     env_file:
       - ./.envs/.production/.postgres
+    networks:
+      - default
 
   redis:
     image: redis:6
+    networks:
+      - default
 
   celeryworker:
     <<: *django
@@ -43,3 +50,24 @@ services:
     <<: *django
     ports: []
     command: /start-celerybeat
+
+  milvus:
+    image: milvusdb/milvus:v2.4.5
+    container_name: milvus-standalone
+    environment:
+      - ETCD_USE_EMBED=true
+      - ETCD_DATA_DIR=/var/lib/milvus/etcd
+      - ETCD_CONFIG_PATH=/milvus/configs/embedEtcd.yaml
+      - COMMON_STORAGETYPE=local
+    volumes:
+      - production_milvus_data:/var/lib/milvus
+      - ./compose/production/milvus/embedEtcd.yaml:/milvus/configs/embedEtcd.yaml
+    command: ["milvus", "run", "standalone"]
+    security_opt:
+      - seccomp:unconfined
+    networks:
+      - default
+    
+networks:
+  default:
+    name: ayushma_production

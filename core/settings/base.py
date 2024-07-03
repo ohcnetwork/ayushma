@@ -41,7 +41,7 @@ USE_TZ = True
 DATABASES = {
     "default": env.db(
         "DATABASE_URL",
-        default="postgres://postgres:postgres@localhost:5432/ayushma",
+        default="postgres://debug:debug@postgres/ayushma",
     )
 }
 
@@ -243,7 +243,7 @@ CELERY_TIMEZONE = TIME_ZONE
 # http://docs.celeryproject.org/en/latest/userguide/configuration.html#std:setting-broker_url
 CELERY_BROKER_URL = env(
     "CELERY_BROKER_URL",
-    default=env("REDIS_URL", default="redis://localhost:6379/0"),
+    default=env("REDIS_URL", default="redis://redis:6379/0"),
 )
 # http://docs.celeryproject.org/en/latest/userguide/configuration.html#std:setting-result_backend
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL
@@ -349,11 +349,13 @@ STT_API_KEY = env("STT_API_KEY", default="")  # Not required for google
 
 # Pinecone
 PINECONE_API_KEY = env("PINECONE_API_KEY", default="")
-PINECONE_ENVIRONMENT = env("PINECONE_ENVIRONMENT", default="")
 PINECONE_INDEX = env("PINECONE_INDEX", default="")
 
-pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENVIRONMENT)
-PINECONE_INDEX_INSTANCE = pinecone.Index(index_name=PINECONE_INDEX)
+VECTOR_DB=env("VECTOR_DB", default="milvus")
+
+# Milvus
+MILVUS_URL = env("MILVUS_URL", default="http://milvus:19530")
+MILVUS_COLLECTION = env("MILVUS_COLLECTION", default="ayushma")
 
 # S3
 AWS_STORAGE_BUCKET_NAME = env("S3_BUCKET_NAME", default=None)
