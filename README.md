@@ -1,6 +1,6 @@
 # Ayushma AI
 
-This is a Django Project
+Empowering Nurses with Multilingual ICU Protocols. Leveraging the rapid advancements in AI technology, created multilingual interfaces that assist nurses in rapidly upgrading their knowledge about ICU protocols. This is a Django project.
 
 ## Requirements
 
