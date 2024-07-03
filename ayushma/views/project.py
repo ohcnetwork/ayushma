@@ -14,6 +14,7 @@ from rest_framework.response import Response
 
 from ayushma.models import Project
 from ayushma.serializers.project import ProjectSerializer, ProjectUpdateSerializer
+from ayushma.utils.vectordb import VectorDB
 from utils.views.base import BaseModelViewSet
 from utils.views.mixins import PartialUpdateModelMixin
 
@@ -68,9 +69,8 @@ class ProjectViewSet(
     def perform_destroy(self, instance):
         # delete namespaces from vectorDB
         try:
-            settings.PINECONE_INDEX_INSTANCE.delete(
-                namespace=str(instance.external_id),
-                deleteAll=True,
+            VectorDB().delete_partition(
+                partition_name=str(instance.external_id).replace("-", "_")
             )
         except Exception as e:
             print(e)

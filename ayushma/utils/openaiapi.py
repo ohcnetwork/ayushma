@@ -10,7 +10,6 @@ from anyio.from_thread import start_blocking_portal
 from django.conf import settings
 from langchain.schema import AIMessage, HumanMessage
 from openai import OpenAI
-from pinecone import QueryResponse
 
 from ayushma.models import ChatMessage
 from ayushma.models.chat import Chat
@@ -18,6 +17,7 @@ from ayushma.models.document import Document
 from ayushma.models.enums import ChatMessageType, ModelType
 from ayushma.utils.langchain import LangChainHelper
 from ayushma.utils.language_helpers import text_to_speech, translate_text
+from ayushma.utils.vectordb import VectorDB
 from core.settings.base import AI_NAME
 
 
@@ -65,39 +65,6 @@ def get_embedding(
     res = client.embeddings.create(**embedding_args)
 
     return [record.embedding for record in res.data]
-
-
-def get_sanitized_reference(pinecone_references: List[QueryResponse]) -> str:
-    """
-    Extracts the text from the Pinecone QueryResponse object and sanitizes it.
-
-    Args:
-        pinecone_reference (List[QueryResponse]): The similar documents retrieved from
-            the Pinecone index.
-
-    Returns:
-        A string containing the document id and text from the Pinecone QueryResponse object.
-
-    Example usage:
-        >>> get_sanitized_reference([QueryResponse(...), QueryResponse(...)])
-        "{'28': 'Hello how are you, I am fine, thank you.', '21': 'How was your day?, Mine was good.'}"
-    """
-    sanitized_reference = {}
-
-    for reference in pinecone_references:
-        for match in reference.matches:
-            try:
-                document_id = str(match.metadata["document"])
-                text = str(match.metadata["text"]).replace("\n", " ") + ","
-                if document_id in sanitized_reference:
-                    sanitized_reference[document_id] += text
-                else:
-                    sanitized_reference[document_id] = text
-            except Exception as e:
-                print(f"Error extracting reference: {e}")
-                pass
-
-    return json.dumps(sanitized_reference)
 
 
 def num_tokens_from_string(string: str, encoding_name: str) -> int:
@@ -155,18 +122,18 @@ def get_reference(text, openai_key, namespace, top_k):
                 raise Exception(
                     "[Reference] Error generating embeddings for split text"
                 )
-    # find similar embeddings from pinecone index for each embedding
-    pinecone_references: List[QueryResponse] = []
+    # find similar embeddings from vector index for each embedding
 
-    for embedding in embeddings:
-        similar: QueryResponse = settings.PINECONE_INDEX_INSTANCE.query(
-            vector=embedding,
-            top_k=int(top_k),
-            namespace=namespace,
-            include_metadata=True,
-        )
-        pinecone_references.append(similar)
-    return get_sanitized_reference(pinecone_references=pinecone_references)
+    flat_embeddings = [item for sublist in embeddings for item in sublist]
+    vdb = VectorDB()
+    similar = vdb.search(
+        embeddings=flat_embeddings,
+        partition_name=namespace,
+        limit=int(top_k),
+    )
+
+    print("References fetched")
+    return vdb.sanitize(similar)
 
 
 def add_reference_documents(chat_message):
@@ -299,7 +266,7 @@ def converse(
             reference = get_reference(
                 english_text,
                 openai_key,
-                str(chat.project.external_id),
+                str(chat.project.external_id).replace("-", "_"),
                 match_number,
             )
         except Exception as e:

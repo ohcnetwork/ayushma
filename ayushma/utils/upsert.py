@@ -2,13 +2,13 @@ import os
 from io import BytesIO
 from typing import Optional
 
-import pinecone
 import requests
 from bs4 import BeautifulSoup
 from django.conf import settings
 from PyPDF2 import PdfReader
 
 from ayushma.utils.openaiapi import get_embedding
+from ayushma.utils.vectordb import VectorDB
 
 
 def read_document(url):
@@ -42,10 +42,10 @@ def upsert(
     text: Optional[str] = None,
 ):
     """
-    Upserts the contents of a file, URL, or text to a Pinecone index with the specified external ID.
+    Upserts the contents of a file, URL, or text to a vector index with the specified external ID.
 
     Args:
-        external_id (str): The external ID to use when upserting to the Pinecone index.
+        external_id (str): The external ID to use when upserting to the vector index.
         document_id (int): The external_id of the document that is to be upserted (external_id of the doc is added to the metadata)
         s3_url (str, optional): The S3 URL of the file to upsert. Defaults to None.
         url (str, optional): The URL of the website to upsert. Defaults to None.
@@ -57,11 +57,6 @@ def upsert(
     Returns:
         None
     """
-    pinecone.init(
-        api_key=settings.PINECONE_API_KEY,
-        environment=settings.PINECONE_ENVIRONMENT,
-    )
-    print("Initialized Pinecone and OpenAI")
 
     print("Processing...")
 
@@ -90,31 +85,22 @@ def upsert(
         100  # process everything in batches of 100 (creates 100 vectors per upset)
     )
 
-    print("Fetching Pinecone index...")
-    if settings.PINECONE_INDEX not in pinecone.list_indexes():
-        pinecone.create_index(
-            settings.PINECONE_INDEX,
-            dimension=1536,  # 1536 is the dimension of the text-embedding-ada-002 model
-        )
-    pinecone_index = pinecone.Index(index_name=settings.PINECONE_INDEX)
-
-    print("Upserting to Pinecone index...")
+    print("Upserting to vector collection...")
 
     for i in range(0, len(document_lines), batch_size):
-        i_end = min(i + batch_size, len(document_lines))  # set end position of batch
         lines_batch = document_lines[i : i + batch_size]  # get batch of lines and IDs
         lines_batch = [
             line.strip() for line in lines_batch if line.strip()
         ]  # remove blank lines
-        ids_batch = [f"{document_id}_{n}" for n in range(i, i_end)]  # create IDs
 
-        embeds = get_embedding(lines_batch)  # create embeddings
-        meta = [
-            {"text": line, "document": str(document_id)} for line in lines_batch
-        ]  # prep metadata and upsert batch
-        to_upsert = zip(ids_batch, embeds, meta)  # zip together
-        pinecone_index.upsert(
-            vectors=list(to_upsert), namespace=str(external_id)
-        )  # upsert to Pinecone
+        embeds = get_embedding(lines_batch)
+        partition_name = str(external_id).replace("-", "_")
 
-    print("Finished upserting to Pinecone index")
+        VectorDB().insert(
+            vectors=embeds,
+            texts=lines_batch,
+            subject=str(document_id),
+            partition_name=partition_name,
+        )
+
+    print("Finished upserting to vectorDB")

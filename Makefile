@@ -30,7 +30,10 @@ logs:
 	docker compose -f $(docker_config_file) logs
 
 makemigrations: up
-	docker exec django bash -c "python manage.py makemigrations"
+	docker compose -f $(docker_config_file) exec django bash -c "python manage.py makemigrations"
+
+migrate: up
+	docker compose -f $(docker_config_file) exec django bash -c "python manage.py migrate"
 
 checkmigration:
 	docker compose -f $(docker_config_file) exec django bash -c "python manage.py makemigrations --check --dry-run"
