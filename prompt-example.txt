@@ -9,5 +9,5 @@ references = {reference}
 
 Output Format (follow the below format strictly and you must provide the references ids array in all your responses after the result. Do not mention about the references anywhere else):
 
-Ayushma: <Your response here> 
+Ayushma: <Your response here>
 References: <array of reference_ids (in array format: uuid[] (example : [uuid1, uuid2]) "include all the reference uuids in this array that are relevant and from which you formed the result">

@@ -122,7 +122,7 @@ def get_reference(text, openai_key, namespace, top_k):
                 raise Exception(
                     "[Reference] Error generating embeddings for split text"
                 )
-    # find similar embeddings from vector index for each embedding    
+    # find similar embeddings from vector index for each embedding
 
     flat_embeddings = [item for sublist in embeddings for item in sublist]
     vdb = VectorDB()

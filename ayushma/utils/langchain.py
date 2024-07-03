@@ -2,14 +2,14 @@ from typing import Any, Literal
 
 import openai
 from django.conf import settings
-from langchain.chains import LLMChain
-from langchain.prompts import PromptTemplate
 from langchain.callbacks.manager import AsyncCallbackManager
+from langchain.chains import LLMChain
 from langchain.chat_models import ChatOpenAI
 from langchain.llms import AzureOpenAI
 from langchain.prompts import (
     ChatPromptTemplate,
     MessagesPlaceholder,
+    PromptTemplate,
     SystemMessagePromptTemplate,
 )
 from langchain.prompts.chat import BaseStringMessagePromptTemplate

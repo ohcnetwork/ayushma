@@ -6,7 +6,6 @@ from pathlib import Path
 
 import environ
 import openai
-import pinecone
 from corsheaders.defaults import default_headers
 from django.urls import reverse_lazy
 
@@ -351,7 +350,7 @@ STT_API_KEY = env("STT_API_KEY", default="")  # Not required for google
 PINECONE_API_KEY = env("PINECONE_API_KEY", default="")
 PINECONE_INDEX = env("PINECONE_INDEX", default="")
 
-VECTOR_DB=env("VECTOR_DB", default="milvus")
+VECTOR_DB = env("VECTOR_DB", default="milvus")
 
 # Milvus
 MILVUS_URL = env("MILVUS_URL", default="http://milvus:19530")

@@ -17,6 +17,7 @@ from ayushma.utils.vectordb import VectorDB
 from utils.views.base import BaseModelViewSet
 from utils.views.mixins import PartialUpdateModelMixin
 
+
 class ProjectDocumentViewSet(
     BaseModelViewSet,
     PartialUpdateModelMixin,
@@ -63,12 +64,11 @@ class ProjectDocumentViewSet(
             print(e)
             pass
 
-
         upsert_doc.delay(document.external_id, doc_url)
 
     def perform_destroy(self, instance):
         # delete namespace from vectorDB
-        
+
         try:
             VectorDB().delete_subject(
                 partition_name=self.kwargs["project_external_id"].replace("-", "_"),

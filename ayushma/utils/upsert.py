@@ -94,7 +94,7 @@ def upsert(
         ]  # remove blank lines
 
         embeds = get_embedding(lines_batch)
-        partition_name=str(external_id).replace("-", "_")
+        partition_name = str(external_id).replace("-", "_")
 
         VectorDB().insert(
             vectors=embeds,

@@ -67,7 +67,7 @@ services:
       - seccomp:unconfined
     networks:
       - default
-    
+
 networks:
   default:
     name: ayushma_production
