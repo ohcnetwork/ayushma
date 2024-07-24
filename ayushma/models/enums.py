@@ -48,6 +48,7 @@ class ModelType(IntegerChoices):
     GPT_4_VISUAL = 5
     GPT_4_TURBO = 6
     GPT_4_OMNI = 7
+    GPT_4_OMNI_MINI = 8
 
 
 class StatusChoices(IntegerChoices):
