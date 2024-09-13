@@ -68,7 +68,7 @@ class SelfHostedEngine:
                 settings.SELF_HOSTED_ENDPOINT,
                 files={"audio": audio},
                 data={
-                    # change this model to get faster results see: https://github.com/coronasafe/care-whisper
+                    # change this model to get faster results see: https://github.com/ohcnetwork/care-whisper
                     "model": "small",
                     "language": self.language_code.replace("-IN", ""),
                 },
