@@ -29,16 +29,11 @@ class UserCreateSerializer(serializers.ModelSerializer):
         model = User
         fields = ("username", "full_name", "password", "email", "recaptcha")
 
-    def validate_recaptcha(self, value):
-        if not validatecaptcha(value):
-            raise serializers.ValidationError("Invalid captcha")
-        return value
-
-    def validate(self, validated_data):
-        validated_data.pop("recaptcha", None)
-        return validated_data
-
     def create(self, validated_data):
+        recaptcha = validated_data.pop("recaptcha", None)
+        if not validatecaptcha(recaptcha):
+            raise serializers.ValidationError("Invalid captcha")
+
         validated_data["password"] = make_password(validated_data["password"])
         return super().create(validated_data)
 

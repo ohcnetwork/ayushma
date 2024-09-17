@@ -2,13 +2,14 @@ from typing import Any, Literal
 
 import openai
 from django.conf import settings
-from langchain import LLMChain, PromptTemplate
 from langchain.callbacks.manager import AsyncCallbackManager
+from langchain.chains import LLMChain
 from langchain.chat_models import ChatOpenAI
 from langchain.llms import AzureOpenAI
 from langchain.prompts import (
     ChatPromptTemplate,
     MessagesPlaceholder,
+    PromptTemplate,
     SystemMessagePromptTemplate,
 )
 from langchain.prompts.chat import BaseStringMessagePromptTemplate
@@ -37,7 +38,12 @@ def get_model_name(model_type: ModelType):
     elif model_type == ModelType.GPT_4_VISUAL:
         return "gpt-4-vision-preview"
     elif model_type == ModelType.GPT_4_TURBO:
-        return "gpt-4-1106-preview"
+        return "gpt-4-turbo"
+    elif model_type == ModelType.GPT_4_OMNI:
+        return "gpt-4o"
+    elif model_type == ModelType.GPT_4_OMNI_MINI:
+        return "gpt-4o-mini"
+
     else:
         if settings.OPENAI_API_TYPE == "azure":
             return settings.AZURE_CHAT_MODEL

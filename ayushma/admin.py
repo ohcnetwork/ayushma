@@ -3,7 +3,13 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from djangoql.admin import DjangoQLSearchMixin
 
 from ayushma.models.services import Service, TempToken
-from ayushma.models.testsuite import Feedback, TestQuestion, TestRun, TestSuite
+from ayushma.models.testsuite import (
+    Feedback,
+    TestQuestion,
+    TestResult,
+    TestRun,
+    TestSuite,
+)
 
 from .models import APIKey, Chat, ChatMessage, Document, Project, User
 
@@ -129,6 +135,11 @@ class TestQuestionAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
 
 @admin.register(TestRun)
 class TestRunAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
+    pass
+
+
+@admin.register(TestResult)
+class TestResultAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
     pass
 
 

@@ -1,3 +1,4 @@
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.db.models import (
     CASCADE,
@@ -10,7 +11,7 @@ from django.db.models import (
 
 from ayushma.models import Project
 from ayushma.models.document import Document
-from ayushma.models.enums import FeedBackRating, StatusChoices
+from ayushma.models.enums import FeedBackRating, ModelType, StatusChoices
 from ayushma.models.users import User
 from utils.models.base import BaseModel
 
@@ -34,6 +35,7 @@ class TestRun(BaseModel):
     project = ForeignKey(Project, on_delete=CASCADE)
     status = IntegerField(choices=StatusChoices.choices, default=StatusChoices.RUNNING)
     references = models.BooleanField(default=True)
+    models = ArrayField(models.IntegerField(choices=ModelType.choices), default=list)
 
 
 class TestResult(BaseModel):
@@ -45,6 +47,7 @@ class TestResult(BaseModel):
     cosine_sim = FloatField()
     bleu_score = FloatField()
     references = models.ManyToManyField(Document, blank=True)
+    model = models.IntegerField(choices=ModelType.choices, blank=True, null=True)
 
 
 class Feedback(BaseModel):
