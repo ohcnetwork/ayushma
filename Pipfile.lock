@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "e2d224518ee4b6b66d64f42bd2d4f64c19eb45c5750e6bb787de91ca26242003"
+            "sha256": "4415866814e9a734f217071370b9911e9eaf35a05d9af06dfe50566435053122"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -192,11 +192,11 @@
         },
         "asgiref": {
             "hashes": [
-                "sha256:3e1e3ecc849832fe52ccf2cb6686b7a55f82bb1d6aee72a58826471390335e47",
-                "sha256:c343bd80a0bec947a9860adb4c432ffa7db769836c64238fc34bdc3fec84d590"
+                "sha256:5f184dc43b7e763efe848065441eac62229c9f7b0475f41f80e207a114eda4ce",
+                "sha256:e8667a091e69529631969fd45dc268fa79b99c92c5fcdda727757e52146ec133"
             ],
-            "markers": "python_version >= '3.8'",
-            "version": "==3.8.1"
+            "markers": "python_version >= '3.9'",
+            "version": "==3.11.1"
         },
         "attrs": {
             "hashes": [
@@ -573,12 +573,12 @@
         },
         "drf-nested-routers": {
             "hashes": [
-                "sha256:01aa556b8c08608bb74fb34f6ca065a5183f2cda4dc0478192cc17a2581d71b0",
-                "sha256:996b77f3f4dfaf64569e7b8f04e3919945f90f95366838ca5b8bed9dd709d6c5"
+                "sha256:2b846385ed95c9f17bf4242db3b264ac826b5af00dda6c737d3fe7cc7bf2c7db",
+                "sha256:3a8ec45a025c0f39188ec1ec415244beb875a6f4db87911a1f5a606d09b68c9f"
             ],
             "index": "pypi",
-            "markers": "python_version >= '3.5'",
-            "version": "==0.93.4"
+            "markers": "python_version >= '3.8'",
+            "version": "==0.94.1"
         },
         "drf-spectacular": {
             "hashes": [
@@ -1874,11 +1874,11 @@
         },
         "sqlparse": {
             "hashes": [
-                "sha256:773dcbf9a5ab44a090f3441e2180efe2560220203dc2f8c0b0fa141e18b505e4",
-                "sha256:bb6b4df465655ef332548e24f08e205afc81b9ab86cb1c45657a7ff173a3a00e"
+                "sha256:12a08b3bf3eec877c519589833aed092e2444e68240a3577e8e26148acc7b1ba",
+                "sha256:e20d4a9b0b8585fdf63b10d30066c7c94c5d7a7ec47c889a2d83a3caa93ff28e"
             ],
             "markers": "python_version >= '3.8'",
-            "version": "==0.5.1"
+            "version": "==0.5.5"
         },
         "tenacity": {
             "hashes": [
