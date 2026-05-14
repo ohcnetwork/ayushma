@@ -20,7 +20,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-
       - name: Bake docker images
-        uses: docker/bake-action@v4
+        uses: docker/bake-action@v7
         with:
           load: true
           set: |
