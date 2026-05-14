@@ -13,7 +13,7 @@ jobs:
     if: ${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/production' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Docker meta
         id: meta
